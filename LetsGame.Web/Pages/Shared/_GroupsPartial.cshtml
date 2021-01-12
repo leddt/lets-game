@@ -1,0 +1,20 @@
+﻿@using Microsoft.EntityFrameworkCore
+@inject ApplicationDbContext Db
+@inject UserManager<AppUser> UserManager
+
+@{
+    var userId = UserManager.GetUserId(User);
+    var groups = await Db.Memberships
+        .Where(x => x.User.Id == userId)
+        .Select(x => x.Group)
+        .ToListAsync();
+}
+
+<div class="btn-group-vertical">
+    @foreach (var group in groups)
+    {
+        <a asp-page="Group" asp-route-slug="@group.Slug" class="btn" is-active-class="btn-secondary" is-inactive-class="btn-outline-secondary">@group.Name</a>
+    }
+    
+    <a asp-page="AddGroup" class="btn" is-active-class="btn-primary" is-inactive-class="btn-outline-primary">New group</a>
+</div>

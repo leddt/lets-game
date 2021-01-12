@@ -1,0 +1,21 @@
+﻿@page
+@model LetsGame.Web.Pages.AddGroupModel
+
+@{
+    Layout = "_AuthenticatedLayout";
+}
+
+<h1 class="display-4">Create new group</h1>
+
+<div class="row">
+    <div class="col col-lg-6">
+        <form method="post">
+            <div class="form-group">
+                <label asp-for="GroupName"></label>
+                <input asp-for="GroupName" class="form-control form-control-lg" autofocus/>
+                <span asp-validation-for="GroupName" class="invalid-feedback"></span>
+            </div>
+            <button type="submit" class="btn btn-lg btn-primary">Create group</button>
+        </form>
+    </div>
+</div>
