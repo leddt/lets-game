@@ -4,3 +4,14 @@
   min-height: 100vh;
 }
 
+.bg-overlay-dark {
+  background-color: rgba(0, 0, 0, 0.4);
+  transition: background-color ease-in 0.2s;
+}
+.bg-overlay-dark:hover {
+  background-color: rgba(0, 0, 0, 0);
+}
+
+.opacity-0 {
+  opacity: 0;
+}

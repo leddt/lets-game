@@ -57,7 +57,7 @@ namespace LetsGame.Web.Infrastructure.AspNet.TagHelpers
             var urlHelper = _urlHelperFactory.GetUrlHelper(actionContext);
             var expectedUrl = urlHelper.Page(Page, RouteValues);
 
-            return actionContext.HttpContext.Request.Path.Equals(expectedUrl, StringComparison.OrdinalIgnoreCase);
+            return actionContext.HttpContext.Request.Path.StartsWithSegments(expectedUrl, StringComparison.OrdinalIgnoreCase);
         }
 
         private void MakeActive(TagHelperOutput output) => AddClass(output, ActiveClass);

@@ -12,6 +12,8 @@ using Microsoft.EntityFrameworkCore;
 using LetsGame.Web.Data;
 using LetsGame.Web.Infrastructure.AspNet;
 using LetsGame.Web.Services;
+using LetsGame.Web.Services.Igdb;
+using LetsGame.Web.Services.Itad;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -43,6 +45,11 @@ namespace LetsGame.Web
             services.AddDefaultIdentity<AppUser>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
             services.AddRazorPages();
+
+            services.Configure<ItadOptions>(Configuration.GetSection("itad"));
+            services.Configure<IgdbOptions>(Configuration.GetSection("igdb"));
+            services.AddHttpClient<ItadClient>(ItadClient.Configure);
+            services.AddHttpClient<IgdbClient>(IgdbClient.Configure);
             
             services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();
             

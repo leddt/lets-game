@@ -16,6 +16,7 @@ namespace LetsGame.Web.Data
         }
 
         public DbSet<Group> Groups { get; set; }
+        public DbSet<GroupGame> GroupGames { get; set; }
         public DbSet<Membership> Memberships { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -31,6 +32,10 @@ namespace LetsGame.Web.Data
                     .UsingEntity<Membership>(
                         m => m.HasOne(x => x.User).WithMany(x => x.Memberships),
                         m => m.HasOne(x => x.Group).WithMany(x => x.Memberships));
+
+                _.HasMany(x => x.Games)
+                    .WithOne(x => x.Group)
+                    .IsRequired();
             });
             
             Entity<Membership>(_ =>

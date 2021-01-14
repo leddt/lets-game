@@ -1,12 +1,13 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using LetsGame.Web.Data;
+using LetsGame.Web.Services.Itad.Model;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 
-namespace LetsGame.Web.Pages
+namespace LetsGame.Web.Pages.Groups
 {
     public class GroupModel : PageModel
     {
@@ -19,11 +20,22 @@ namespace LetsGame.Web.Pages
             _userManager = userManager;
         }
 
-        public string Slug { get; set; }
+        public Group Group { get; set; }
         
-        public void OnGet(string slug)
+        [BindProperty]
+        public string SearchText { get; set; }
+        
+        public ItadSearchResult[] SearchResults { get; set; }
+        
+        public async Task<IActionResult> OnGetAsync(string slug)
         {
-            Slug = slug;
+            Group = await _db.Groups
+                .Include(x => x.Games)
+                .FirstOrDefaultAsync(x => x.Slug == slug);
+
+            if (Group == null) return NotFound();
+            
+            return Page();
         }
 
         public async Task<IActionResult> OnPostDelete(string slug)
@@ -40,7 +52,7 @@ namespace LetsGame.Web.Pages
                 await _db.SaveChangesAsync();
             }
 
-            return RedirectToPage("Index");
+            return RedirectToPage("/Index");
         }
     }
 }
