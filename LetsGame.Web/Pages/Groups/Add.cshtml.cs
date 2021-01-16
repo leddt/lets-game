@@ -26,18 +26,8 @@ namespace LetsGame.Web.Pages.Groups
 
         public async Task<IActionResult> OnPostAsync()
         {
-            var group = new Data.Group
-            {
-                Name = GroupName,
-                Slug = await _groupService.GetSlugFromGroupName(GroupName)
-            };
-
-            var currentUser = await _userManager.GetUserAsync(User);
-
-            _db.Groups.Add(group);
-            _db.Memberships.Add(new Membership {Group = group, User = currentUser, Role = GroupRole.Owner});
-
-            await _db.SaveChangesAsync();
+            var currentUserId = _userManager.GetUserId(User);
+            var group = await _groupService.CreateGroupAsync(GroupName, currentUserId);
 
             return RedirectToPage("/Groups/Group", new {slug = group.Slug});
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using LetsGame.Web.Data;
+using LetsGame.Web.Services;
 using LetsGame.Web.Services.Itad.Model;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -72,22 +73,13 @@ namespace LetsGame.Web.Pages.Groups
             return RedirectToPage("/Index");
         }
 
-        public async Task<IActionResult> OnPostVoteSlot(string slug)
+        public async Task<IActionResult> OnPostVoteSlot(
+            [FromServices] GroupService groupService,
+            string slug)
         {
             var userId = _userManager.GetUserId(User);
-            var slot = await _db.GroupEventSlots.Include(x => x.Votes).FirstOrDefaultAsync(x => x.Id == SlotId);
             
-            if (slot != null && !slot.Votes.Any(v => v.VoterId == userId))
-            {
-                _db.GroupEventSlotVotes.Add(new GroupEventSlotVote
-                {
-                    Slot = slot,
-                    VoterId = userId,
-                    VotedAtUtc = DateTime.UtcNow
-                });
-                
-                await _db.SaveChangesAsync();
-            }
+            await groupService.AddSlotVote(SlotId, userId);
 
             return RedirectToPage("Group", new {slug});
         }

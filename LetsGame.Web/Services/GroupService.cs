@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using LetsGame.Web.Data;
-using LetsGame.Web.Extensions;
+using LetsGame.Web.Services.Igdb;
 using Microsoft.EntityFrameworkCore;
 
 namespace LetsGame.Web.Services
@@ -13,57 +11,81 @@ namespace LetsGame.Web.Services
     {
         private readonly ApplicationDbContext _db;
         private readonly SlugGenerator _slugGenerator;
+        private readonly IgdbClient _igdbClient;
 
-        public GroupService(ApplicationDbContext db, SlugGenerator slugGenerator)
+        public GroupService(ApplicationDbContext db, SlugGenerator slugGenerator, IgdbClient igdbClient)
         {
             _db = db;
             _slugGenerator = slugGenerator;
+            _igdbClient = igdbClient;
         }
 
-        public Task<string> GetSlugFromGroupName(string name)
+        public Task<Group> FindBySlugAsync(string slug)
+        {
+            return _db.Groups.FirstOrDefaultAsync(x => x.Slug == slug);
+        }
+
+        public Task<string> GetSlugFromGroupNameAsync(string name)
         {
             return _slugGenerator.GenerateWithCheck(name, slug => _db.Groups.AnyAsync(x => x.Slug == slug));
         }
-    }
 
-    public class SlugGenerator
-    {
-        private Random random;
-
-        public SlugGenerator()
+        public async Task<Group> CreateGroupAsync(string name, string ownerId)
         {
-            random = new Random();
+            var group = new Group
+            {
+                Name = name,
+                Slug = await GetSlugFromGroupNameAsync(name)
+            };
+
+            _db.Groups.Add(group);
+            _db.Memberships.Add(new Membership {Group = group, UserId = ownerId, Role = GroupRole.Owner});
+
+            await _db.SaveChangesAsync();
+
+            return group;
         }
 
-        public async Task<string> GenerateWithCheck(string name, Func<string, Task<bool>> isInUse)
+        public async Task<GroupGame> AddGameToGroupAsync(long groupId, long igdbId)
         {
-            const int baseSuffixLength = 3;
-            const int attemptsThreshold = 5;
+            var groupGame = await _db.GroupGames
+                .FirstOrDefaultAsync(x => x.GroupId == groupId &&
+                                          x.IgdbId == igdbId);
             
-            var suffix = "";
-            var attempts = 0;
+            if (groupGame != null) return groupGame;
             
-            while (true)
+            var game = await _igdbClient.GetGameAsync(igdbId);
+            if (game == null) throw new ArgumentException("Game not found", nameof(igdbId));
+
+            groupGame = new GroupGame
             {
-                var slug = (name + suffix).Sluggify();
-                if (!await isInUse(slug)) return slug;
+                GroupId = groupId,
+                IgdbId = game.Id,
+                Name = game.Name,
+                IgdbImageId = game.MainImage?.ImageId
+            };
+
+            _db.GroupGames.Add(groupGame);
+            await _db.SaveChangesAsync();
+
+            return groupGame;
+        }
+
+        public async Task AddSlotVote(long slotId, string voterId)
+        {
+            var slot = await _db.GroupEventSlots.Include(x => x.Votes).FirstOrDefaultAsync(x => x.Id == slotId);
+            
+            if (slot != null && !slot.Votes.Any(v => v.VoterId == voterId))
+            {
+                _db.GroupEventSlotVotes.Add(new GroupEventSlotVote
+                {
+                    Slot = slot,
+                    VoterId = voterId,
+                    VotedAtUtc = DateTime.UtcNow
+                });
                 
-                suffix = GetSuffix(baseSuffixLength + attempts/attemptsThreshold);
-                attempts++;
+                await _db.SaveChangesAsync();
             }
-        }
-
-        private string GetSuffix(int length)
-        {
-            const string suffixChars = "abcdefghijklmnopqrstuvwxyz1234567890";
-
-            var sb = new StringBuilder("-", length + 1);
-            for (var i = 0; i < length; i++)
-            {
-                sb.Append(suffixChars[random.Next(suffixChars.Length)]);
-            }
-
-            return sb.ToString();
         }
     }
 }

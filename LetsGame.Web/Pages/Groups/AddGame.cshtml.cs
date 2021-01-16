@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using LetsGame.Web.Data;
+using LetsGame.Web.Services;
 using LetsGame.Web.Services.Igdb;
 using LetsGame.Web.Services.Igdb.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -22,29 +23,13 @@ namespace LetsGame.Web.Pages.Groups
         }
 
         public async Task<IActionResult> OnPostAdd(
-            [FromServices] ApplicationDbContext db,
-            [FromServices] IgdbClient client, 
+            [FromServices] GroupService groupService,
             string slug)
         {
-            var group = await db.Groups.Include(x => x.Games).FirstOrDefaultAsync(x => x.Slug == slug);
-            
+            var group = await groupService.FindBySlugAsync(slug);
             if (group == null) return NotFound();
-            if (group.Games.Any(x => x.IgdbId == GameToAdd))
-                return RedirectToPage("/Groups/Group", new {slug});
 
-            var game = await client.GetGameAsync(GameToAdd);
-            if (game == null) return NotFound();
-
-            var groupGame = new GroupGame
-            {
-                Group = group,
-                IgdbId = game.Id,
-                Name = game.Name,
-                IgdbImageId = game.MainImage?.ImageId
-            };
-
-            db.GroupGames.Add(groupGame);
-            await db.SaveChangesAsync();
+            await groupService.AddGameToGroupAsync(group.Id, GameToAdd);
 
             return RedirectToPage("/Groups/Group", new {slug});
         }
