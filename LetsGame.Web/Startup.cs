@@ -21,6 +21,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace LetsGame.Web
 {
@@ -37,10 +38,11 @@ namespace LetsGame.Web
         public void ConfigureServices(IServiceCollection services)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            
+
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(
-                    Configuration.GetConnectionString("DefaultConnection")));
+                options
+                    .UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))
+                    .LogTo(Console.WriteLine, new[] {DbLoggerCategory.Database.Command.Name}, LogLevel.Information));
             services.AddDatabaseDeveloperPageExceptionFilter();
             services.AddDefaultIdentity<AppUser>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddEntityFrameworkStores<ApplicationDbContext>();

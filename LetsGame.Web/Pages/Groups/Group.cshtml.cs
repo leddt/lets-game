@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using LetsGame.Web.Data;
 using LetsGame.Web.Services.Itad.Model;
@@ -21,16 +23,31 @@ namespace LetsGame.Web.Pages.Groups
         }
 
         public Group Group { get; set; }
+        public IEnumerable<GroupEvent> ProposedEvents => Group.Events.Where(x => x.ChosenDateAndTimeUtc == null);
+        public IEnumerable<GroupEvent> UpcomingEvent => Group.Events.Where(x => x.ChosenDateAndTimeUtc.HasValue);
         
         [BindProperty]
-        public string SearchText { get; set; }
+        public int SlotId { get; set; }
         
         public ItadSearchResult[] SearchResults { get; set; }
         
         public async Task<IActionResult> OnGetAsync(string slug)
         {
+            var utcNow = DateTime.UtcNow;
+            
             Group = await _db.Groups
+                .TagWith("Load group page data")
+                .AsSplitQuery()
                 .Include(x => x.Games)
+                .Include(x => x.Events
+                    .Where(e => e.ChosenDateAndTimeUtc > utcNow || 
+                                e.ChosenDateAndTimeUtc == null && e.Slots.Any(s => s.ProposedDateAndTimeUtc > utcNow)))
+                    .ThenInclude(x => x.Game)
+                .Include(x => x.Events)
+                    .ThenInclude(x => x.Slots.OrderBy(s => s.ProposedDateAndTimeUtc))
+                    .ThenInclude(x => x.Votes)
+                    .ThenInclude(x => x.Voter)
+                .OrderBy(x => x.Id)
                 .FirstOrDefaultAsync(x => x.Slug == slug);
 
             if (Group == null) return NotFound();
@@ -53,6 +70,26 @@ namespace LetsGame.Web.Pages.Groups
             }
 
             return RedirectToPage("/Index");
+        }
+
+        public async Task<IActionResult> OnPostVoteSlot(string slug)
+        {
+            var userId = _userManager.GetUserId(User);
+            var slot = await _db.GroupEventSlots.Include(x => x.Votes).FirstOrDefaultAsync(x => x.Id == SlotId);
+            
+            if (slot != null && !slot.Votes.Any(v => v.VoterId == userId))
+            {
+                _db.GroupEventSlotVotes.Add(new GroupEventSlotVote
+                {
+                    Slot = slot,
+                    VoterId = userId,
+                    VotedAtUtc = DateTime.UtcNow
+                });
+                
+                await _db.SaveChangesAsync();
+            }
+
+            return RedirectToPage("Group", new {slug});
         }
     }
 }

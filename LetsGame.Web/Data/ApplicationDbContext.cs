@@ -16,15 +16,21 @@ namespace LetsGame.Web.Data
         }
 
         public DbSet<Group> Groups { get; set; }
-        public DbSet<GroupGame> GroupGames { get; set; }
+        
         public DbSet<Membership> Memberships { get; set; }
+        
+        public DbSet<GroupGame> GroupGames { get; set; }
+        
+        public DbSet<GroupEvent> GroupEvents { get; set; }
+        public DbSet<GroupEventSlot> GroupEventSlots { get; set; }
+        public DbSet<GroupEventSlotVote> GroupEventSlotVotes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
             
             void Entity<T>(Action<EntityTypeBuilder<T>> action) where T : class => action(builder.Entity<T>());
-
+            
             Entity<Group>(_ =>
             {
                 _.HasMany(x => x.Members)
@@ -43,6 +49,23 @@ namespace LetsGame.Web.Data
                 _.Property(x => x.Role)
                     .HasMaxLength(20)
                     .HasConversion(new EnumToStringConverter<GroupRole>());
+            });
+            
+            Entity<GroupEvent>(_ =>
+            {
+                _.HasOne(x => x.Group).WithMany(x => x.Events).IsRequired().OnDelete(DeleteBehavior.NoAction);
+                _.HasOne(x => x.Game).WithMany().IsRequired();
+                _.HasOne(x => x.Creator).WithMany().OnDelete(DeleteBehavior.SetNull);
+                _.HasMany(x => x.Slots).WithOne(x => x.Event).IsRequired();
+            });
+            
+            Entity<GroupEventSlot>(_ =>
+            {
+                _.HasMany(x => x.Voters)
+                    .WithMany("SlotVotes")
+                    .UsingEntity<GroupEventSlotVote>(
+                        v => v.HasOne(x => x.Voter).WithMany(),
+                        v => v.HasOne(x => x.Slot).WithMany(x => x.Votes));
             });
         }
     }

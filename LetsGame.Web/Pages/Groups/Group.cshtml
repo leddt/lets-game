@@ -1,9 +1,12 @@
 ﻿@page "/group/{slug}"
 @using LetsGame.Web.Services.Igdb.Models
+@using LetsGame.Web.Helpers
+@inject UserManager<AppUser> userManager;
 @model LetsGame.Web.Pages.Groups.GroupModel
 
 @{
     Layout = "_AuthenticatedLayout";
+    var currentUserId = userManager.GetUserId(User);
 }
 
 <div class="d-flex justify-content-between align-items-center">
@@ -21,19 +24,65 @@
     @foreach (var game in Model.Group.Games)
     {
         <div class="col mb-4">
-            <div class="card bg-dark text-white">
-                @if (game.IgdbImageId != null)
-                {
-                    <img src="@Image.GetScreenshotMedUrl(game.IgdbImageId)" class="card-img" alt="Screenshot from @game.Name"/>
-                }
-                else
-                {
-                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='555' height='312'%3E%3Crect width='100%25' height='100%25' fill='%23868e96'%3E%3C/rect%3E%3C/svg%3E" class="card-img" alt=""/>
-                }
-                <div class="card-img-overlay bg-overlay-dark">
-                    <h5 class="card-title">@game.Name</h5>
+            <game-card name="@game.Name" image-id="@game.IgdbImageId"/>
+        </div>
+    }
+</div>
+
+<h2>Proposed events</h2>
+<a asp-page="ProposeEvent" asp-route-slug="@Model.Group.Slug" class="btn btn-primary">Propose event</a>
+
+<div class="row row-cols-1 row-cols-xl-2 pt-3">
+    @foreach (var e in Model.ProposedEvents)
+    {
+        <div class="col mb-4">
+            <div class="card">
+                <div class="row no-gutters">
+                    <div class="col-md-4 fill">
+                        <img src="@Image.GetScreenshotMedUrl(e.Game.IgdbImageId)" class="card-img" alt="Screenshot from @e.Game.Name"/>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card-body">
+                            <h5 class="card-title">@e.Game.Name</h5>
+                            <blockquote class="blockquote cart-text">@e.Details</blockquote>
+                            <div class="card-text">
+                                Time slots:
+                                <ul>
+                                    @foreach (var slot in e.Slots)
+                                    {
+                                        <li>
+                                            @DateHelpers.FormatUtcToUserFriendlyDate(slot.ProposedDateAndTimeUtc)
+                                            <ul>
+                                                @foreach (var vote in slot.Votes.OrderBy(x => x.VotedAtUtc))
+                                                {
+                                                    <li>@vote.Voter.Email</li>
+                                                }
+                                                @if (!slot.Votes.Any(v => v.Voter.Id == currentUserId))
+                                                {
+                                                    <li>
+                                                        <form asp-page-handler="VoteSlot">
+                                                            <input type="hidden" asp-for="SlotId" value="@slot.Id"/>
+                                                            <button type="submit" class="btn btn-sm btn-primary">Vote</button>
+                                                        </form>
+                                                    </li>
+                                                }
+                                            </ul>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     }
 </div>
+
+<h2>Upcoming events</h2>
+@foreach (var e in Model.UpcomingEvent)
+{
+    <div>
+        @e.Game.Name
+    </div>
+}

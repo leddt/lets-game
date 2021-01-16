@@ -11,6 +11,7 @@ namespace LetsGame.Web.Services.Igdb.Models
         public string Url(string format) => GetImageUrl(ImageId, format);
 
         public static string GetScreenshotMedUrl(string imageId) => GetImageUrl(imageId, "screenshot_med");
+        public static string GetCoverBigUrl(string imageId) => GetImageUrl(imageId, "cover_big");
         public static string GetImageUrl(string imageId, string format)
             => $"https://images.igdb.com/igdb/image/upload/t_{format}/{imageId}.jpg";
     }

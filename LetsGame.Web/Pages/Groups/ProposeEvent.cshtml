@@ -1,0 +1,58 @@
+﻿@page "/group/{slug}/propose-event"
+@using LetsGame.Web.Services.Igdb.Models
+@model LetsGame.Web.Pages.Groups.ProposeEvent
+
+@{
+    Layout = "_AuthenticatedLayout";
+}
+
+<h1 class="display-4">Propose event</h1>
+
+@if (Model.PickedGameId.HasValue)
+{
+    <a asp-page="ProposeEvent" asp-route-slut="@Model.Group.Slug" class="btn btn-primary">Start over</a>
+}
+
+<h2>Which game will we play?</h2>
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4">
+    @foreach (var game in Model.Group.Games)
+    {
+        <form method="post" asp-page-handler="PickGame">
+            <input type="hidden" asp-for="PickedGameId" value="@game.Id"/>
+
+            <div class="col mb-4">
+                <game-card name="@game.Name" image-id="@game.IgdbImageId" class="@(game.Id == Model.PickedGameId ? "outlined" : "")">
+                    @if (Model.PickedGameId == null)
+                    {
+                        <button type="submit" class="btn btn-light stretched-link opacity-0" title="Choose @game.Name">Choose</button>
+                    }
+                </game-card>
+            </div>
+        </form>
+    }
+</div>
+
+@if (Model.PickedGameId.HasValue)
+{
+    <form method="post" asp-page-handler="Propose">
+        <h2>When can we play?</h2>
+        <p>Fill out as many dates as you want</p>
+
+        <input asp-for="PickedGameId" type="hidden"/>
+
+        <div class="row">
+            @for (var i = 0; i < Model.ProposedDatesAndTimes.Length; i++)
+            {
+                <div class="col col-md-6 col-xl-3 mb-3">
+                    <input asp-for="ProposedDatesAndTimes[i]" type="datetime-local" class="form-control" min="@Model.MinDateTime.ToString("s")"/>
+                </div>
+            }
+        </div>
+
+        <h2>Anything to add?</h2>
+        <form-group for="Details" as="TextArea"/>
+
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+}

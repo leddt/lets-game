@@ -21,6 +21,8 @@ namespace LetsGame.Web.Infrastructure.AspNet.TagHelpers
 
         public ModelExpression For { get; set; }
         
+        public ControlElement As { get; set; }
+        
         [ViewContext]
         [HtmlAttributeNotBound]
         public ViewContext ViewContext { get; set; }
@@ -47,19 +49,30 @@ namespace LetsGame.Web.Infrastructure.AspNet.TagHelpers
             
             ApplyAttributes(context, output, tag, LabelAttributePrefix);
 
-            new LabelTagHelper(_generator) {For = For, ViewContext = ViewContext}.ProcessAsync(context, tag);
+            new LabelTagHelper(_generator) {For = For, ViewContext = ViewContext}.Process(context, tag);
 
             output.Content.AppendHtml(tag);
         }
 
         private void CreateControl(TagHelperContext context, TagHelperOutput output)
         {
-            var tag = CreateTag("input");
+            var tag = As switch
+            {
+                ControlElement.TextArea => CreateTag("textarea"), 
+                _ => CreateTag("input")
+            };
             
             ApplyAttributes(context, output, tag, ControlAttributePrefix);
             tag.AddClass("form-control", HtmlEncoder.Default);
 
-            new InputTagHelper(_generator) {For = For, ViewContext = ViewContext}.ProcessAsync(context, tag);
+            if (As == ControlElement.TextArea)
+            {
+                new TextAreaTagHelper(_generator) {For = For, ViewContext = ViewContext}.Process(context, tag);
+            }
+            else
+            {
+                new InputTagHelper(_generator) {For = For, ViewContext = ViewContext}.Process(context, tag);
+            }
 
             output.Content.AppendHtml(tag);
         }
@@ -71,7 +84,7 @@ namespace LetsGame.Web.Infrastructure.AspNet.TagHelpers
             ApplyAttributes(context, output, tag, ValidationAttributePrefix);
             tag.AddClass("invalid-feedback", HtmlEncoder.Default);
 
-            new ValidationMessageTagHelper(_generator) {For = For, ViewContext = ViewContext}.ProcessAsync(context, tag);
+            new ValidationMessageTagHelper(_generator) {For = For, ViewContext = ViewContext}.Process(context, tag);
             
             output.Content.AppendHtml(tag);
         }
@@ -88,6 +101,11 @@ namespace LetsGame.Web.Infrastructure.AspNet.TagHelpers
                 output.Attributes.Remove(attr);
                 tag.Attributes.SetAttribute(attr.Name.Substring(prefix.Length), attr.Value);
             }
+        }
+
+        public enum ControlElement
+        {
+            Input, TextArea
         }
     }
 }

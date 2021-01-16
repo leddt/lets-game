@@ -39,7 +39,7 @@ namespace LetsGame.Web.Pages.Groups
 
             await _db.SaveChangesAsync();
 
-            return RedirectToPage("/Group/Group", new {slug = group.Slug});
+            return RedirectToPage("/Groups/Group", new {slug = group.Slug});
         }
     }
 }
