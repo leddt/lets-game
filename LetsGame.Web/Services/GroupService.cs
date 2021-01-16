@@ -73,7 +73,9 @@ namespace LetsGame.Web.Services
 
         public async Task AddSlotVote(long slotId, string voterId)
         {
-            var slot = await _db.GroupEventSlots.Include(x => x.Votes).FirstOrDefaultAsync(x => x.Id == slotId);
+            var slot = await _db.GroupEventSlots
+                .Include(x => x.Votes)
+                .FirstOrDefaultAsync(x => x.Id == slotId);
             
             if (slot != null && !slot.Votes.Any(v => v.VoterId == voterId))
             {
@@ -86,6 +88,16 @@ namespace LetsGame.Web.Services
                 
                 await _db.SaveChangesAsync();
             }
+        }
+
+        public async Task PickSlot(int slotId)
+        {
+            var slot = await _db.GroupEventSlots
+                .Include(x => x.Event)
+                .FirstOrDefaultAsync(x => x.Id == slotId);
+
+            slot.Event.ChosenDateAndTimeUtc = slot.ProposedDateAndTimeUtc;
+            await _db.SaveChangesAsync();
         }
     }
 }

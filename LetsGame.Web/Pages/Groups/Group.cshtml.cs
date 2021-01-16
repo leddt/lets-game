@@ -24,6 +24,7 @@ namespace LetsGame.Web.Pages.Groups
         }
 
         public Group Group { get; set; }
+        public Membership Membership { get; set; }
         public IEnumerable<GroupEvent> ProposedEvents => Group.Events.Where(x => x.ChosenDateAndTimeUtc == null);
         public IEnumerable<GroupEvent> UpcomingEvent => Group.Events.Where(x => x.ChosenDateAndTimeUtc.HasValue);
         
@@ -35,6 +36,7 @@ namespace LetsGame.Web.Pages.Groups
         public async Task<IActionResult> OnGetAsync(string slug)
         {
             var utcNow = DateTime.UtcNow;
+            var currentUserId = _userManager.GetUserId(User);
             
             Group = await _db.Groups
                 .TagWith("Load group page data")
@@ -50,8 +52,11 @@ namespace LetsGame.Web.Pages.Groups
                     .ThenInclude(x => x.Voter)
                 .OrderBy(x => x.Id)
                 .FirstOrDefaultAsync(x => x.Slug == slug);
+            
+            Membership = await _db.Memberships.FirstOrDefaultAsync(x => x.GroupId == Group.Id && x.UserId == currentUserId);
 
             if (Group == null) return NotFound();
+            if (Membership == null) return NotFound();
             
             return Page();
         }
@@ -81,6 +86,15 @@ namespace LetsGame.Web.Pages.Groups
             
             await groupService.AddSlotVote(SlotId, userId);
 
+            return RedirectToPage("Group", new {slug});
+        }
+
+        public async Task<IActionResult> OnPostPickSlot(
+            [FromServices] GroupService groupService,
+            string slug)
+        {
+            await groupService.PickSlot(SlotId);
+            
             return RedirectToPage("Group", new {slug});
         }
     }
