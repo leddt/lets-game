@@ -30,16 +30,22 @@ namespace LetsGame.Web.Services
             return _slugGenerator.GenerateWithCheck(name, slug => _db.Groups.AnyAsync(x => x.Slug == slug));
         }
 
-        public async Task<Group> CreateGroupAsync(string name, string ownerId)
+        public async Task<Group> CreateGroupAsync(string groupName, string ownerId, string ownerDisplayName)
         {
             var group = new Group
             {
-                Name = name,
-                Slug = await GetSlugFromGroupNameAsync(name)
+                Name = groupName,
+                Slug = await GetSlugFromGroupNameAsync(groupName)
             };
 
             _db.Groups.Add(group);
-            _db.Memberships.Add(new Membership {Group = group, UserId = ownerId, Role = GroupRole.Owner});
+            _db.Memberships.Add(new Membership
+            {
+                Group = group, 
+                UserId = ownerId, 
+                DisplayName = ownerDisplayName, 
+                Role = GroupRole.Owner
+            });
 
             await _db.SaveChangesAsync();
 

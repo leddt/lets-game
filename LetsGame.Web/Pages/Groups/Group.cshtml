@@ -62,9 +62,9 @@
                                             <ul>
                                                 @foreach (var vote in slot.Votes.OrderBy(x => x.VotedAtUtc))
                                                 {
-                                                    <li>@vote.Voter.Email</li>
+                                                    <li>@Model.GetDisplayName(vote.VoterId)</li>
                                                 }
-                                                @if (!slot.Votes.Any(v => v.Voter.Id == currentUserId))
+                                                @if (!slot.Votes.Any(v => v.VoterId == currentUserId))
                                                 {
                                                     <li>
                                                         <form asp-page-handler="VoteSlot">
@@ -111,10 +111,10 @@
                                 {
                                     @foreach (var vote in slot.Votes.OrderBy(v => v.VotedAtUtc))
                                     {
-                                        <li>@vote.Voter.Email</li>
+                                        <li>@Model.GetDisplayName(vote.VoterId)</li>
                                     }
                                 }
-                                @if (!slot.Votes.Any(v => v.Voter.Id == currentUserId))
+                                @if (!slot.Votes.Any(v => v.VoterId == currentUserId))
                                 {
                                     <li>
                                         <form asp-page-handler="VoteSlot">

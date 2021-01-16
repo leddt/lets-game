@@ -10,6 +10,8 @@ namespace LetsGame.Web.Data
         [ForeignKey("User")] public string UserId { get; set; }
         [ForeignKey("Group")] public long GroupId { get; set; }
         
+        public string DisplayName { get; set; }
+        
         public GroupRole Role { get; set; }
     }
 }

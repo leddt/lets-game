@@ -78,6 +78,7 @@ namespace LetsGame.Web.Pages.Groups
         private async Task LoadGroupAsync(string slug)
         {
             Group = await _db.Groups
+                .AsSplitQuery()
                 .Include(x => x.Games)
                 .FirstOrDefaultAsync(x => x.Slug == slug);
         }

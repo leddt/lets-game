@@ -32,6 +32,9 @@ namespace LetsGame.Web.Pages.Groups
         public int SlotId { get; set; }
         
         public ItadSearchResult[] SearchResults { get; set; }
+
+        public string GetDisplayName(string userId) =>
+            Group.Memberships.FirstOrDefault(x => x.UserId == userId)?.DisplayName ?? "Unknown member";
         
         public async Task<IActionResult> OnGetAsync(string slug)
         {
@@ -41,6 +44,7 @@ namespace LetsGame.Web.Pages.Groups
             Group = await _db.Groups
                 .TagWith("Load group page data")
                 .AsSplitQuery()
+                .Include(x => x.Memberships)
                 .Include(x => x.Games)
                 .Include(x => x.Events
                     .Where(e => e.ChosenDateAndTimeUtc > utcNow || 
@@ -49,11 +53,10 @@ namespace LetsGame.Web.Pages.Groups
                 .Include(x => x.Events)
                     .ThenInclude(x => x.Slots.OrderBy(s => s.ProposedDateAndTimeUtc))
                     .ThenInclude(x => x.Votes)
-                    .ThenInclude(x => x.Voter)
                 .OrderBy(x => x.Id)
                 .FirstOrDefaultAsync(x => x.Slug == slug);
             
-            Membership = await _db.Memberships.FirstOrDefaultAsync(x => x.GroupId == Group.Id && x.UserId == currentUserId);
+            Membership = Group.Memberships.FirstOrDefault(x => x.UserId == currentUserId);
 
             if (Group == null) return NotFound();
             if (Membership == null) return NotFound();
@@ -83,7 +86,6 @@ namespace LetsGame.Web.Pages.Groups
             string slug)
         {
             var userId = _userManager.GetUserId(User);
-            
             await groupService.AddSlotVote(SlotId, userId);
 
             return RedirectToPage("Group", new {slug});

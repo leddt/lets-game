@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 using LetsGame.Web.Data;
 using LetsGame.Web.Services;
@@ -23,11 +24,14 @@ namespace LetsGame.Web.Pages.Groups
 
         [BindProperty, Required, Display(Name = "Name", Prompt = "My amazing group")]
         public string GroupName { get; set; }
+        
+        [BindProperty, Required, Display(Name = "Your name in this group", Prompt = "Leroy Jenkins")]
+        public string DisplayName { get; set; }
 
         public async Task<IActionResult> OnPostAsync()
         {
             var currentUserId = _userManager.GetUserId(User);
-            var group = await _groupService.CreateGroupAsync(GroupName, currentUserId);
+            var group = await _groupService.CreateGroupAsync(GroupName, currentUserId, DisplayName);
 
             return RedirectToPage("/Groups/Group", new {slug = group.Slug});
         }
