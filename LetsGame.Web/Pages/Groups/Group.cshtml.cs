@@ -27,7 +27,8 @@ namespace LetsGame.Web.Pages.Groups
         public IEnumerable<GroupEvent> ProposedEvents => Group.Events.Where(x => x.ChosenDateAndTimeUtc == null);
         public IEnumerable<GroupEvent> UpcomingEvents => Group.Events.Where(x => x.ChosenDateAndTimeUtc.HasValue).OrderBy(x => x.ChosenDateAndTimeUtc);
         
-        [BindProperty] public int SlotId { get; set; }
+        [BindProperty] public long SlotId { get; set; }
+        [BindProperty] public long GameId { get; set; }
         [BindProperty] public bool SingleUse { get; set; }
         [BindProperty] public string InviteId { get; set; }
         [BindProperty] public string MemberId { get; set; }
@@ -36,11 +37,13 @@ namespace LetsGame.Web.Pages.Groups
             Group.Memberships.FirstOrDefault(x => x.UserId == userId)?.DisplayName ?? "Unknown member";
 
         public bool IsGroupOwner => UserMembership.Role == GroupRole.Owner;
+        public string UserId { get; set; }
         
         public async Task<IActionResult> OnGetAsync(string slug)
         {
             var utcNow = DateTime.UtcNow;
-            var currentUserId = _userManager.GetUserId(User);
+            
+            UserId = _userManager.GetUserId(User);
             
             Group = await _db.Groups
                 .TagWith("Load group page data")
@@ -58,7 +61,7 @@ namespace LetsGame.Web.Pages.Groups
                 .OrderBy(x => x.Id)
                 .FirstOrDefaultAsync(x => x.Slug == slug);
             
-            UserMembership = Group.Memberships.FirstOrDefault(x => x.UserId == currentUserId);
+            UserMembership = Group.Memberships.FirstOrDefault(x => x.UserId == UserId);
 
             if (Group == null) return NotFound();
             if (UserMembership == null) return NotFound();
@@ -138,6 +141,20 @@ namespace LetsGame.Web.Pages.Groups
             if (member != null)
             {
                 db.Memberships.Remove(member);
+                await db.SaveChangesAsync();
+            }
+
+            return RedirectToPage("Group", new {slug});
+        }
+
+        public async Task<IActionResult> OnPostRemoveGame(
+            [FromServices] ApplicationDbContext db,
+            string slug)
+        {
+            var game = await db.GroupGames.FirstOrDefaultAsync(x => x.Group.Slug == slug && x.Id == GameId);
+            if (game != null)
+            {
+                db.GroupGames.Remove(game);
                 await db.SaveChangesAsync();
             }
 

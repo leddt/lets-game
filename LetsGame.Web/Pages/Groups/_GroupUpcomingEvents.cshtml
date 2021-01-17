@@ -10,7 +10,7 @@
 
 @if (Model.UpcomingEvents.Any())
 {
-    <h2>Upcoming events</h2>
+    <h2>Upcoming sessions</h2>
     <div class="row row-cols-1 row-cols-xl-2 pt-3">
         @foreach (var e in Model.UpcomingEvents)
         {
@@ -22,32 +22,36 @@
                         </div>
                         <div class="col-md-8">
                             <div class="card-body">
-                                <h5 class="card-title">@e.Game.Name</h5>
-                                <blockquote class="blockquote cart-text">@e.Details</blockquote>
-                                <p class="card-text">
+                                <h4 class="card-title">@e.Game.Name</h4>
+                                <blockquote class="blockquote">@e.Details</blockquote>
+                                <p class="card-text">Created by @Model.GetDisplayName(e.CreatorId)</p>
+                                <h5>
                                     @DateService.FormatUtcToUserFriendlyDate(e.ChosenDateAndTimeUtc.Value)
-                                </p>
-                                <ul class="card-text">
-                                    @{
-                                        var slot = e.Slots.FirstOrDefault(s => s.ProposedDateAndTimeUtc == e.ChosenDateAndTimeUtc);
-                                    }
-                                    @if (slot != null)
+                                </h5>
+                                @{
+                                    var slot = e.Slots.FirstOrDefault(s => s.ProposedDateAndTimeUtc == e.ChosenDateAndTimeUtc);
+                                }
+                                <div class="d-flex align-items-center flex-wrap">
+                                    <span class="mr-1">Gamers:</span>
+                                    @foreach (var vote in slot.Votes.OrderBy(x => x.VotedAtUtc))
                                     {
-                                        @foreach (var vote in slot.Votes.OrderBy(v => v.VotedAtUtc))
-                                        {
-                                            <li>@Model.GetDisplayName(vote.VoterId)</li>
-                                        }
+                                        <avatar name="@Model.GetDisplayName(vote.VoterId)"/>
                                     }
                                     @if (!slot.Votes.Any(v => v.VoterId == currentUserId))
                                     {
-                                        <li>
-                                            <form asp-page-handler="VoteSlot">
-                                                <input type="hidden" asp-for="SlotId" value="@slot.Id"/>
-                                                <button type="submit" class="btn btn-sm btn-primary">Join</button>
-                                            </form>
-                                        </li>
+                                        <form asp-page-handler="VoteSlot">
+                                            <input type="hidden" asp-for="SlotId" value="@slot.Id"/>
+                                            <avatar is-button="true" is-add="true" name="Join this session"/>
+                                        </form>
                                     }
-                                </ul>
+                                    else
+                                    {
+                                        <form asp-page-handler="UnvoteSlot">
+                                            <input type="hidden" asp-for="SlotId" value="@slot.Id"/>
+                                            <avatar is-button="true" is-remove="true" name="Leave this session"/>
+                                        </form>
+                                    }
+                                </div>
                             </div>
                         </div>
                     </div>

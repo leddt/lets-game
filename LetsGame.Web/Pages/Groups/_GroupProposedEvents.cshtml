@@ -29,7 +29,8 @@
                     <div class="col-md-8">
                         <div class="card-body">
                             <h4 class="card-title">@e.Game.Name</h4>
-                            <blockquote class="blockquote cart-text">@e.Details</blockquote>
+                            <blockquote class="blockquote">@e.Details</blockquote>
+                            <p class="card-text">Created by @Model.GetDisplayName(e.CreatorId)</p>
                             <div class="card-text">
                                 <h5>Proposed time slots</h5>
                                 @foreach (var slot in e.Slots)
@@ -37,7 +38,7 @@
                                     <div>
                                         <div class="d-flex align-items-center justify-content-between">
                                             <h6>@DateService.FormatUtcToUserFriendlyDate(slot.ProposedDateAndTimeUtc)</h6>
-                                            @if (Model.IsGroupOwner)
+                                            @if (Model.IsGroupOwner || e.CreatorId == Model.UserId)
                                             {
                                                 <form asp-page-handler="PickSlot">
                                                     <input type="hidden" asp-for="SlotId" value="@slot.Id"/>

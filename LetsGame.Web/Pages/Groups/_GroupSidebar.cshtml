@@ -86,7 +86,15 @@
         @foreach (var game in Model.Group.Games)
         {
             <div class="col mb-4">
-                <game-card name="@game.Name" image-id="@game.IgdbImageId"/>
+                <game-card name="@game.Name" image-id="@game.IgdbImageId">
+                    @if (Model.IsGroupOwner)
+                    {
+                        <form asp-page-handler="RemoveGame">
+                            <input type="hidden" asp-for="GameId" value="@game.Id"/>
+                            <button type="submit" class="btn btn-sm btn-danger" title="Remove @game.Name from this group">&times;</button>
+                        </form>
+                    }
+                </game-card>
             </div>
         }
     </div>

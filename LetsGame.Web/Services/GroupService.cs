@@ -109,7 +109,7 @@ namespace LetsGame.Web.Services
             }
         }
 
-        public async Task PickSlotAsync(int slotId)
+        public async Task PickSlotAsync(long slotId)
         {
             var slot = await _db.GroupEventSlots
                 .Include(x => x.Event)
