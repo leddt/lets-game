@@ -59,50 +59,14 @@
     }
 }
 
-.game-group {
-    align-items: center;
-    border: solid 0.2rem;
-    border-radius: 50%;
-    color: #FFF;
-    display: flex;
-    font-size: 1.5rem;
-    font-weight: bold;
-    height: 4rem;
-    justify-content: center;
-    width: 4rem;
-}
-.game-group:hover {
-    color: #FFF;
-    text-decoration: none;
-}
-
-.game-group.add-group {
-    height: 3rem;
+.game-groups .avatar-action {
     margin: 0 0 0 1rem;
-    width: 3rem;
-}
-.game-group.add-group.game-group-inactive {
-    background-color: #FFF;
-    border: dashed 0.1rem #6c757d;
-    color: #343a40;
 }
 @media (min-width: 576px) {
-    .game-group.add-group {
+    .game-groups .avatar-action {
         margin: 1rem 0 0 0;
     }
 }
-
-.game-group-active {
-    background-color: #343a40;
-    border-color: #007bff
-}
-.game-group-inactive {
-    background-color: #6c757d;
-}
-.game-group-inactive:hover {
-    background-color: #343a40;
-}
-
 
 .avatar {
     align-items: center;
@@ -116,8 +80,10 @@
     justify-content: center;
     width: 2.5rem;
 }
-button.avatar:hover {
+a.avatar:hover, button.avatar:hover {
+    color: #FFF;
     background-color: #343a40;
+    text-decoration: none;
 }
 .avatar-large {
     font-size: 1.5rem;
@@ -134,10 +100,13 @@ button.avatar:hover {
     height: 2rem;
     width: 2rem;
 }
-button.avatar.avatar-action:hover {
+a.avatar.avatar-action:hover, button.avatar.avatar-action:hover {
     background-color: #f8f9fa;
 }
 .avatar-active {
-    background-color: #343a40;
-    border-color: #007bff
+    background-color: #343a40 !important;
+    border: solid 0.2rem #007bff !important;
+}
+.avatar-active svg path {
+    fill: white;
 }

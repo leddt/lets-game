@@ -1,5 +1,4 @@
 ﻿@using Microsoft.EntityFrameworkCore
-@using LetsGame.Web.Extensions
 @inject ApplicationDbContext Db
 @inject UserManager<AppUser> UserManager
 
@@ -15,22 +14,18 @@
 
     @foreach (var group in groups)
     {
-        <a asp-page="/Groups/Group"
-           asp-route-slug="@group.Slug"
-           class="game-group"
-           is-active-class="game-group-active"
-           is-inactive-class="game-group-inactive"
-           title="@group.Name">
-            @group.Name.ToInitials(3)
-        </a>
+        <avatar 
+            name="@group.Name"
+            asp-page="/Groups/Group"
+            asp-route-slug="@group.Slug"
+            is-large="true"
+            is-active-class="avatar-active" />
     }
 
-    <a asp-page="/Groups/Create"
-       class="game-group add-group"
-       is-active-class="game-group-active"
-       is-inactive-class="game-group-inactive"
-       title="Create a new group">
-        ＋
-    </a>
+    <avatar
+        name="Create a new group"
+        asp-page="/Groups/Create"
+        is-add="true"
+        is-active-class="avatar-active" />
 
 </div>
