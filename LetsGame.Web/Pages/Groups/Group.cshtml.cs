@@ -139,15 +139,8 @@ namespace LetsGame.Web.Pages.Groups
 
         public async Task<IActionResult> OnPostDeleteMember(string slug)
         {
-            var member = await _db.Memberships
-                .Where(x => x.Group.Memberships.Any(m => m.UserId == UserId && m.Role == GroupRole.Owner))
-                .FirstOrDefaultAsync(x => x.Group.Slug == slug && x.UserId == MemberId);
-            
-            if (member != null)
-            {
-                _db.Memberships.Remove(member);
-                await _db.SaveChangesAsync();
-            }
+            var group = await _groupService.FindBySlugAsync(slug);
+            await _groupService.RemoveGroupMember(group.Id, MemberId);
 
             return RedirectToPage("Group", new {slug});
         }

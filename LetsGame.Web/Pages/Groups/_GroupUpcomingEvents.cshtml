@@ -34,7 +34,10 @@
                                     }
                                 </div>
                                 <blockquote class="blockquote">@e.Details</blockquote>
-                                <p class="card-text">Created by @Model.GetDisplayName(e.CreatorId)</p>
+                                @if (e.CreatorId != null)
+                                {
+                                    <p class="card-text">Created by @Model.GetDisplayName(e.CreatorId)</p>
+                                }
                                 <h5>
                                     @DateService.FormatUtcToUserFriendlyDate(e.ChosenDateAndTimeUtc.Value)
                                 </h5>

@@ -34,7 +34,7 @@ namespace LetsGame.Web.Services
         public Task<Group> FindBySlugAsync(string slug)
         {
             return _db.Groups.FirstOrDefaultAsync(x => x.Slug == slug &&
-                                                       x.Memberships.Any(x => x.UserId == CurrentUserId));
+                                                       x.Memberships.Any(m => m.UserId == CurrentUserId));
         }
 
         public async Task<Group> CreateGroupAsync(string groupName, string ownerDisplayName)
@@ -181,6 +181,37 @@ namespace LetsGame.Web.Services
             if (invite != null) _db.GroupInvites.Remove(invite);
             
             await _db.SaveChangesAsync();
+        }
+
+        public async Task RemoveGroupMember(long groupId, string memberId)
+        {
+            var member = await _db.Memberships
+                .Where(x => x.Group.Memberships.Any(m => m.UserId == CurrentUserId && m.Role == GroupRole.Owner))
+                .FirstOrDefaultAsync(x => x.GroupId == groupId && x.UserId == memberId && x.Role != GroupRole.Owner);
+            
+            if (member != null)
+            {
+                _db.Memberships.Remove(member);
+
+                var events = await _db.GroupEvents
+                    .Where(x => x.GroupId == groupId && x.CreatorId == memberId)
+                    .ToListAsync();
+                events.ForEach(ev => ev.CreatorId = null);
+
+                var votes = await _db.GroupEventSlotVotes
+                    .Where(x => x.Slot.Event.GroupId == groupId && x.VoterId == memberId)
+                    .ToListAsync();
+                if (votes.Any())
+                    _db.GroupEventSlotVotes.RemoveRange(votes);
+                
+                var cantPlays = await _db.GroupEventCantPlays
+                    .Where(x => x.Event.GroupId == groupId && x.UserId == memberId)
+                    .ToListAsync();
+                if (cantPlays.Any())
+                    _db.GroupEventCantPlays.RemoveRange(cantPlays);
+                
+                await _db.SaveChangesAsync();
+            }
         }
 
         public async Task<Group> AcceptInviteAsync(string displayName, string inviteId)
