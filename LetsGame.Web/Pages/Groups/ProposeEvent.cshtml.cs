@@ -38,20 +38,28 @@ namespace LetsGame.Web.Pages.Groups
         public DateTime?[] ProposedDatesAndTimes { get; set; }
         
         
-        public async Task OnGetAsync(string slug)
+        public async Task<IActionResult> OnGetAsync(string slug)
         {
             await LoadGroupAsync(slug);
+            if (Group == null) return NotFound();
+            
+            return Page();
         }
 
-        public async Task OnPostPickGameAsync(string slug)
+        public async Task<IActionResult> OnPostPickGameAsync(string slug)
         {
             ProposedDatesAndTimes = new DateTime?[12];
             await LoadGroupAsync(slug);
+            if (Group == null) return NotFound();
+            
+            return Page();
         }
 
         public async Task<IActionResult> OnPostProposeAsync(string slug)
         {
             await LoadGroupAsync(slug);
+            if (Group == null) return NotFound();
+            
             if (PickedGameId == null) return RedirectToPage("ProposeEvent", new {slug});
 
             var userId = _userManager.GetUserId(User);
@@ -79,9 +87,10 @@ namespace LetsGame.Web.Pages.Groups
 
         private async Task LoadGroupAsync(string slug)
         {
+            var userId = _userManager.GetUserId(User);
             Group = await _db.Groups
-                .AsSplitQuery()
                 .Include(x => x.Games)
+                .Where(x => x.Memberships.Any(m => m.UserId == userId))
                 .FirstOrDefaultAsync(x => x.Slug == slug);
         }
     }

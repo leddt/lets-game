@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using LetsGame.Web.Data;
 using LetsGame.Web.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -29,7 +30,7 @@ namespace LetsGame.Web.Pages
         {
             await LoadInvite(db, id);
             
-            if (Invite != null && User.Identity.IsAuthenticated)
+            if (Invite != null && User.Identity?.IsAuthenticated == true)
             {
                 var userId = _userManager.GetUserId(User);
                 var membership = await db.Memberships.FirstOrDefaultAsync(x => x.UserId == userId && x.GroupId == Invite.GroupId);
@@ -46,14 +47,16 @@ namespace LetsGame.Web.Pages
             [FromServices] GroupService groupService,
             string id)
         {
+            if (!User.Identity?.IsAuthenticated == true)
+                return Unauthorized();
+            
             if (!ModelState.IsValid)
             {
                 await LoadInvite(db, id);
                 return Page();
             }
             
-            var userId = _userManager.GetUserId(User);
-            var group = await groupService.AcceptInviteAsync(userId, DisplayName, id);
+            var group = await groupService.AcceptInviteAsync(DisplayName, id);
             
             return RedirectToPage("/Groups/Group", new {slug = group.Slug});
         }

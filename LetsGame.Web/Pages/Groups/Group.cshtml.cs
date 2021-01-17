@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using LetsGame.Web.Data;
 using LetsGame.Web.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -11,15 +12,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LetsGame.Web.Pages.Groups
 {
+    [Authorize]
     public class GroupModel : PageModel
     {
         private readonly ApplicationDbContext _db;
         private readonly UserManager<AppUser> _userManager;
+        private readonly GroupService _groupService;
 
-        public GroupModel(ApplicationDbContext db, UserManager<AppUser> userManager)
+        public GroupModel(ApplicationDbContext db, UserManager<AppUser> userManager, GroupService groupService)
         {
             _db = db;
             _userManager = userManager;
+            _groupService = groupService;
         }
 
         public Group Group { get; set; }
@@ -38,13 +42,11 @@ namespace LetsGame.Web.Pages.Groups
             Group.Memberships.FirstOrDefault(x => x.UserId == userId)?.DisplayName ?? "Unknown member";
 
         public bool IsGroupOwner => UserMembership.Role == GroupRole.Owner;
-        public string UserId { get; set; }
+        public string UserId => _userManager.GetUserId(User);
         
         public async Task<IActionResult> OnGetAsync(string slug)
         {
             var utcNow = DateTime.UtcNow;
-            
-            UserId = _userManager.GetUserId(User);
             
             Group = await _db.Groups
                 .TagWith("Load group page data")
@@ -64,7 +66,7 @@ namespace LetsGame.Web.Pages.Groups
                 .OrderBy(x => x.Id)
                 .FirstOrDefaultAsync(x => x.Slug == slug);
             
-            UserMembership = Group.Memberships.FirstOrDefault(x => x.UserId == UserId);
+            UserMembership = Group?.Memberships.FirstOrDefault(x => x.UserId == UserId);
 
             if (Group == null) return NotFound();
             if (UserMembership == null) return NotFound();
@@ -74,11 +76,10 @@ namespace LetsGame.Web.Pages.Groups
 
         public async Task<IActionResult> OnPostDelete(string slug)
         {
-            var currentUserId = _userManager.GetUserId(User);
             var group = await _db.Groups.FirstOrDefaultAsync(x =>
                 x.Slug == slug &&
                 x.Memberships.Any(m => m.Role == GroupRole.Owner && 
-                                       m.User.Id == currentUserId));
+                                       m.User.Id == UserId));
 
             if (group != null)
             {
@@ -89,86 +90,78 @@ namespace LetsGame.Web.Pages.Groups
             return RedirectToPage("/Index");
         }
 
-        public async Task<IActionResult> OnPostVoteSlot(
-            [FromServices] GroupService groupService,
-            string slug)
+        public async Task<IActionResult> OnPostVoteSlot(string slug)
         {
-            var userId = _userManager.GetUserId(User);
-            await groupService.AddSlotVoteAsync(SlotId, userId);
+            await _groupService.AddSlotVoteAsync(SlotId);
 
             return RedirectToPage("Group", new {slug});
         }
-        public async Task<IActionResult> OnPostUnvoteSlot(
-            [FromServices] GroupService groupService,
-            string slug)
+        
+        public async Task<IActionResult> OnPostUnvoteSlot(string slug)
         {
-            var userId = _userManager.GetUserId(User);
-            await groupService.RemoveSlotVoteAsync(SlotId, userId);
+            await _groupService.RemoveSlotVoteAsync(SlotId);
 
             return RedirectToPage("Group", new {slug});
         }
 
-        public async Task<IActionResult> OnPostCantPlay(
-            [FromServices] GroupService groupService,
-            string slug)
+        public async Task<IActionResult> OnPostCantPlay(string slug)
         {
-            var userId = _userManager.GetUserId(User);
-            await groupService.SetCantPlayAsync(EventId, userId);
+            await _groupService.SetCantPlayAsync(EventId);
 
             return RedirectToPage("Group", new {slug});
         }
 
-        public async Task<IActionResult> OnPostPickSlot(
-            [FromServices] GroupService groupService,
-            string slug)
+        public async Task<IActionResult> OnPostPickSlot(string slug)
         {
-            await groupService.PickSlotAsync(SlotId);
+            await _groupService.PickSlotAsync(SlotId);
             
             return RedirectToPage("Group", new {slug});
         }
 
-        public async Task<IActionResult> OnPostCreateInvite(
-            [FromServices] GroupService groupService,
-            string slug)
+        public async Task<IActionResult> OnPostCreateInvite(string slug)
         {
-            var group = await groupService.FindBySlugAsync(slug);
-            await groupService.CreateInviteAsync(group.Id, SingleUse);
-
-            return RedirectToPage("Group", new {slug});
-        }
-
-        public async Task<IActionResult> OnPostDeleteInvite(
-            [FromServices] GroupService groupService,
-            string slug)
-        {
-            await groupService.DeleteInviteAsync(InviteId);
-
-            return RedirectToPage("Group", new {slug});
-        }
-
-        public async Task<IActionResult> OnPostDeleteMember(
-            [FromServices] ApplicationDbContext db,
-            string slug)
-        {
-            var member = await db.Memberships.FirstOrDefaultAsync(x => x.Group.Slug == slug && x.UserId == MemberId);
-            if (member != null)
+            var group = await _groupService.FindBySlugAsync(slug);
+            
+            if (group != null)
             {
-                db.Memberships.Remove(member);
-                await db.SaveChangesAsync();
+                await _groupService.CreateInviteAsync(group.Id, SingleUse);
             }
 
             return RedirectToPage("Group", new {slug});
         }
 
-        public async Task<IActionResult> OnPostRemoveGame(
-            [FromServices] ApplicationDbContext db,
-            string slug)
+        public async Task<IActionResult> OnPostDeleteInvite(string slug)
         {
-            var game = await db.GroupGames.FirstOrDefaultAsync(x => x.Group.Slug == slug && x.Id == GameId);
+            await _groupService.DeleteInviteAsync(InviteId);
+
+            return RedirectToPage("Group", new {slug});
+        }
+
+        public async Task<IActionResult> OnPostDeleteMember(string slug)
+        {
+            var member = await _db.Memberships
+                .Where(x => x.Group.Memberships.Any(m => m.UserId == UserId && m.Role == GroupRole.Owner))
+                .FirstOrDefaultAsync(x => x.Group.Slug == slug && x.UserId == MemberId);
+            
+            if (member != null)
+            {
+                _db.Memberships.Remove(member);
+                await _db.SaveChangesAsync();
+            }
+
+            return RedirectToPage("Group", new {slug});
+        }
+
+        public async Task<IActionResult> OnPostRemoveGame(string slug)
+        {
+            var game = await _db.GroupGames
+                .Where(x => x.Group.Memberships.Any(m => m.UserId == UserId && m.Role == GroupRole.Owner))
+                .FirstOrDefaultAsync(x => x.Group.Slug == slug && x.Id == GameId);
+            
             if (game != null)
             {
-                db.GroupGames.Remove(game);
-                await db.SaveChangesAsync();
+                _db.GroupGames.Remove(game);
+                await _db.SaveChangesAsync();
             }
 
             return RedirectToPage("Group", new {slug});

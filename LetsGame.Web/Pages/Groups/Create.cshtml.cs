@@ -3,23 +3,21 @@ using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 using LetsGame.Web.Data;
 using LetsGame.Web.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace LetsGame.Web.Pages.Groups
 {
+    [Authorize]
     public class CreateModel : PageModel
     {
-        private readonly ApplicationDbContext _db;
         private readonly GroupService _groupService;
-        private readonly UserManager<AppUser> _userManager;
 
-        public CreateModel(ApplicationDbContext db, GroupService groupService, UserManager<AppUser> userManager)
+        public CreateModel(GroupService groupService)
         {
-            _db = db;
             _groupService = groupService;
-            _userManager = userManager;
         }
 
         [BindProperty, Required, Display(Name = "Group name", Prompt = "The public name for this group")]
@@ -32,8 +30,7 @@ namespace LetsGame.Web.Pages.Groups
         {
             if (!ModelState.IsValid) return Page();
             
-            var currentUserId = _userManager.GetUserId(User);
-            var group = await _groupService.CreateGroupAsync(GroupName, currentUserId, DisplayName);
+            var group = await _groupService.CreateGroupAsync(GroupName, DisplayName);
 
             return RedirectToPage("/Groups/Group", new {slug = group.Slug});
         }

@@ -75,6 +75,7 @@ namespace LetsGame.Web
             services.AddScoped<SlugGenerator>();
             services.AddScoped<GroupService>();
             services.AddScoped<DateService>();
+            services.AddScoped<ICurrentUserAccessor, HttpContextCurrentUserAccessor>();
             
             services.AddTransient<IEmailSender, EmailSender>();
         }

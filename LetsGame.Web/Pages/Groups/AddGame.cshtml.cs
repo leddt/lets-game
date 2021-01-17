@@ -6,11 +6,13 @@ using LetsGame.Web.Data;
 using LetsGame.Web.Services;
 using LetsGame.Web.Services.Igdb;
 using LetsGame.Web.Services.Igdb.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace LetsGame.Web.Pages.Groups
 {
+    [Authorize]
     public class AddGame : PageModel
     {
         [BindProperty, Required, Display(Name = "Game name", Prompt = "What game are you looking for?")] 
