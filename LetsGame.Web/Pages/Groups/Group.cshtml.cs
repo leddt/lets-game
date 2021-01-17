@@ -92,6 +92,15 @@ namespace LetsGame.Web.Pages.Groups
 
             return RedirectToPage("Group", new {slug});
         }
+        public async Task<IActionResult> OnPostUnvoteSlot(
+            [FromServices] GroupService groupService,
+            string slug)
+        {
+            var userId = _userManager.GetUserId(User);
+            await groupService.RemoveSlotVoteAsync(SlotId, userId);
+
+            return RedirectToPage("Group", new {slug});
+        }
 
         public async Task<IActionResult> OnPostPickSlot(
             [FromServices] GroupService groupService,

@@ -97,6 +97,18 @@ namespace LetsGame.Web.Services
             }
         }
 
+        public async Task RemoveSlotVoteAsync(long slotId, string voterId)
+        {
+            var vote = await _db.GroupEventSlotVotes
+                .FirstOrDefaultAsync(x => x.SlotId == slotId && x.VoterId == voterId);
+
+            if (vote != null)
+            {
+                _db.GroupEventSlotVotes.Remove(vote);
+                await _db.SaveChangesAsync();
+            }
+        }
+
         public async Task PickSlotAsync(int slotId)
         {
             var slot = await _db.GroupEventSlots
