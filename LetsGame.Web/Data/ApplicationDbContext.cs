@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -8,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace LetsGame.Web.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<AppUser>
+    public class ApplicationDbContext : IdentityDbContext<AppUser>, IDataProtectionKeyContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -24,6 +25,9 @@ namespace LetsGame.Web.Data
         public DbSet<GroupEvent> GroupEvents { get; set; }
         public DbSet<GroupEventSlot> GroupEventSlots { get; set; }
         public DbSet<GroupEventSlotVote> GroupEventSlotVotes { get; set; }
+        
+
+        public DbSet<DataProtectionKey> DataProtectionKeys { get; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

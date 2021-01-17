@@ -14,6 +14,7 @@ using LetsGame.Web.Infrastructure.AspNet;
 using LetsGame.Web.Services;
 using LetsGame.Web.Services.Igdb;
 using LetsGame.Web.Services.Itad;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -38,13 +39,19 @@ namespace LetsGame.Web
         public void ConfigureServices(IServiceCollection services)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
+            
             services.AddDbContext<ApplicationDbContext>(options =>
                 options
                     .UseNpgsql(Configuration.GetConnectionString("Postgres"))
                     // .UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))
                     .LogTo(Console.WriteLine, new[] {DbLoggerCategory.Database.Command.Name}, LogLevel.Information));
+            
             services.AddDatabaseDeveloperPageExceptionFilter();
+
+            services.AddDataProtection()
+                .PersistKeysToDbContext<ApplicationDbContext>()
+                .SetApplicationName("LetsGame");
+            
             services.AddDefaultIdentity<AppUser>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
             services.AddRazorPages();
