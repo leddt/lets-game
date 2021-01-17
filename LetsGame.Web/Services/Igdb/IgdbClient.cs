@@ -46,7 +46,7 @@ namespace LetsGame.Web.Services.Igdb
                 fields: DefaultGameFields,
                 search: query,
                 where: "category = 0",
-                limit: 12);
+                limit: 48);
         }
 
         public async Task<Game> GetGameAsync(long id)
