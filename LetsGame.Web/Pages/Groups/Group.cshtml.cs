@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using LetsGame.Web.Data;
 using LetsGame.Web.Services;
-using LetsGame.Web.Services.Itad.Model;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -26,15 +25,15 @@ namespace LetsGame.Web.Pages.Groups
         public Group Group { get; set; }
         public Membership Membership { get; set; }
         public IEnumerable<GroupEvent> ProposedEvents => Group.Events.Where(x => x.ChosenDateAndTimeUtc == null);
-        public IEnumerable<GroupEvent> UpcomingEvent => Group.Events.Where(x => x.ChosenDateAndTimeUtc.HasValue);
+        public IEnumerable<GroupEvent> UpcomingEvents => Group.Events.Where(x => x.ChosenDateAndTimeUtc.HasValue).OrderBy(x => x.ChosenDateAndTimeUtc);
         
         [BindProperty]
         public int SlotId { get; set; }
         
-        public ItadSearchResult[] SearchResults { get; set; }
-
         public string GetDisplayName(string userId) =>
             Group.Memberships.FirstOrDefault(x => x.UserId == userId)?.DisplayName ?? "Unknown member";
+
+        public bool IsGroupOwner => Membership.Role == GroupRole.Owner;
         
         public async Task<IActionResult> OnGetAsync(string slug)
         {

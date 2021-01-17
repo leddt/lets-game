@@ -5,6 +5,7 @@
 <div class="d-flex flex-nowrap flex-grow-1">
     <div class="border-right p-3"><partial name="_GroupsPartial" /></div>
     <div class="flex-grow-1 p-3">@RenderBody()</div>
+    @RenderSection("Sidebar", required: false)
 </div>
 
 @section Scripts {

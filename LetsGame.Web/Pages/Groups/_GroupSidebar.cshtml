@@ -1,0 +1,36 @@
+﻿@model GroupModel
+
+<div class="w-25 border-left p-3" style="min-width: 15rem">
+    <h2>Members</h2>
+    <ul>
+        @foreach (var membership in Model.Group.Memberships)
+        {
+            <li>
+                @membership.DisplayName
+                @if (membership.Role == GroupRole.Owner)
+                {
+                    <span class="text-muted">(Owner)</span>
+                }
+            </li>
+        }
+    </ul>
+    
+    @if (Model.IsGroupOwner)
+    {
+        <h2>Invites</h2>
+    }
+
+    <h2>Games</h2>
+    @if (Model.IsGroupOwner) {
+        <a asp-page="AddGame" asp-route-slug="@Model.Group.Slug" class="btn btn-primary">Add game</a>
+    }
+
+    <div class="row row-cols-1 pt-3">
+        @foreach (var game in Model.Group.Games)
+        {
+            <div class="col mb-4">
+                <game-card name="@game.Name" image-id="@game.IgdbImageId"/>
+            </div>
+        }
+    </div>
+</div>

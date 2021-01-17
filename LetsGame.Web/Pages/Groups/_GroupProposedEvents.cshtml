@@ -1,0 +1,72 @@
+﻿@using LetsGame.Web.Services
+@using LetsGame.Web.Services.Igdb.Models
+@model GroupModel
+@inject UserManager<AppUser> UserManager;
+@inject DateService DateService;
+
+@{
+    var currentUserId = UserManager.GetUserId(User);
+}
+
+<h2>Proposed sessions</h2>
+
+@if (!Model.ProposedEvents.Any())
+{
+    <p>There are no gaming sessions being planned right now.</p>
+}
+
+<a asp-page="ProposeEvent" asp-route-slug="@Model.Group.Slug" class="btn btn-primary">Propose a session</a>
+
+<div class="row row-cols-1 row-cols-xl-2 pt-3">
+    @foreach (var e in Model.ProposedEvents)
+    {
+        <div class="col mb-4">
+            <div class="card">
+                <div class="row no-gutters">
+                    <div class="col-md-4 fill">
+                        <img src="@Image.GetScreenshotMedUrl(e.Game.IgdbImageId)" class="card-img" alt="Screenshot from @e.Game.Name"/>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card-body">
+                            <h5 class="card-title">@e.Game.Name</h5>
+                            <blockquote class="blockquote cart-text">@e.Details</blockquote>
+                            <div class="card-text">
+                                Time slots:
+                                <ul>
+                                    @foreach (var slot in e.Slots)
+                                    {
+                                        <li>
+                                            @DateService.FormatUtcToUserFriendlyDate(slot.ProposedDateAndTimeUtc)
+                                            @if (Model.IsGroupOwner)
+                                            {
+                                                <form asp-page-handler="PickSlot">
+                                                    <input type="hidden" asp-for="SlotId" value="@slot.Id"/>
+                                                    <button type="submit" class="btn btn-sm btn-success">Pick this slot</button>
+                                                </form>
+                                            }
+                                            <ul>
+                                                @foreach (var vote in slot.Votes.OrderBy(x => x.VotedAtUtc))
+                                                {
+                                                    <li>@Model.GetDisplayName(vote.VoterId)</li>
+                                                }
+                                                @if (!slot.Votes.Any(v => v.VoterId == currentUserId))
+                                                {
+                                                    <li>
+                                                        <form asp-page-handler="VoteSlot">
+                                                            <input type="hidden" asp-for="SlotId" value="@slot.Id"/>
+                                                            <button type="submit" class="btn btn-sm btn-primary">Vote</button>
+                                                        </form>
+                                                    </li>
+                                                }
+                                            </ul>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
