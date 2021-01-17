@@ -17,12 +17,14 @@ namespace LetsGame.Web.Pages.Groups
         private readonly ApplicationDbContext _db;
         private readonly UserManager<AppUser> _userManager;
         private readonly DateService _dateService;
+        private readonly GroupService _groupService;
 
-        public ProposeEvent(ApplicationDbContext db, UserManager<AppUser> userManager, DateService dateService)
+        public ProposeEvent(ApplicationDbContext db, UserManager<AppUser> userManager, DateService dateService, GroupService groupService)
         {
             _db = db;
             _userManager = userManager;
             _dateService = dateService;
+            _groupService = groupService;
         }
 
         public Group Group { get; set; }
@@ -59,28 +61,17 @@ namespace LetsGame.Web.Pages.Groups
         {
             await LoadGroupAsync(slug);
             if (Group == null) return NotFound();
-            
             if (PickedGameId == null) return RedirectToPage("ProposeEvent", new {slug});
 
-            var userId = _userManager.GetUserId(User);
-            
-            var groupEvent = new GroupEvent
-            {
-                Group = Group,
-                GameId = PickedGameId.Value,
-                Details = Details,
-                CreatorId = userId,
-                Slots = ProposedDatesAndTimes
+            await _groupService.ProposeEventAsync(
+                groupId: Group.Id,
+                gameId: PickedGameId.Value,
+                details: Details,
+                slotsUtc: ProposedDatesAndTimes
                     .Where(x => x.HasValue)
-                    .Select(dt => new GroupEventSlot
-                    {
-                        ProposedDateAndTimeUtc = _dateService.ConvertFromUserTimezoneToUtc(dt.Value)
-                    })
-                    .ToList()
-            };
-
-            _db.GroupEvents.Add(groupEvent);
-            await _db.SaveChangesAsync();
+                    .Select(x => x.Value)
+                    .Select(_dateService.ConvertFromUserTimezoneToUtc)
+                    .ToArray());
 
             return RedirectToPage("Group", new {slug});
         }

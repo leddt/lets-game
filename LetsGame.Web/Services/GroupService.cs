@@ -241,6 +241,28 @@ namespace LetsGame.Web.Services
             return invite.Group;
         }
 
+        public async Task ProposeEventAsync(long groupId, long gameId, string details, DateTime[] slotsUtc)
+        {
+            await EnsureIsGroupMemberAsync(groupId);
+            
+            var groupEvent = new GroupEvent
+            {
+                GroupId = groupId,
+                GameId = gameId,
+                Details = details,
+                CreatorId = CurrentUserId,
+                Slots = slotsUtc
+                    .Select(dt => new GroupEventSlot
+                    {
+                        ProposedDateAndTimeUtc = dt
+                    })
+                    .ToList()
+            };
+            
+            _db.GroupEvents.Add(groupEvent);
+            await _db.SaveChangesAsync();
+        }
+
         private string CurrentUserId => _userManager.GetUserId(_currentUserAccessor.CurrentUser);
 
         private Task<string> CreateSlugFromGroupNameAsync(string name)
@@ -257,6 +279,15 @@ namespace LetsGame.Web.Services
                                    m.UserId == CurrentUserId));
             
             if (!isGroupOwner) throw new InvalidOperationException("Not group owner");
+        }
+
+        private async Task EnsureIsGroupMemberAsync(long groupId)
+        {
+            var isGroupMember = await _db.Groups
+                .AnyAsync(x => x.Id == groupId &&
+                               x.Memberships.Any(m => m.UserId == CurrentUserId));
+            
+            if (!isGroupMember) throw new InvalidOperationException("Not group member");
         }
     }
 }
