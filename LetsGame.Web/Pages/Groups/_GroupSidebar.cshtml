@@ -14,6 +14,14 @@
                 {
                     <span class="text-muted">(Owner)</span>
                 }
+                
+                @if (!isSelf)
+                {
+                    <form asp-page-handler="DeleteMember" class="d-inline">
+                        <input type="hidden" asp-for="MemberId" value="@membership.UserId" />
+                        <button type="submit" class="btn btn-outline-danger btn-sm mb-1">&times;</button>
+                    </form>
+                }
             </li>
         }
     </ul>

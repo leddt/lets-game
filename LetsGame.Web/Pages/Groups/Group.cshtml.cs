@@ -30,6 +30,7 @@ namespace LetsGame.Web.Pages.Groups
         [BindProperty] public int SlotId { get; set; }
         [BindProperty] public bool SingleUse { get; set; }
         [BindProperty] public string InviteId { get; set; }
+        [BindProperty] public string MemberId { get; set; }
         
         public string GetDisplayName(string userId) =>
             Group.Memberships.FirstOrDefault(x => x.UserId == userId)?.DisplayName ?? "Unknown member";
@@ -116,6 +117,20 @@ namespace LetsGame.Web.Pages.Groups
             string slug)
         {
             await groupService.DeleteInviteAsync(InviteId);
+
+            return RedirectToPage("Group", new {slug});
+        }
+
+        public async Task<IActionResult> OnPostDeleteMember(
+            [FromServices] ApplicationDbContext db,
+            string slug)
+        {
+            var member = await db.Memberships.FirstOrDefaultAsync(x => x.Group.Slug == slug && x.UserId == MemberId);
+            if (member != null)
+            {
+                db.Memberships.Remove(member);
+                await db.SaveChangesAsync();
+            }
 
             return RedirectToPage("Group", new {slug});
         }
