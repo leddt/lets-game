@@ -2,29 +2,32 @@
 
 <div class="w-sm-25 border-left p-3" style="min-width: 15rem">
     <h2>Members</h2>
-    <ul>
-        @foreach (var membership in Model.Group.Memberships)
-        {
-            var isSelf = membership == Model.UserMembership;
+    @foreach (var membership in Model.Group.Memberships)
+    {
+        var isSelf = membership == Model.UserMembership;
 
-            <li>
-                <span class="@(isSelf ? "font-weight-bold" : "")">@membership.DisplayName</span>
+        <div class="d-flex align-items-center">
+            <avatar name="@membership.DisplayName" />
+            <span class="@(isSelf ? "font-weight-bold" : "")">@membership.DisplayName</span>
 
-                @if (membership.Role == GroupRole.Owner)
-                {
-                    <span class="text-muted">(Owner)</span>
-                }
-                
-                @if (!isSelf)
-                {
-                    <form asp-page-handler="DeleteMember" class="d-inline">
-                        <input type="hidden" asp-for="MemberId" value="@membership.UserId" />
-                        <button type="submit" class="btn btn-outline-danger btn-sm mb-1">&times;</button>
-                    </form>
-                }
-            </li>
-        }
-    </ul>
+            @if (membership.Role == GroupRole.Owner)
+            {
+                <span class="text-muted mx-1">(Owner)</span>
+            }
+            
+            @if (Model.IsGroupOwner && !isSelf)
+            {
+                <form asp-page-handler="DeleteMember" class="d-inline flex-fill text-right">
+                    <input type="hidden" asp-for="MemberId" value="@membership.UserId" />
+                    <button type="submit" class="btn btn-outline-danger btn-sm mb-1" title="Remove @membership.DisplayName from the group">&times;</button>
+                </form>
+            }
+        </div>
+    }
+    @if (Model.Group.Memberships.Count == 1)
+    {
+        <p>It's lonely in here... You should invite your friends to join you!</p>
+    }
 
     @if (Model.IsGroupOwner)
     {
