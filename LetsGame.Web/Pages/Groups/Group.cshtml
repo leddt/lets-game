@@ -1,12 +1,13 @@
 ﻿@page "/group/{slug}"
 @using LetsGame.Web.Services.Igdb.Models
-@using LetsGame.Web.Helpers
-@inject UserManager<AppUser> userManager;
+@using LetsGame.Web.Services
+@inject UserManager<AppUser> UserManager;
+@inject DateService DateService;
 @model LetsGame.Web.Pages.Groups.GroupModel
 
 @{
     Layout = "_AuthenticatedLayout";
-    var currentUserId = userManager.GetUserId(User);
+    var currentUserId = UserManager.GetUserId(User);
 }
 
 <div class="d-flex justify-content-between align-items-center">
@@ -51,7 +52,7 @@
                                     @foreach (var slot in e.Slots)
                                     {
                                         <li>
-                                            @DateHelpers.FormatUtcToUserFriendlyDate(slot.ProposedDateAndTimeUtc)
+                                            @DateService.FormatUtcToUserFriendlyDate(slot.ProposedDateAndTimeUtc)
                                             @if (Model.Membership.Role == GroupRole.Owner)
                                             {
                                                 <form asp-page-handler="PickSlot">
@@ -101,7 +102,7 @@
                             <h5 class="card-title">@e.Game.Name</h5>
                             <blockquote class="blockquote cart-text">@e.Details</blockquote>
                             <p class="card-text">
-                                @DateHelpers.FormatUtcToUserFriendlyDate(e.ChosenDateAndTimeUtc.Value)
+                                @DateService.FormatUtcToUserFriendlyDate(e.ChosenDateAndTimeUtc.Value)
                             </p>
                             <ul class="card-text">
                                 @{

@@ -1,32 +1,40 @@
 ﻿using System;
+using Microsoft.Extensions.Configuration;
 
-namespace LetsGame.Web.Helpers
+namespace LetsGame.Web.Services
 {
-    public static class DateHelpers
+    public class DateService
     {
-        public static DateTime ConvertFromUserTimezoneToUtc(DateTime dt)
+        private readonly string _localTimezone;
+        
+        public DateService(IConfiguration config)
+        {
+            _localTimezone = config["LocalTimezone"];
+        }
+
+        public DateTime ConvertFromUserTimezoneToUtc(DateTime dt)
         {
             
             return dt - GetUserTimeZone().GetUtcOffset(dt);
         }
 
-        public static DateTime ConvertFromUtcToUserTimezone(DateTime dt)
+        public DateTime ConvertFromUtcToUserTimezone(DateTime dt)
         {
             return dt + GetUserTimeZone().GetUtcOffset(dt);
         }
 
-        public static DateTime RemoveSeconds(DateTime dt)
+        public DateTime RemoveSeconds(DateTime dt)
         {
             return dt.AddSeconds(-dt.Second);
         }
 
-        private static TimeZoneInfo GetUserTimeZone()
+        private TimeZoneInfo GetUserTimeZone()
         {
             // TODO: Implement user timezone preference
-            return TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+            return TimeZoneInfo.FindSystemTimeZoneById(_localTimezone);
         }
 
-        public static string FormatUtcToUserFriendlyDate(DateTime dt)
+        public string FormatUtcToUserFriendlyDate(DateTime dt)
         {
             var localDt = ConvertFromUtcToUserTimezone(dt);
             var localNow = ConvertFromUtcToUserTimezone(DateTime.UtcNow);

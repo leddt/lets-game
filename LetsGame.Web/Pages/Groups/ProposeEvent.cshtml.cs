@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using LetsGame.Web.Data;
-using LetsGame.Web.Helpers;
+using LetsGame.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -16,15 +16,17 @@ namespace LetsGame.Web.Pages.Groups
     {
         private readonly ApplicationDbContext _db;
         private readonly UserManager<AppUser> _userManager;
+        private readonly DateService _dateService;
 
-        public ProposeEvent(ApplicationDbContext db, UserManager<AppUser> userManager)
+        public ProposeEvent(ApplicationDbContext db, UserManager<AppUser> userManager, DateService dateService)
         {
             _db = db;
             _userManager = userManager;
+            _dateService = dateService;
         }
 
         public Group Group { get; set; }
-        public DateTime MinDateTime => DateHelpers.RemoveSeconds(DateHelpers.ConvertFromUtcToUserTimezone(DateTime.UtcNow));
+        public DateTime MinDateTime => _dateService.RemoveSeconds(_dateService.ConvertFromUtcToUserTimezone(DateTime.UtcNow));
         
         [BindProperty]
         public long? PickedGameId { get; set; }
@@ -64,7 +66,7 @@ namespace LetsGame.Web.Pages.Groups
                     .Where(x => x.HasValue)
                     .Select(dt => new GroupEventSlot
                     {
-                        ProposedDateAndTimeUtc = DateHelpers.ConvertFromUserTimezoneToUtc(dt.Value)
+                        ProposedDateAndTimeUtc = _dateService.ConvertFromUserTimezoneToUtc(dt.Value)
                     })
                     .ToList()
             };
