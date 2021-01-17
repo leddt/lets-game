@@ -41,7 +41,8 @@ namespace LetsGame.Web
 
             services.AddDbContext<ApplicationDbContext>(options =>
                 options
-                    .UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))
+                    .UseNpgsql(Configuration.GetConnectionString("Postgres"))
+                    // .UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))
                     .LogTo(Console.WriteLine, new[] {DbLoggerCategory.Database.Command.Name}, LogLevel.Information));
             services.AddDatabaseDeveloperPageExceptionFilter();
             services.AddDefaultIdentity<AppUser>(options => options.SignIn.RequireConfirmedAccount = true)
