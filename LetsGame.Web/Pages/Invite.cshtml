@@ -1,0 +1,37 @@
+﻿@page "/i/{id}"
+@model LetsGame.Web.Pages.InviteModel
+
+@{
+    Layout = "_AnonymousLayout";
+}
+
+<div class="text-center">
+    @if (Model.Invite == null)
+    {
+        <p class="display-4">Invite not found</p>
+    }
+    else
+    {
+        <p class="display-4">You are invited to join</p>
+        <p class="display-1">@Model.Invite.Group.Name</p>
+
+        <div class="mt-5">
+            @if (User.Identity.IsAuthenticated)
+            {
+                <div class="m-auto" style="max-width: 30rem">
+                    <form method="post">
+                        <form-group for="DisplayName" class="text-left" control-class="form-control-lg" />
+                        <button type="submit" class="btn btn-primary btn-lg">Accept invite</button>
+                    </form>
+                </div>
+            }
+            else
+            {
+                <div class="m-auto" style="max-width: 15rem">
+                    <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-primary btn-lg btn-block m-3">Register</a>
+                    <a asp-area="Identity" asp-page="/Account/Login" asp-route-ReturnUrl="@HttpContext.Request.Path" class="btn btn-outline-primary btn-lg btn-block m-3">Login</a>
+                </div>
+            }
+        </div>
+    }
+</div>

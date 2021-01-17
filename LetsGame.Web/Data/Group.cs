@@ -12,5 +12,6 @@ namespace LetsGame.Web.Data
         public ICollection<Membership> Memberships { get; set; }
         public ICollection<GroupGame> Games { get; set; }
         public ICollection<GroupEvent> Events { get; set; }
+        public ICollection<GroupInvite> Invites { get; set; }
     }
 }

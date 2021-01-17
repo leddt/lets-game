@@ -23,17 +23,18 @@ namespace LetsGame.Web.Pages.Groups
         }
 
         public Group Group { get; set; }
-        public Membership Membership { get; set; }
+        public Membership UserMembership { get; set; }
         public IEnumerable<GroupEvent> ProposedEvents => Group.Events.Where(x => x.ChosenDateAndTimeUtc == null);
         public IEnumerable<GroupEvent> UpcomingEvents => Group.Events.Where(x => x.ChosenDateAndTimeUtc.HasValue).OrderBy(x => x.ChosenDateAndTimeUtc);
         
-        [BindProperty]
-        public int SlotId { get; set; }
+        [BindProperty] public int SlotId { get; set; }
+        [BindProperty] public bool SingleUse { get; set; }
+        [BindProperty] public string InviteId { get; set; }
         
         public string GetDisplayName(string userId) =>
             Group.Memberships.FirstOrDefault(x => x.UserId == userId)?.DisplayName ?? "Unknown member";
 
-        public bool IsGroupOwner => Membership.Role == GroupRole.Owner;
+        public bool IsGroupOwner => UserMembership.Role == GroupRole.Owner;
         
         public async Task<IActionResult> OnGetAsync(string slug)
         {
@@ -52,13 +53,14 @@ namespace LetsGame.Web.Pages.Groups
                 .Include(x => x.Events)
                     .ThenInclude(x => x.Slots.OrderBy(s => s.ProposedDateAndTimeUtc))
                     .ThenInclude(x => x.Votes)
+                .Include(x => x.Invites.OrderBy(x => x.CreatedAtUtc))
                 .OrderBy(x => x.Id)
                 .FirstOrDefaultAsync(x => x.Slug == slug);
             
-            Membership = Group.Memberships.FirstOrDefault(x => x.UserId == currentUserId);
+            UserMembership = Group.Memberships.FirstOrDefault(x => x.UserId == currentUserId);
 
             if (Group == null) return NotFound();
-            if (Membership == null) return NotFound();
+            if (UserMembership == null) return NotFound();
             
             return Page();
         }
@@ -85,7 +87,7 @@ namespace LetsGame.Web.Pages.Groups
             string slug)
         {
             var userId = _userManager.GetUserId(User);
-            await groupService.AddSlotVote(SlotId, userId);
+            await groupService.AddSlotVoteAsync(SlotId, userId);
 
             return RedirectToPage("Group", new {slug});
         }
@@ -94,8 +96,27 @@ namespace LetsGame.Web.Pages.Groups
             [FromServices] GroupService groupService,
             string slug)
         {
-            await groupService.PickSlot(SlotId);
+            await groupService.PickSlotAsync(SlotId);
             
+            return RedirectToPage("Group", new {slug});
+        }
+
+        public async Task<IActionResult> OnPostCreateInvite(
+            [FromServices] GroupService groupService,
+            string slug)
+        {
+            var group = await groupService.FindBySlugAsync(slug);
+            await groupService.CreateInviteAsync(group.Id, SingleUse);
+
+            return RedirectToPage("Group", new {slug});
+        }
+
+        public async Task<IActionResult> OnPostDeleteInvite(
+            [FromServices] GroupService groupService,
+            string slug)
+        {
+            await groupService.DeleteInviteAsync(InviteId);
+
             return RedirectToPage("Group", new {slug});
         }
     }

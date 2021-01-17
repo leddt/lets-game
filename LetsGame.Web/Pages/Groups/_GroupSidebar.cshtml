@@ -1,12 +1,15 @@
 ﻿@model GroupModel
 
-<div class="w-25 border-left p-3" style="min-width: 15rem">
+<div class="w-sm-25 border-left p-3" style="min-width: 15rem">
     <h2>Members</h2>
     <ul>
         @foreach (var membership in Model.Group.Memberships)
         {
+            var isSelf = membership == Model.UserMembership;
+
             <li>
-                @membership.DisplayName
+                <span class="@(isSelf ? "font-weight-bold" : "")">@membership.DisplayName</span>
+
                 @if (membership.Role == GroupRole.Owner)
                 {
                     <span class="text-muted">(Owner)</span>
@@ -14,15 +17,49 @@
             </li>
         }
     </ul>
-    
+
     @if (Model.IsGroupOwner)
     {
         <h2>Invites</h2>
+        @foreach (var invite in Model.Group.Invites)
+        {
+            <div class="mb-1">
+                <form asp-page-handler="DeleteInvite">
+                    <input type="hidden" asp-for="InviteId" value="@invite.Id"/>
+                    <div class="d-flex align-items-center py-1 border-bottom">
+                        <button type="submit" class="btn btn-outline-danger btn-sm mr-2">&times;</button>
+                        <div class="flex-fill">
+                            <input onfocus="this.select()" class="w-100 border-0" readonly type="text" value="@Url.Page("/Invite", null, new {id = invite.Id}, this.Context.Request.Scheme)"/>
+
+                            @if (invite.IsSingleUse)
+                            {
+                                <div class="text-muted">(single use)</div>
+                            }
+                            else
+                            {
+                                <div class="text-muted">(unlimited)</div>
+                            }
+                        </div>
+                    </div>
+                </form>
+            </div>
+        }
+        <div class="mb-3">
+            <form asp-page-handler="CreateInvite" class="d-inline-block mt-2">
+                <input type="hidden" asp-for="SingleUse" value="false"/>
+                <button type="submit" class="btn btn-primary btn-sm">Create (unlimited)</button>
+            </form>
+            <form asp-page-handler="CreateInvite" class="d-inline-block mt-2">
+                <input type="hidden" asp-for="SingleUse" value="true"/>
+                <button type="submit" class="btn btn-primary btn-sm">Create (single-use)</button>
+            </form>
+        </div>
     }
 
     <h2>Games</h2>
-    @if (Model.IsGroupOwner) {
-        <a asp-page="AddGame" asp-route-slug="@Model.Group.Slug" class="btn btn-primary">Add game</a>
+    @if (Model.IsGroupOwner)
+    {
+        <a asp-page="AddGame" asp-route-slug="@Model.Group.Slug" class="btn btn-primary btn-sm">Add game</a>
     }
 
     <div class="row row-cols-1 pt-3">

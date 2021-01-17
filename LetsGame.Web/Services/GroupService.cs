@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using LetsGame.Web.Data;
+using LetsGame.Web.Helpers;
 using LetsGame.Web.Services.Igdb;
 using Microsoft.EntityFrameworkCore;
 
@@ -77,7 +78,7 @@ namespace LetsGame.Web.Services
             return groupGame;
         }
 
-        public async Task AddSlotVote(long slotId, string voterId)
+        public async Task AddSlotVoteAsync(long slotId, string voterId)
         {
             var slot = await _db.GroupEventSlots
                 .Include(x => x.Votes)
@@ -96,7 +97,7 @@ namespace LetsGame.Web.Services
             }
         }
 
-        public async Task PickSlot(int slotId)
+        public async Task PickSlotAsync(int slotId)
         {
             var slot = await _db.GroupEventSlots
                 .Include(x => x.Event)
@@ -104,6 +105,58 @@ namespace LetsGame.Web.Services
 
             slot.Event.ChosenDateAndTimeUtc = slot.ProposedDateAndTimeUtc;
             await _db.SaveChangesAsync();
+        }
+
+        public async Task<GroupInvite> CreateInviteAsync(long groupId, bool singleUse)
+        {
+            string id;
+            
+            do
+            {
+                id = RandomHelper.GetRandomIdentifier(8);
+            } while (await _db.GroupInvites.AnyAsync(x => x.Id == id));
+
+            var invite = new GroupInvite
+            {
+                Id = id,
+                GroupId = groupId,
+                IsSingleUse = singleUse
+            };
+
+            _db.GroupInvites.Add(invite);
+            await _db.SaveChangesAsync();
+
+            return invite;
+        }
+
+        public async Task DeleteInviteAsync(string id)
+        {
+            var invite = await _db.GroupInvites.FindAsync(id);
+            if (invite != null) _db.GroupInvites.Remove(invite);
+            
+            await _db.SaveChangesAsync();
+        }
+
+        public async Task<Group> AcceptInviteAsync(string userId, string displayName, string inviteId)
+        {
+            var invite = await _db.GroupInvites.Include(x => x.Group).FirstOrDefaultAsync(x => x.Id == inviteId);
+
+            _db.Memberships.Add(new Membership
+            {
+                UserId = userId,
+                GroupId = invite.GroupId,
+                DisplayName = displayName,
+                Role = GroupRole.Member
+            });
+
+            if (invite.IsSingleUse)
+            {
+                _db.GroupInvites.Remove(invite);
+            }
+
+            await _db.SaveChangesAsync();
+
+            return invite.Group;
         }
     }
 }

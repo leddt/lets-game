@@ -10,7 +10,7 @@
         .ToListAsync();
 }
 
-<div class="btn-group-vertical">
+<div class="btn-group-sm btn-group-vertical">
     @foreach (var group in groups)
     {
         <a asp-page="/Groups/Group" asp-route-slug="@group.Slug" class="btn" is-active-class="btn-secondary" is-inactive-class="btn-outline-secondary">@group.Name</a>

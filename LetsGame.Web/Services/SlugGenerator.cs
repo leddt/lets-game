@@ -2,6 +2,7 @@
 using System.Text;
 using System.Threading.Tasks;
 using LetsGame.Web.Extensions;
+using LetsGame.Web.Helpers;
 
 namespace LetsGame.Web.Services
 {
@@ -27,22 +28,9 @@ namespace LetsGame.Web.Services
                 var slug = (name + suffix).Sluggify();
                 if (!await isInUse(slug)) return slug;
                 
-                suffix = GetSuffix(baseSuffixLength + attempts/attemptsThreshold);
+                suffix = "-" + RandomHelper.GetRandomIdentifier(baseSuffixLength + attempts/attemptsThreshold);
                 attempts++;
             }
-        }
-
-        private string GetSuffix(int length)
-        {
-            const string suffixChars = "abcdefghijklmnopqrstuvwxyz1234567890";
-
-            var sb = new StringBuilder("-", length + 1);
-            for (var i = 0; i < length; i++)
-            {
-                sb.Append(suffixChars[random.Next(suffixChars.Length)]);
-            }
-
-            return sb.ToString();
         }
     }
 }

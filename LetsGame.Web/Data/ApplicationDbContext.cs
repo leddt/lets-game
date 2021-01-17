@@ -25,6 +25,7 @@ namespace LetsGame.Web.Data
         public DbSet<GroupEvent> GroupEvents { get; set; }
         public DbSet<GroupEventSlot> GroupEventSlots { get; set; }
         public DbSet<GroupEventSlotVote> GroupEventSlotVotes { get; set; }
+        public DbSet<GroupInvite> GroupInvites { get; set; }
         
 
         public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
