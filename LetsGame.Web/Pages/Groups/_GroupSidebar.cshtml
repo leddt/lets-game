@@ -1,4 +1,5 @@
-﻿@model GroupModel
+﻿@using System.Text.Encodings.Web
+@model GroupModel
 
 <div class="w-sm-25 border-left p-3" style="min-width: 15rem">
     <h2>Members</h2>
@@ -19,12 +20,12 @@
             {
                 <form asp-page-handler="DeleteMember" class="d-inline flex-fill text-right">
                     <input type="hidden" asp-for="MemberId" value="@membership.UserId" />
-                    <button type="submit" class="btn btn-outline-danger btn-sm mb-1" title="Remove @membership.DisplayName from the group">&times;</button>
+                    <button type="submit" class="btn btn-outline-danger btn-sm mb-1" title="Remove @membership.DisplayName from the group" onclick="return confirm('Remove @(JavaScriptEncoder.Default.Encode(membership.DisplayName)) from the group?')">&times;</button>
                 </form>
             }
         </div>
     }
-    @if (Model.Group.Memberships.Count == 1)
+    @if (Model.IsGroupOwner && Model.Group.Memberships.Count == 1)
     {
         <p>It's lonely in here... You should invite your friends to join you!</p>
     }
@@ -94,7 +95,7 @@
                     {
                         <form asp-page-handler="RemoveGame">
                             <input type="hidden" asp-for="GameId" value="@game.Id"/>
-                            <button type="submit" class="btn btn-sm btn-danger" title="Remove @game.Name from this group">&times;</button>
+                            <button type="submit" class="btn btn-sm btn-danger" title="Remove @game.Name from this group" onclick="return confirm('Remove @(JavaScriptEncoder.Default.Encode(game.Name)) and all it\'s events from the group?')">&times;</button>
                         </form>
                     }
                 </game-card>

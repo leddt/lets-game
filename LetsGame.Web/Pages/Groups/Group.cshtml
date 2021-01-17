@@ -1,5 +1,6 @@
 ﻿@page "/group/{slug}"
 @using LetsGame.Web.Services
+@using System.Text.Encodings.Web
 @inject UserManager<AppUser> UserManager;
 @inject DateService DateService;
 @model LetsGame.Web.Pages.Groups.GroupModel
@@ -14,7 +15,7 @@
     @if (Model.IsGroupOwner)
     {
         <form method="post" asp-page-handler="delete">
-            <button type="submit" class="btn btn-danger">Delete this group</button>
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Delete @(JavaScriptEncoder.Default.Encode(@Model.Group.Name)) forever?')">Delete this group</button>
         </form>
     }
 </div>

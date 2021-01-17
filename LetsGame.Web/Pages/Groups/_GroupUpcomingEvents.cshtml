@@ -1,5 +1,6 @@
 ﻿@using LetsGame.Web.Services.Igdb.Models
 @using LetsGame.Web.Services
+@using System.Text.Encodings.Web
 @model GroupModel
 @inject UserManager<AppUser> UserManager;
 @inject DateService DateService;
@@ -22,7 +23,16 @@
                         </div>
                         <div class="col-md-8">
                             <div class="card-body">
-                                <h4 class="card-title">@e.Game.Name</h4>
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <h4 class="card-title m-0">@e.Game.Name</h4>
+                                    @if (Model.IsGroupOwner || e.CreatorId == Model.UserId)
+                                    {
+                                        <form asp-page-handler="DeleteEvent">
+                                            <input type="hidden" asp-for="EventId" value="@e.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Cancel session" onclick="return confirm('Cancel this @(JavaScriptEncoder.Default.Encode(e.Game.Name)) session?')">&times;</button>
+                                        </form>
+                                    }
+                                </div>
                                 <blockquote class="blockquote">@e.Details</blockquote>
                                 <p class="card-text">Created by @Model.GetDisplayName(e.CreatorId)</p>
                                 <h5>

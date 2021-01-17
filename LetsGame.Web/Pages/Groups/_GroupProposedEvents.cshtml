@@ -1,5 +1,6 @@
 ﻿@using LetsGame.Web.Services
 @using LetsGame.Web.Services.Igdb.Models
+@using System.Text.Encodings.Web
 @model GroupModel
 @inject UserManager<AppUser> UserManager;
 @inject DateService DateService;
@@ -28,7 +29,16 @@
                     </div>
                     <div class="col-md-8">
                         <div class="card-body">
-                            <h4 class="card-title">@e.Game.Name</h4>
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <h4 class="card-title m-0">@e.Game.Name</h4>
+                                @if (Model.IsGroupOwner || e.CreatorId == Model.UserId)
+                                {
+                                    <form asp-page-handler="DeleteEvent">
+                                        <input type="hidden" asp-for="EventId" value="@e.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Cancel session" onclick="return confirm('Cancel this @(JavaScriptEncoder.Default.Encode(e.Game.Name)) session?')">&times;</button>
+                                    </form>
+                                }
+                            </div>
                             <blockquote class="blockquote">@e.Details</blockquote>
                             <p class="card-text">Created by @Model.GetDisplayName(e.CreatorId)</p>
                             <div class="card-text">
@@ -42,7 +52,10 @@
                                             {
                                                 <form asp-page-handler="PickSlot">
                                                     <input type="hidden" asp-for="SlotId" value="@slot.Id"/>
-                                                    <button type="submit" class="btn btn-sm btn-success" title="Pick this slot as the winner">
+                                                    <button type="submit" 
+                                                            class="btn btn-sm btn-success" 
+                                                            title="Pick this slot as the winner" 
+                                                            onclick="return confirm('Pick @JavaScriptEncoder.Default.Encode(DateService.FormatUtcToUserFriendlyDate(slot.ProposedDateAndTimeUtc)) as the winning time slot for this @JavaScriptEncoder.Default.Encode(e.Game.Name) session?')">
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="white" d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"/></svg>
                                                     </button>
                                                 </form>
@@ -72,9 +85,9 @@
                                     </div>
                                 }
                             </div>
-                            
+
                             <hr/>
-                            
+
                             @if (e.CantPlays.Any())
                             {
                                 <div class="d-flex align-items-center flex-wrap">
@@ -85,7 +98,7 @@
                                     }
                                 </div>
                             }
-                            
+
                             @if (!e.CantPlays.Any(x => x.UserId == Model.UserId))
                             {
                                 <form asp-page-handler="CantPlay">

@@ -49,18 +49,18 @@ namespace LetsGame.Web.Pages.Groups
             Group = await _db.Groups
                 .TagWith("Load group page data")
                 .AsSplitQuery()
-                .Include(x => x.Memberships)
-                .Include(x => x.Games)
+                .Include(x => x.Memberships.OrderBy(m => m.Role == GroupRole.Owner ? 0 : 1).ThenBy(m => m.DisplayName))
+                .Include(x => x.Games.OrderBy(g => g.Name))
                 .Include(x => x.Events
                     .Where(e => e.ChosenDateAndTimeUtc > utcNow || 
                                 e.ChosenDateAndTimeUtc == null && e.Slots.Any(s => s.ProposedDateAndTimeUtc > utcNow)))
                     .ThenInclude(x => x.Game)
                 .Include(x => x.Events)
-                    .ThenInclude(x => x.Slots.OrderBy(s => s.ProposedDateAndTimeUtc))
-                    .ThenInclude(x => x.Votes)
+                    .ThenInclude(x => x.Slots.Where(s => s.ProposedDateAndTimeUtc > utcNow).OrderBy(s => s.ProposedDateAndTimeUtc))
+                    .ThenInclude(x => x.Votes.OrderBy(v => v.VotedAtUtc))
                 .Include(x => x.Events)
-                    .ThenInclude(x => x.CantPlays)
-                .Include(x => x.Invites.OrderBy(x => x.CreatedAtUtc))
+                    .ThenInclude(x => x.CantPlays.OrderBy(c => c.AddedAtUtc))
+                .Include(x => x.Invites.OrderBy(i => i.CreatedAtUtc))
                 .OrderBy(x => x.Id)
                 .FirstOrDefaultAsync(x => x.Slug == slug);
             
@@ -171,6 +171,22 @@ namespace LetsGame.Web.Pages.Groups
                 await db.SaveChangesAsync();
             }
 
+            return RedirectToPage("Group", new {slug});
+        }
+
+        public async Task<IActionResult> OnPostDeleteEvent(string slug)
+        {
+            var ev = await _db.GroupEvents
+                .Where(x => x.CreatorId == UserId ||
+                            x.Group.Memberships.Any(m => m.Role == GroupRole.Owner && m.UserId == UserId))
+                .FirstOrDefaultAsync(x => x.Id == EventId);
+
+            if (ev != null)
+            {
+                _db.GroupEvents.Remove(ev);
+                await _db.SaveChangesAsync();
+            }
+            
             return RedirectToPage("Group", new {slug});
         }
     }
