@@ -28,7 +28,7 @@
             else
             {
                 <div class="m-auto" style="max-width: 15rem">
-                    <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-primary btn-lg btn-block m-3">Register</a>
+                    <a asp-area="Identity" asp-page="/Account/Register" asp-route-ReturnUrl="@HttpContext.Request.Path" class="btn btn-primary btn-lg btn-block m-3">Register</a>
                     <a asp-area="Identity" asp-page="/Account/Login" asp-route-ReturnUrl="@HttpContext.Request.Path" class="btn btn-outline-primary btn-lg btn-block m-3">Login</a>
                 </div>
             }

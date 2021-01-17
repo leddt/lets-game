@@ -1,0 +1,14 @@
+@page
+@model ConfirmEmailModel
+@{
+    ViewData["Title"] = "Confirm email";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<partial name="_StatusMessage" for="StatusMessage" />
+
+@if (Model.Success)
+{
+    <a asp-area="Identity" asp-page="/Account/Login" asp-route-ReturnUrl="@Model.ReturnUrl" class="btn btn-primary btn-lg mt-5">Login</a>
+}

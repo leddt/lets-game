@@ -1,13 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.EntityFrameworkCore;
 using LetsGame.Web.Data;
 using LetsGame.Web.Infrastructure.AspNet;
@@ -16,6 +10,7 @@ using LetsGame.Web.Services.Igdb;
 using LetsGame.Web.Services.Itad;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.Configuration;
@@ -68,6 +63,8 @@ namespace LetsGame.Web
 
             services.Configure<ItadOptions>(Configuration.GetSection("itad"));
             services.Configure<IgdbOptions>(Configuration.GetSection("igdb"));
+            services.Configure<SendGridOptions>(Configuration.GetSection("SendGrid"));
+            
             services.AddHttpClient<ItadClient>(ItadClient.Configure);
             services.AddHttpClient<IgdbClient>(IgdbClient.Configure);
             
@@ -78,6 +75,8 @@ namespace LetsGame.Web
             services.AddScoped<SlugGenerator>();
             services.AddScoped<GroupService>();
             services.AddScoped<DateService>();
+            
+            services.AddTransient<IEmailSender, EmailSender>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
