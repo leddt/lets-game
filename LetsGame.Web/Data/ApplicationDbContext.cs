@@ -25,6 +25,7 @@ namespace LetsGame.Web.Data
         public DbSet<GroupEvent> GroupEvents { get; set; }
         public DbSet<GroupEventSlot> GroupEventSlots { get; set; }
         public DbSet<GroupEventSlotVote> GroupEventSlotVotes { get; set; }
+        public DbSet<GroupEventCantPlay> GroupEventCantPlays { get; set; }
         public DbSet<GroupInvite> GroupInvites { get; set; }
         
 
@@ -62,6 +63,13 @@ namespace LetsGame.Web.Data
                 _.HasOne(x => x.Game).WithMany().IsRequired();
                 _.HasOne(x => x.Creator).WithMany().OnDelete(DeleteBehavior.SetNull);
                 _.HasMany(x => x.Slots).WithOne(x => x.Event).IsRequired();
+            });
+            
+            Entity<GroupEventCantPlay>(_ =>
+            {
+                _.HasKey(x => new {x.EventId, x.UserId});
+                _.HasOne(x => x.Event).WithMany(x => x.CantPlays).IsRequired();
+                _.HasOne(x => x.User).WithMany().IsRequired();
             });
             
             Entity<GroupEventSlot>(_ =>

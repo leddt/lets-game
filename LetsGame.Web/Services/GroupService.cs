@@ -93,6 +93,10 @@ namespace LetsGame.Web.Services
                     VotedAtUtc = DateTime.UtcNow
                 });
                 
+                var cantPlay = await _db.GroupEventCantPlays.FirstOrDefaultAsync(x => x.EventId == slot.EventId && x.UserId == voterId);
+                if (cantPlay != null)
+                    _db.GroupEventCantPlays.Remove(cantPlay);
+                
                 await _db.SaveChangesAsync();
             }
         }
@@ -107,6 +111,20 @@ namespace LetsGame.Web.Services
                 _db.GroupEventSlotVotes.Remove(vote);
                 await _db.SaveChangesAsync();
             }
+        }
+
+        public async Task SetCantPlayAsync(long eventId, string userId)
+        {
+            var votes = await _db.GroupEventSlotVotes.Where(x => x.Slot.EventId == eventId && x.VoterId == userId).ToListAsync();
+            if (votes.Any()) _db.GroupEventSlotVotes.RemoveRange(votes);
+
+            var exists = await _db.GroupEventCantPlays.AnyAsync(x => x.EventId == eventId && x.UserId == userId);
+            if (!exists)
+            {
+                _db.GroupEventCantPlays.Add(new GroupEventCantPlay {EventId = eventId, UserId = userId});
+            }
+
+            await _db.SaveChangesAsync();
         }
 
         public async Task PickSlotAsync(long slotId)

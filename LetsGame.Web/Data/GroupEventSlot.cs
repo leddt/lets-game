@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LetsGame.Web.Data
 {
@@ -8,6 +9,7 @@ namespace LetsGame.Web.Data
         public long Id { get; set; }
         
         public GroupEvent Event { get; set; }
+        [ForeignKey("Event")] public long EventId { get; set; }
         
         public DateTime ProposedDateAndTimeUtc { get; set; }
         

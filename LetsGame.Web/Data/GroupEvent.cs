@@ -16,6 +16,7 @@ namespace LetsGame.Web.Data
         public GroupGame Game { get; set; }
         public AppUser Creator { get; set; }
         public ICollection<GroupEventSlot> Slots { get; set; }
+        public ICollection<GroupEventCantPlay> CantPlays { get; set; }
         
         public DateTime? ChosenDateAndTimeUtc { get; set; }
         public string Details { get; set; }

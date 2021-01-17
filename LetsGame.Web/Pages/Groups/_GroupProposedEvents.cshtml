@@ -72,6 +72,27 @@
                                     </div>
                                 }
                             </div>
+                            
+                            <hr/>
+                            
+                            @if (e.CantPlays.Any())
+                            {
+                                <div class="d-flex align-items-center flex-wrap">
+                                    <span class="mr-1">Can't play:</span>
+                                    @foreach (var vote in e.CantPlays.OrderBy(x => x.AddedAtUtc))
+                                    {
+                                        <avatar name="@Model.GetDisplayName(vote.UserId)"/>
+                                    }
+                                </div>
+                            }
+                            
+                            @if (!e.CantPlays.Any(x => x.UserId == Model.UserId))
+                            {
+                                <form asp-page-handler="CantPlay">
+                                    <input type="hidden" asp-for="EventId" value="@e.Id"/>
+                                    <button type="submit" class="btn btn-sm btn-secondary">I can't play</button>
+                                </form>
+                            }
                         </div>
                     </div>
                 </div>

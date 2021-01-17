@@ -27,6 +27,7 @@ namespace LetsGame.Web.Pages.Groups
         public IEnumerable<GroupEvent> ProposedEvents => Group.Events.Where(x => x.ChosenDateAndTimeUtc == null);
         public IEnumerable<GroupEvent> UpcomingEvents => Group.Events.Where(x => x.ChosenDateAndTimeUtc.HasValue).OrderBy(x => x.ChosenDateAndTimeUtc);
         
+        [BindProperty] public long EventId { get; set; }
         [BindProperty] public long SlotId { get; set; }
         [BindProperty] public long GameId { get; set; }
         [BindProperty] public bool SingleUse { get; set; }
@@ -57,6 +58,8 @@ namespace LetsGame.Web.Pages.Groups
                 .Include(x => x.Events)
                     .ThenInclude(x => x.Slots.OrderBy(s => s.ProposedDateAndTimeUtc))
                     .ThenInclude(x => x.Votes)
+                .Include(x => x.Events)
+                    .ThenInclude(x => x.CantPlays)
                 .Include(x => x.Invites.OrderBy(x => x.CreatedAtUtc))
                 .OrderBy(x => x.Id)
                 .FirstOrDefaultAsync(x => x.Slug == slug);
@@ -101,6 +104,16 @@ namespace LetsGame.Web.Pages.Groups
         {
             var userId = _userManager.GetUserId(User);
             await groupService.RemoveSlotVoteAsync(SlotId, userId);
+
+            return RedirectToPage("Group", new {slug});
+        }
+
+        public async Task<IActionResult> OnPostCantPlay(
+            [FromServices] GroupService groupService,
+            string slug)
+        {
+            var userId = _userManager.GetUserId(User);
+            await groupService.SetCantPlayAsync(EventId, userId);
 
             return RedirectToPage("Group", new {slug});
         }
