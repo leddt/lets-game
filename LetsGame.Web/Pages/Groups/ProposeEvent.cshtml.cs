@@ -70,7 +70,7 @@ namespace LetsGame.Web.Pages.Groups
                 slotsUtc: ProposedDatesAndTimes
                     .Where(x => x.HasValue)
                     .Select(x => x.Value)
-                    .Select(_dateService.ConvertFromUserTimezoneToUtc)
+                    .Select(x => _dateService.ConvertFromUserTimezoneToUtc(x))
                     .ToArray());
 
             return RedirectToPage("Group", new {slug});

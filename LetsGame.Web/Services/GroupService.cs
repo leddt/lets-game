@@ -1,10 +1,17 @@
 ﻿using System;
 using System.Linq;
+using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using LetsGame.Web.Data;
 using LetsGame.Web.Helpers;
 using LetsGame.Web.Services.Igdb;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
 
 namespace LetsGame.Web.Services
@@ -16,19 +23,34 @@ namespace LetsGame.Web.Services
         private readonly IgdbClient _igdbClient;
         private readonly ICurrentUserAccessor _currentUserAccessor;
         private readonly UserManager<AppUser> _userManager;
+        private readonly IEmailSender _emailSender;
+        private readonly DateService _dateService;
+        private readonly IUrlHelperFactory _urlHelperFactory;
+        private readonly IActionContextAccessor _actionContextAccessor;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         public GroupService(
             ApplicationDbContext db, 
             SlugGenerator slugGenerator, 
             IgdbClient igdbClient, 
             ICurrentUserAccessor currentUserAccessor, 
-            UserManager<AppUser> userManager)
+            UserManager<AppUser> userManager,
+            IEmailSender emailSender,
+            DateService dateService,
+            IUrlHelperFactory urlHelperFactory,
+            IActionContextAccessor actionContextAccessor,
+            IHttpContextAccessor httpContextAccessor)
         {
             _db = db;
             _slugGenerator = slugGenerator;
             _igdbClient = igdbClient;
             _currentUserAccessor = currentUserAccessor;
             _userManager = userManager;
+            _emailSender = emailSender;
+            _dateService = dateService;
+            _urlHelperFactory = urlHelperFactory;
+            _actionContextAccessor = actionContextAccessor;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public Task<Group> FindBySlugAsync(string slug)
@@ -243,12 +265,15 @@ namespace LetsGame.Web.Services
 
         public async Task ProposeEventAsync(long groupId, long gameId, string details, DateTime[] slotsUtc)
         {
-            await EnsureIsGroupMemberAsync(groupId);
+            var group = await EnsureIsGroupMemberAsync(groupId);
+
+            var game = await _db.GroupGames.FirstOrDefaultAsync(x => x.GroupId == groupId && x.Id == gameId);
+            if (game == null) throw new InvalidOperationException($"Unknown game");
             
             var groupEvent = new GroupEvent
             {
                 GroupId = groupId,
-                GameId = gameId,
+                Game = game,
                 Details = details,
                 CreatorId = CurrentUserId,
                 Slots = slotsUtc
@@ -261,6 +286,37 @@ namespace LetsGame.Web.Services
             
             _db.GroupEvents.Add(groupEvent);
             await _db.SaveChangesAsync();
+
+            var allGroupMembers = await _db.Memberships
+                .Include(x => x.User)
+                .Where(x => x.GroupId == groupId)
+                .ToListAsync();
+
+            var creator = allGroupMembers.First(x => x.UserId == CurrentUserId);
+            var urlHelper = _urlHelperFactory.GetUrlHelper(_actionContextAccessor.ActionContext);
+            var groupUrl = urlHelper.Page("/Groups/Group", null, new {slug = group.Slug}, _httpContextAccessor.HttpContext?.Request.Scheme ?? "http");
+            
+            static string Encode(string value) => HtmlEncoder.Default.Encode(value);
+            string GetMessage(Membership member)
+            {
+                return $"<p>Hi {Encode(member.DisplayName)}!" +
+                       $"<p>A new session for <strong>{Encode(game.Name)}</strong> has been proposed by <strong>{Encode(creator.DisplayName)}</strong>." +
+                       $"<p>The proposed time slots are:" +
+                       $"<ul>" +
+                       string.Join("", slotsUtc.Select(x => $"<li>{Encode(_dateService.FormatUtcToUserFriendlyDate(x, member.User))}")) +
+                       $"</ul>" +
+                       $"<p><a href=\"{groupUrl}\">Go to your group's page to vote on it!</a>";
+            }
+
+            foreach (var member in allGroupMembers)
+            {
+                if (member.UserId == CurrentUserId) continue;
+
+                await _emailSender.SendEmailAsync(
+                    member.User.Email,
+                    $"A new session has been proposed in {group.Name}",
+                    GetMessage(member));
+            }
         }
 
         private string CurrentUserId => _userManager.GetUserId(_currentUserAccessor.CurrentUser);
@@ -281,13 +337,13 @@ namespace LetsGame.Web.Services
             if (!isGroupOwner) throw new InvalidOperationException("Not group owner");
         }
 
-        private async Task EnsureIsGroupMemberAsync(long groupId)
+        private async Task<Group> EnsureIsGroupMemberAsync(long groupId)
         {
-            var isGroupMember = await _db.Groups
-                .AnyAsync(x => x.Id == groupId &&
-                               x.Memberships.Any(m => m.UserId == CurrentUserId));
+            var group = await _db.Groups
+                .FirstOrDefaultAsync(x => x.Id == groupId &&
+                                          x.Memberships.Any(m => m.UserId == CurrentUserId));
             
-            if (!isGroupMember) throw new InvalidOperationException("Not group member");
+            return group ?? throw new InvalidOperationException("Not group member");;
         }
     }
 }

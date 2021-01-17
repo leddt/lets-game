@@ -1,4 +1,5 @@
 ﻿using System;
+using LetsGame.Web.Data;
 using Microsoft.Extensions.Configuration;
 
 namespace LetsGame.Web.Services
@@ -12,15 +13,14 @@ namespace LetsGame.Web.Services
             _localTimezone = config["LocalTimezone"];
         }
 
-        public DateTime ConvertFromUserTimezoneToUtc(DateTime dt)
+        public DateTime ConvertFromUserTimezoneToUtc(DateTime dt, AppUser userOverride = null)
         {
-            
-            return dt - GetUserTimeZone().GetUtcOffset(dt);
+            return dt - GetUserTimeZone(userOverride).GetUtcOffset(dt);
         }
 
-        public DateTime ConvertFromUtcToUserTimezone(DateTime dt)
+        public DateTime ConvertFromUtcToUserTimezone(DateTime dt, AppUser userOverride = null)
         {
-            return dt + GetUserTimeZone().GetUtcOffset(dt);
+            return dt + GetUserTimeZone(userOverride).GetUtcOffset(dt);
         }
 
         public DateTime RemoveSeconds(DateTime dt)
@@ -28,16 +28,16 @@ namespace LetsGame.Web.Services
             return dt.AddSeconds(-dt.Second);
         }
 
-        private TimeZoneInfo GetUserTimeZone()
+        private TimeZoneInfo GetUserTimeZone(AppUser userOverride = null)
         {
             // TODO: Implement user timezone preference
             return TimeZoneInfo.FindSystemTimeZoneById(_localTimezone);
         }
 
-        public string FormatUtcToUserFriendlyDate(DateTime dt)
+        public string FormatUtcToUserFriendlyDate(DateTime dt, AppUser userOverride = null)
         {
-            var localDt = ConvertFromUtcToUserTimezone(dt);
-            var localNow = ConvertFromUtcToUserTimezone(DateTime.UtcNow);
+            var localDt = ConvertFromUtcToUserTimezone(dt, userOverride);
+            var localNow = ConvertFromUtcToUserTimezone(DateTime.UtcNow, userOverride);
 
             if (localDt.Date == localNow.Date) return $"Today at {GetFriendlyTime(localDt)}";
             if (localDt.Date == localNow.AddDays(1)) return $"Tomorrow at {GetFriendlyTime(localDt)}";
