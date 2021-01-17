@@ -29,6 +29,12 @@
     @if (Model.IsGroupOwner)
     {
         <h2>Invites</h2>
+        
+        @if (!Model.Group.Invites.Any())
+        {
+            <p>Create links to invite your friends to the group!</p>
+        }
+        
         @foreach (var invite in Model.Group.Invites)
         {
             <div class="mb-1">
@@ -65,6 +71,12 @@
     }
 
     <h2>Games</h2>
+    
+    @if (!Model.Group.Games.Any())
+    {
+        <p>No game yet</p>
+    }
+    
     @if (Model.IsGroupOwner)
     {
         <a asp-page="AddGame" asp-route-slug="@Model.Group.Slug" class="btn btn-primary btn-sm">Add game</a>

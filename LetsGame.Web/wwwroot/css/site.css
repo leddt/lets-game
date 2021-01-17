@@ -45,3 +45,43 @@
         width: 25%
     }
 }
+
+.game-groups {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+@media (min-width: 576px) {
+    .game-groups {
+        flex-direction: column;
+    }
+}
+
+.game-group {
+    align-items: center;
+    border: solid 0.2rem;
+    border-radius: 50%;
+    color: #FFF;
+    display: flex;
+    font-size: 1.5rem;
+    font-weight: bold;
+    height: 4rem;
+    justify-content: center;
+    width: 4rem;
+}
+.game-group:hover {
+    color: #FFF;
+    text-decoration: none;
+}
+
+.game-group-active {
+    background-color: #343a40;
+    border-color: #007bff
+}
+.game-group-inactive {
+    background-color: #6c757d;
+}
+.game-group-inactive:hover {
+    background-color: #343a40;
+}
