@@ -32,29 +32,29 @@ namespace LetsGame.Web.Infrastructure.AspNet.TagHelpers
             _generator = generator;
         }
 
-        public override void Process(TagHelperContext context, TagHelperOutput output)
+        public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
         {
             output.TagName = "div";
             output.TagMode = TagMode.StartTagAndEndTag;
             output.AddClass("form-group", HtmlEncoder.Default);
             
-            CreateLabel(context, output);
-            CreateControl(context, output);
-            CreateValidation(context, output);
+            await CreateLabel(context, output);
+            await CreateControl(context, output);
+            await CreateValidation(context, output);
         }
 
-        private void CreateLabel(TagHelperContext context, TagHelperOutput output)
+        private async Task CreateLabel(TagHelperContext context, TagHelperOutput output)
         {
             var tag = CreateTag("label");
             
             ApplyAttributes(context, output, tag, LabelAttributePrefix);
 
-            new LabelTagHelper(_generator) {For = For, ViewContext = ViewContext}.Process(context, tag);
+            await new LabelTagHelper(_generator) {For = For, ViewContext = ViewContext}.ProcessAsync(context, tag);
 
             output.Content.AppendHtml(tag);
         }
 
-        private void CreateControl(TagHelperContext context, TagHelperOutput output)
+        private async Task CreateControl(TagHelperContext context, TagHelperOutput output)
         {
             var tag = As switch
             {
@@ -67,24 +67,24 @@ namespace LetsGame.Web.Infrastructure.AspNet.TagHelpers
 
             if (As == ControlElement.TextArea)
             {
-                new TextAreaTagHelper(_generator) {For = For, ViewContext = ViewContext}.Process(context, tag);
+                await new TextAreaTagHelper(_generator) {For = For, ViewContext = ViewContext}.ProcessAsync(context, tag);
             }
             else
             {
-                new InputTagHelper(_generator) {For = For, ViewContext = ViewContext}.Process(context, tag);
+                await new InputTagHelper(_generator) {For = For, ViewContext = ViewContext}.ProcessAsync(context, tag);
             }
 
             output.Content.AppendHtml(tag);
         }
 
-        private void CreateValidation(TagHelperContext context, TagHelperOutput output)
+        private async Task CreateValidation(TagHelperContext context, TagHelperOutput output)
         {
             var tag = CreateTag("span");
             
             ApplyAttributes(context, output, tag, ValidationAttributePrefix);
             tag.AddClass("invalid-feedback", HtmlEncoder.Default);
 
-            new ValidationMessageTagHelper(_generator) {For = For, ViewContext = ViewContext}.Process(context, tag);
+            await new ValidationMessageTagHelper(_generator) {For = For, ViewContext = ViewContext}.ProcessAsync(context, tag);
             
             output.Content.AppendHtml(tag);
         }

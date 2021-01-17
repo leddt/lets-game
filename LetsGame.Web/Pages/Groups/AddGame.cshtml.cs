@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Threading.Tasks;
 using LetsGame.Web.Data;
 using LetsGame.Web.Services;
@@ -6,14 +8,16 @@ using LetsGame.Web.Services.Igdb;
 using LetsGame.Web.Services.Igdb.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 
 namespace LetsGame.Web.Pages.Groups
 {
     public class AddGame : PageModel
     {
-        [BindProperty] public string SearchText { get; set; }
-        [BindProperty] public long GameToAdd { get; set; }
+        [BindProperty, Required, Display(Name = "Game name", Prompt = "What game are you looking for?")] 
+        public string SearchText { get; set; }
+        
+        [BindProperty] 
+        public long GameToAdd { get; set; }
         
         public Game[] Results { get; set; }
 
