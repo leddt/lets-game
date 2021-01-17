@@ -27,7 +27,7 @@ namespace LetsGame.Web.Data
         public DbSet<GroupEventSlotVote> GroupEventSlotVotes { get; set; }
         
 
-        public DbSet<DataProtectionKey> DataProtectionKeys { get; }
+        public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
