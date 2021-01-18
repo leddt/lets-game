@@ -38,7 +38,7 @@ namespace LetsGame.Web
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            if (false && env.IsDevelopment())
+            if (env.IsDevelopment())
             {
                 services.AddHostedService<EmbeddedPostgresHostedService>();
                 services.AddDbContext<ApplicationDbContext>(options =>
