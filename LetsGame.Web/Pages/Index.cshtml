@@ -5,6 +5,30 @@
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <h1 class="display-1">Welcome</h1>
+
+    @if (Model.Groups.Count == 0)
+    {
+        <p>Looks like you're new here. <a asp-page="/Groups/Create">Create a group</a> to get started!</p>
+    }
+    else if (Model.Groups.Count == 1)
+    {
+        <p>
+            <a asp-page="/Groups/Group" asp-route-slug="@Model.Groups[0].Slug">Go to your group</a>,
+            or
+            <a asp-page="/Groups/Create">create a new one</a>!
+        </p>
+    }
+    else
+    {
+        <p>
+            Pick a group, or <a asp-page="/Groups/Create">create a new one</a>!
+        </p>
+        @foreach (var group in Model.Groups)
+        {
+            <div>
+                <a asp-page="/Groups/Group" asp-route-slug="@group.Slug" class="btn btn-primary mb-2">@group.Name</a>
+            </div>
+        }
+    }
 </div>
