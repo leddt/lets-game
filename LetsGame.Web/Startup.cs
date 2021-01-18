@@ -23,8 +23,11 @@ namespace LetsGame.Web
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        private readonly IWebHostEnvironment env;
+
+        public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
+            this.env = env;
             Configuration = configuration;
         }
 
@@ -34,12 +37,24 @@ namespace LetsGame.Web
         public void ConfigureServices(IServiceCollection services)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options
-                    .UseNpgsql(Configuration.GetConnectionString("Postgres"))
-                    // .UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))
-                    .LogTo(Console.WriteLine, new[] {DbLoggerCategory.Database.Command.Name}, LogLevel.Information));
+
+            if (env.IsDevelopment())
+            {
+                services.AddHostedService<EmbeddedPostgresHostedService>();
+                services.AddDbContext<ApplicationDbContext>(options =>
+                {
+                    options
+                        .UseNpgsql(EmbeddedPostgresHostedService.ConnectionString)
+                        .LogTo(Console.WriteLine, new[] {DbLoggerCategory.Database.Command.Name}, LogLevel.Information);
+                });
+            }
+            else
+            {
+                services.AddDbContext<ApplicationDbContext>(options =>
+                    options
+                        .UseNpgsql(Configuration.GetConnectionString("Postgres"))
+                        .LogTo(Console.WriteLine, new[] {DbLoggerCategory.Database.Command.Name}, LogLevel.Information));
+            }
             
             services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -81,8 +96,13 @@ namespace LetsGame.Web
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, ApplicationDbContext db)
         {
+            using (db)
+            {
+                db.Database.Migrate();
+            }
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
