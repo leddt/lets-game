@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using SendGrid;
 using SendGrid.Helpers.Mail;
@@ -9,10 +10,12 @@ namespace LetsGame.Web.Services
     public class EmailSender : IEmailSender
     {
         private readonly IOptions<SendGridOptions> _sendgridOptions;
+        private readonly IConfiguration _config;
 
-        public EmailSender(IOptions<SendGridOptions> sendgridOptions)
+        public EmailSender(IOptions<SendGridOptions> sendgridOptions, IConfiguration config)
         {
             _sendgridOptions = sendgridOptions;
+            _config = config;
         }
 
         public Task SendEmailAsync(string email, string subject, string htmlMessage)
@@ -21,7 +24,7 @@ namespace LetsGame.Web.Services
             
             var message = new SendGridMessage
             {
-                From = new EmailAddress("letsgame-noreply@leddt.com", "Let's Game!"),
+                From = new EmailAddress(_config["EmailFrom"], "Let's Game!"),
                 Subject = subject,
                 HtmlContent = htmlMessage
             };
