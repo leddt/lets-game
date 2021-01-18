@@ -52,7 +52,7 @@ namespace LetsGame.Web
             {
                 services.AddDbContext<ApplicationDbContext>(options =>
                     options
-                        .UseNpgsql(Configuration.GetConnectionString("Postgres"))
+                        .UseNpgsql(ConvertPostgresqlConnectionString(Configuration["DATABASE_URL"]))
                         .LogTo(Console.WriteLine, new[] {DbLoggerCategory.Database.Command.Name}, LogLevel.Information));
             }
             
@@ -93,6 +93,19 @@ namespace LetsGame.Web
             services.AddScoped<ICurrentUserAccessor, HttpContextCurrentUserAccessor>();
             
             services.AddTransient<IEmailSender, EmailSender>();
+        }
+
+        private string ConvertPostgresqlConnectionString(string uriString)
+        {
+            var uri = new Uri(uriString);
+            var userInfo = uri.UserInfo.Split(':');
+
+            return $"Host={uri.Host};" +
+                   $"Database={uri.AbsolutePath};" +
+                   $"Username={userInfo[0]};" +
+                   $"Password={userInfo[1]};" +
+                   $"SSL Mode=Require;" +
+                   $"Trust Server Certificate=true;";
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
