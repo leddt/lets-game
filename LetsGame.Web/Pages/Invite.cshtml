@@ -2,6 +2,15 @@
 @model LetsGame.Web.Pages.InviteModel
 
 @{
+    @if (Model.Invite != null)
+    {
+        ViewBag["Title"] = $"You are invited to join {Model.Invite.Group.Name}";
+    }
+    else
+    {
+        ViewBag["Title"] = "Invite not found";
+    }
+    
     Layout = "_AnonymousLayout";
 }
 

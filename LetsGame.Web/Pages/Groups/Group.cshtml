@@ -6,6 +6,7 @@
 @model LetsGame.Web.Pages.Groups.GroupModel
 
 @{
+    ViewBag["Title"] = Model.Group.Name;
     Layout = "_AuthenticatedLayout";
 }
 
