@@ -24,12 +24,10 @@ namespace LetsGame.Web
     public class Startup
     {
         private readonly IWebHostEnvironment env;
-        private readonly ILogger<Startup> _startupLogger;
 
-        public Startup(IConfiguration configuration, IWebHostEnvironment env, ILogger<Startup> startupLogger)
+        public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
             this.env = env;
-            _startupLogger = startupLogger;
             Configuration = configuration;
         }
 
@@ -40,7 +38,7 @@ namespace LetsGame.Web
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            if (env.IsDevelopment())
+            if (false && env.IsDevelopment())
             {
                 services.AddHostedService<EmbeddedPostgresHostedService>();
                 services.AddDbContext<ApplicationDbContext>(options =>
@@ -107,14 +105,12 @@ namespace LetsGame.Web
             var userInfo = uri.UserInfo.Split(':');
 
             var cs = $"Host={uri.Host};" +
-                     $"Database={uri.AbsolutePath};" +
+                     $"Database={uri.AbsolutePath.Trim('/')};" +
                      $"Username={userInfo[0]};" +
                      $"Password={userInfo[1]};" +
                      $"SSL Mode=Require;" +
                      $"Trust Server Certificate=true;";
             
-            _startupLogger.Log(LogLevel.Information, "Using connection string {ConnectionString}", cs);
-
             return cs;
         }
 
