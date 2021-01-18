@@ -24,10 +24,12 @@ namespace LetsGame.Web
     public class Startup
     {
         private readonly IWebHostEnvironment env;
+        private readonly ILogger<Startup> _startupLogger;
 
-        public Startup(IConfiguration configuration, IWebHostEnvironment env)
+        public Startup(IConfiguration configuration, IWebHostEnvironment env, ILogger<Startup> startupLogger)
         {
             this.env = env;
+            _startupLogger = startupLogger;
             Configuration = configuration;
         }
 
@@ -104,12 +106,16 @@ namespace LetsGame.Web
             var uri = new Uri(uriString);
             var userInfo = uri.UserInfo.Split(':');
 
-            return $"Host={uri.Host};" +
-                   $"Database={uri.AbsolutePath};" +
-                   $"Username={userInfo[0]};" +
-                   $"Password={userInfo[1]};" +
-                   $"SSL Mode=Require;" +
-                   $"Trust Server Certificate=true;";
+            var cs = $"Host={uri.Host};" +
+                     $"Database={uri.AbsolutePath};" +
+                     $"Username={userInfo[0]};" +
+                     $"Password={userInfo[1]};" +
+                     $"SSL Mode=Require;" +
+                     $"Trust Server Certificate=true;";
+            
+            _startupLogger.Log(LogLevel.Information, "Using connection string {ConnectionString}", cs);
+
+            return cs;
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
