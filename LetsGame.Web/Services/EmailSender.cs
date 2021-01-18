@@ -17,6 +17,8 @@ namespace LetsGame.Web.Services
 
         public Task SendEmailAsync(string email, string subject, string htmlMessage)
         {
+            if (string.IsNullOrWhiteSpace(_sendgridOptions.Value.ApiKey)) return Task.CompletedTask;
+            
             var message = new SendGridMessage
             {
                 From = new EmailAddress("letsgame-noreply@leddt.com", "Let's Game!"),

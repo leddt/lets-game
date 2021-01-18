@@ -24,12 +24,11 @@ namespace LetsGame.Web.Services.Igdb
             _options = options;
         }
 
-        public async Task<IgdbAccessToken> GetAccessTokenAsync()
+        private async Task<IgdbAccessToken> GetAccessTokenAsync()
         {
             if (_accessToken?.IsExpired == false) return _accessToken;
 
-            var uri =
-                $"https://id.twitch.tv/oauth2/token?client_id={_options.Value.ClientId}&client_secret={_options.Value.ClientSecret}&grant_type=client_credentials";
+            var uri = $"https://id.twitch.tv/oauth2/token?client_id={_options.Value.ClientId}&client_secret={_options.Value.ClientSecret}&grant_type=client_credentials";
             var request = new HttpRequestMessage(HttpMethod.Post, uri);
             var response = await _client.SendAsync(request);
             response.EnsureSuccessStatusCode();
@@ -39,8 +38,12 @@ namespace LetsGame.Web.Services.Igdb
             return _accessToken;
         }
 
+        private bool IsEnabled => !string.IsNullOrWhiteSpace(_options.Value.ClientId);
+
         public Task<Game[]> SearchGamesAsync(string query)
         {
+            if (!IsEnabled) return Task.FromResult(new[] {GetFakeGame()});
+            
             return IgdbQuery<Game[]>(
                 "games",
                 fields: DefaultGameFields,
@@ -51,12 +54,23 @@ namespace LetsGame.Web.Services.Igdb
 
         public async Task<Game> GetGameAsync(long id)
         {
+            if (!IsEnabled) return GetFakeGame();
+            
             var results = await IgdbQuery<Game[]>(
                 "games",
                 fields: DefaultGameFields,
                 where: $"id = {id}");
 
             return results.FirstOrDefault();
+        }
+
+        private static Game GetFakeGame()
+        {
+            return new()
+            {
+                Id = 999999, 
+                Name = "Fake Game"
+            };
         }
 
         private async Task<T> IgdbQuery<T>(

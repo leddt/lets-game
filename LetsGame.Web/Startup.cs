@@ -65,15 +65,19 @@ namespace LetsGame.Web
             services.AddDefaultIdentity<AppUser>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
-            services.AddAuthentication()
-                .AddGoogle(options =>
-                {
-                    var config = Configuration.GetSection("Authentication:Google");
-
-                    options.ClientId = config["ClientId"];
-                    options.ClientSecret = config["ClientSecret"];
-                });
+            var googleConfig = Configuration.GetSection("Authentication:Google");
             
+            var auth = services.AddAuthentication();
+            if (!string.IsNullOrWhiteSpace(googleConfig["ClientId"]))
+            {
+                auth
+                    .AddGoogle(options =>
+                    {
+                        options.ClientId = googleConfig["ClientId"];
+                        options.ClientSecret = googleConfig["ClientSecret"];
+                    });
+            }
+
             services.AddRazorPages();
 
             services.Configure<ItadOptions>(Configuration.GetSection("itad"));

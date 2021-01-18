@@ -20,6 +20,9 @@ namespace LetsGame.Web.Services.Itad
 
         public async Task<ItadSearchResults> SearchAsync(string text, int limit = 20, bool strict = false)
         {
+            if (string.IsNullOrWhiteSpace(_options.Value.ApiKey))
+                return new ItadSearchResults();
+
             var uri = $"search/search?key={_options.Value.ApiKey}&q={text}&limit={limit}&strict={(strict ? 1 : 0)}";
             var results = await _client.GetFromJsonAsync<ItadResponse<ItadSearchResults>>(uri);
 

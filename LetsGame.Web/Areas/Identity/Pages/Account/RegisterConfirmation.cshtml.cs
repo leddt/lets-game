@@ -2,11 +2,13 @@ using Microsoft.AspNetCore.Authorization;
 using System.Text;
 using System.Threading.Tasks;
 using LetsGame.Web.Data;
+using LetsGame.Web.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
 
 namespace LetsGame.Web.Areas.Identity.Pages.Account
 {
@@ -14,12 +16,12 @@ namespace LetsGame.Web.Areas.Identity.Pages.Account
     public class RegisterConfirmationModel : PageModel
     {
         private readonly UserManager<AppUser> _userManager;
-        private readonly IEmailSender _sender;
+        private readonly IOptions<SendGridOptions> _sendgridOptions;
 
-        public RegisterConfirmationModel(UserManager<AppUser> userManager, IEmailSender sender)
+        public RegisterConfirmationModel(UserManager<AppUser> userManager, IOptions<SendGridOptions> sendgridOptions)
         {
             _userManager = userManager;
-            _sender = sender;
+            _sendgridOptions = sendgridOptions;
         }
 
         public string Email { get; set; }
@@ -43,7 +45,7 @@ namespace LetsGame.Web.Areas.Identity.Pages.Account
 
             Email = email;
             // Once you add a real email sender, you should remove this code that lets you confirm the account
-            DisplayConfirmAccountLink = false;
+            DisplayConfirmAccountLink = string.IsNullOrWhiteSpace(_sendgridOptions.Value.ApiKey);
             if (DisplayConfirmAccountLink)
             {
                 var userId = await _userManager.GetUserIdAsync(user);
