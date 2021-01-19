@@ -19,6 +19,8 @@ namespace LetsGame.Web.Data
         public ICollection<GroupEventCantPlay> CantPlays { get; set; }
         
         public DateTime? ChosenDateAndTimeUtc { get; set; }
+        public DateTime? StartingSoonNotificationSentAtUtc { get; set; }
+        
         public string Details { get; set; }
     }
 }

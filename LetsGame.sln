@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LetsGame.Web", "LetsGame.Web\LetsGame.Web.csproj", "{38DE832B-254E-4E86-BCD5-B2E14B1BBBF8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LetsGame.Tests", "LetsGame.Tests\LetsGame.Tests.csproj", "{DBD13104-7C2A-4FEA-B337-F83C30D0ADAF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{38DE832B-254E-4E86-BCD5-B2E14B1BBBF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{38DE832B-254E-4E86-BCD5-B2E14B1BBBF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{38DE832B-254E-4E86-BCD5-B2E14B1BBBF8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBD13104-7C2A-4FEA-B337-F83C30D0ADAF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBD13104-7C2A-4FEA-B337-F83C30D0ADAF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBD13104-7C2A-4FEA-B337-F83C30D0ADAF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBD13104-7C2A-4FEA-B337-F83C30D0ADAF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -96,7 +96,7 @@ namespace LetsGame.Web
             services.AddTransient<IEmailSender, EmailSender>();
 
             // Recurring tasks
-            services.AddTransient<IRecurringTask, TestRecurringTask>();
+            services.AddTransient<IRecurringTask, SendEventStartingSoonNotifications>();
         }
 
         private string ConvertPostgresqlConnectionString(string uriString)
