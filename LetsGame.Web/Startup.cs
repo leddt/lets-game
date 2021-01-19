@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using LetsGame.Web.Data;
 using LetsGame.Web.Infrastructure.AspNet;
+using LetsGame.Web.RecurringTasks;
 using LetsGame.Web.Services;
 using LetsGame.Web.Services.Igdb;
 using LetsGame.Web.Services.Itad;
@@ -93,6 +94,9 @@ namespace LetsGame.Web
             services.AddScoped<ICurrentUserAccessor, HttpContextCurrentUserAccessor>();
             
             services.AddTransient<IEmailSender, EmailSender>();
+
+            // Recurring tasks
+            services.AddTransient<IRecurringTask, TestRecurringTask>();
         }
 
         private string ConvertPostgresqlConnectionString(string uriString)
