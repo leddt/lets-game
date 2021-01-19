@@ -38,23 +38,19 @@ namespace LetsGame.Web
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            if (env.IsDevelopment())
+            var databaseUrl = Configuration["DATABASE_URL"];
+            if (string.IsNullOrWhiteSpace(databaseUrl))
             {
                 services.AddHostedService<EmbeddedPostgresHostedService>();
-                services.AddDbContext<ApplicationDbContext>(options =>
-                {
-                    options
-                        .UseNpgsql(EmbeddedPostgresHostedService.ConnectionString)
-                        .LogTo(Console.WriteLine, new[] {DbLoggerCategory.Database.Command.Name}, LogLevel.Information);
-                });
+                databaseUrl = EmbeddedPostgresHostedService.DatabaseUrl;
             }
-            else
+            
+            services.AddDbContext<ApplicationDbContext>(options =>
             {
-                services.AddDbContext<ApplicationDbContext>(options =>
-                    options
-                        .UseNpgsql(ConvertPostgresqlConnectionString(Configuration["DATABASE_URL"]))
-                        .LogTo(Console.WriteLine, new[] {DbLoggerCategory.Database.Command.Name}, LogLevel.Information));
-            }
+                options
+                    .UseNpgsql(ConvertPostgresqlConnectionString(databaseUrl))
+                    .LogTo(Console.WriteLine, new[] {DbLoggerCategory.Database.Command.Name}, LogLevel.Information);
+            });
             
             services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -105,10 +101,11 @@ namespace LetsGame.Web
             var userInfo = uri.UserInfo.Split(':');
 
             var cs = $"Host={uri.Host};" +
+                     $"Port={uri.Port};" +
                      $"Database={uri.AbsolutePath.Trim('/')};" +
                      $"Username={userInfo[0]};" +
                      $"Password={userInfo[1]};" +
-                     $"SSL Mode=Require;" +
+                     $"SSL Mode=Prefer;" +
                      $"Trust Server Certificate=true;";
             
             return cs;
