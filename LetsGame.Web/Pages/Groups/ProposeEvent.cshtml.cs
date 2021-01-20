@@ -71,6 +71,7 @@ namespace LetsGame.Web.Pages.Groups
                     .Where(x => x.HasValue)
                     .Select(x => x.Value)
                     .Select(x => _dateService.ConvertFromUserTimezoneToUtc(x))
+                    .OrderBy(x => x)
                     .ToArray());
 
             return RedirectToPage("Group", new {slug});
