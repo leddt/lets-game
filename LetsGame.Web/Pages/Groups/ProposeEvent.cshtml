@@ -6,6 +6,19 @@
     Layout = "_AuthenticatedLayout";
 }
 
+@section Styles {
+    <link rel="stylesheet" href="https://unpkg.com/vue-cal@4.2.0/dist/vuecal.css"/>
+    <link rel="stylesheet" href="/css/vuecal.theme.css"/>
+}
+
+@section Scripts
+{
+    <script src="https://unpkg.com/vue@3.0.5/dist/vue.global.prod.js"></script>
+    <script src="https://unpkg.com/vue-cal@4.2.0/dist/vuecal.umd.min.js"></script>
+    <script src="https://unpkg.com/vue-cal@4.2.0/dist/drag-and-drop.js"></script>
+    <script src="/js/propose-calendar.js"></script>
+}
+
 <h1 class="display-4">Propose a session</h1>
 
 @if (Model.PickedGameId.HasValue)
@@ -37,18 +50,44 @@
 {
     <form method="post" asp-page-handler="Propose">
         <h2>When can we play?</h2>
-        <p>Fill out as many dates as you want</p>
+        <p>Add as many dates as you want</p>
 
         <input asp-for="PickedGameId" type="hidden"/>
 
-        <div class="row">
-            @for (var i = 0; i < Model.ProposedDatesAndTimes.Length; i++)
-            {
-                <div class="col col-md-6 col-xl-3 mb-3">
-                    <input asp-for="ProposedDatesAndTimes[i]" type="datetime-local" class="form-control" min="@Model.MinDateTime.ToString("s")"/>
-                </div>
-            }
+        <div id="propose-calendar">
+            <p>
+                <em>Double click</em> in empty space or <em>click-and-drag</em> to add a slot.<br>
+                <em>Double click</em> a slot to remove it.
+            </p>
+            <div style="height: 600px; max-height: 80vh">
+                <vue-cal ref="vuecal" 
+                         active-view="week"
+                         :disable-views="['years', 'year', 'month', 'day']"
+                         :hide-view-selector="true"
+                         :editable-events="{title: false, create: true, drag: true, resize: true}"
+                         :snap-to-time="15"
+                         :today-button="true"
+                         @@event-dblclick="handleEventDblclick"
+                         @@cell-dblclick="handleCellDblclick"
+                         @@event-delete="eventRemoved"
+                         @@event-create="eventUpdated"
+                         @@event-drag-create="eventUpdated"
+                         @@event-change="eventUpdated"/>
+            </div>
+            <template v-for="(occurence, index) in occurences">
+                <input :key="`start-${index}`" type="hidden" :name="`Slots[${index}].Start`" :value="occurence.start"/>
+                <input :key="`start-${index}`" type="hidden" :name="`Slots[${index}].End`" :value="occurence.end"/>
+            </template>
         </div>
+
+        @* <div class="row"> *@
+        @*     @for (var i = 0; i < Model.ProposedDatesAndTimes.Length; i++) *@
+        @*     { *@
+        @*         <div class="col col-md-6 col-xl-3 mb-3"> *@
+        @*             <input asp-for="ProposedDatesAndTimes[i]" type="datetime-local" class="form-control" min="@Model.MinDateTime.ToString("s")"/> *@
+        @*         </div> *@
+        @*     } *@
+        @* </div> *@
 
         <h2>Anything to add?</h2>
         <form-group for="Details" as="TextArea"/>

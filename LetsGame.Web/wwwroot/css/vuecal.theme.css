@@ -1,0 +1,7 @@
+﻿.vuecal__event {
+    background-color: #666;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+}
