@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using LetsGame.Web.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Memory;
 
@@ -15,6 +17,15 @@ namespace LetsGame.Tests
                     InitialData = initialData
                 })
             });
+        }
+
+        public static ApplicationDbContext GetInMemoryDbContext()
+        {
+            var dbContextOptions = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase("tests")
+                .Options;
+            
+            return new ApplicationDbContext(dbContextOptions);
         }
     }
 }

@@ -97,6 +97,7 @@ namespace LetsGame.Web
 
             // Recurring tasks
             services.AddTransient<IRecurringTask, SendEventStartingSoonNotifications>();
+            services.AddTransient<IRecurringTask, CleanUpPastEvents>();
         }
 
         private string ConvertPostgresqlConnectionString(string uriString)

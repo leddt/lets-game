@@ -12,18 +12,19 @@ namespace LetsGame.Tests.RecurringTasks
 {
     public class SendEventStartingSoonNotificationsTests
     {
+        private readonly ApplicationDbContext _db = TestUtils.GetInMemoryDbContext();
         private readonly SendEventStartingSoonNotifications _sut;
         private readonly Mock<IEmailSender> _emailSender;
 
         public SendEventStartingSoonNotificationsTests()
         {
-            var config = TestUtils.GetConfiguration(new Dictionary<string, string>
+            var config = TestUtils.GetConfiguration(new()
             {
                 {"LocalTimezone", "Eastern Standard Time"}
             });
 
             _emailSender = new Mock<IEmailSender>();
-            _sut = new SendEventStartingSoonNotifications(null, _emailSender.Object, new DateService(config));
+            _sut = new SendEventStartingSoonNotifications(_db, _emailSender.Object, new DateService(config));
         }
         
         [Fact]
@@ -67,15 +68,52 @@ namespace LetsGame.Tests.RecurringTasks
                 It.IsAny<string>()));
         }
 
+        [Fact]
+        public async Task TheJobFindsTheProperEvents()
+        {
+            var validEvent = GetValidEvent();
+            validEvent.Group.Name = "Valid";
+            
+            var invalidEvent1 = GetValidEvent();
+            invalidEvent1.Group.Name = "Invalid";
+            invalidEvent1.ChosenDateAndTimeUtc = DateTime.UtcNow + TimeSpan.FromHours(3);
+            
+            var invalidEvent2 = GetValidEvent();
+            invalidEvent1.Group.Name = "Invalid";
+            invalidEvent2.StartingSoonNotificationSentAtUtc = DateTime.UtcNow;
+            
+            _db.GroupEvents.Add(validEvent);
+            _db.GroupEvents.Add(invalidEvent1);
+            _db.GroupEvents.Add(invalidEvent2);
+            await _db.SaveChangesAsync();
+            _db.ChangeTracker.Clear();
+            
+            await _sut.Run();
+
+            _emailSender.Verify(
+                x => x.SendEmailAsync(
+                    It.IsAny<string>(),
+                    It.Is<string>(s => s.Contains("Valid")),
+                    It.IsAny<string>()),
+                Times.AtLeast(1));
+            
+            _emailSender.Verify(
+                x => x.SendEmailAsync(
+                    It.IsAny<string>(),
+                    It.Is<string>(s => s.Contains("Invalid")),
+                    It.IsAny<string>()),
+                Times.Never);
+        }
+
         private GroupEvent GetValidEvent()
         {
             var chosenTime = DateTime.UtcNow.AddHours(1);
 
-            var user1 = new AppUser {Id = "user1", Email = "user1@example.com"};
-            var user2 = new AppUser {Id = "user2", Email = "user2@example.com"};
-            var user3 = new AppUser {Id = "user3", Email = "user3@example.com"};
-            var user4 = new AppUser {Id = "user4", Email = "user4@example.com"};
-            var user5 = new AppUser {Id = "user5", Email = "user5@example.com"};
+            var user1 = new AppUser {Email = "user1@example.com"};
+            var user2 = new AppUser {Email = "user2@example.com"};
+            var user3 = new AppUser {Email = "user3@example.com"};
+            var user4 = new AppUser {Email = "user4@example.com"};
+            var user5 = new AppUser {Email = "user5@example.com"};
 
             return new GroupEvent
             {

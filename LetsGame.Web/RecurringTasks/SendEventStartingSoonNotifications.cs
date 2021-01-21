@@ -26,8 +26,6 @@ namespace LetsGame.Web.RecurringTasks
 
         public async Task Run()
         {
-            Console.WriteLine("Running task {0}...", nameof(SendEventStartingSoonNotifications));
-            
             var utcNow = DateTime.UtcNow;
             var utcThreshold = utcNow + TimeSpan.FromHours(2);
 
@@ -40,6 +38,8 @@ namespace LetsGame.Web.RecurringTasks
                 .Where(x => x.ChosenDateAndTimeUtc < utcThreshold)
                 .Where(x => x.StartingSoonNotificationSentAtUtc == null)
                 .ToListAsync();
+            
+            Console.WriteLine("{0} events to notify", events.Count);
 
             foreach (var ev in events)
             {
@@ -49,8 +49,6 @@ namespace LetsGame.Web.RecurringTasks
                 
                 await SendEventNotifications(ev);
             }
-            
-            Console.WriteLine("Task {0} completed", nameof(SendEventStartingSoonNotifications));
         }
 
         public async Task SendEventNotifications(GroupEvent ev)
@@ -108,10 +106,13 @@ namespace LetsGame.Web.RecurringTasks
             {
                 var name = otherNames[i];
 
-                if (i == otherNames.Count - 1) // is last? 
-                    sb.Append(" and ");
-                else if (i > 0) // is not first?
-                    sb.Append(", ");
+                if (i > 0) // is not first?
+                {
+                    if (i == otherNames.Count - 1) // is last? 
+                        sb.Append(" and ");
+                    else
+                        sb.Append(", ");
+                }
 
                 sb.Append(name);
             }
