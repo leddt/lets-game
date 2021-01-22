@@ -52,7 +52,7 @@ namespace LetsGame.Web.Pages.Groups
         {
             var protector = _dataProtectionProvider.CreateProtector("ical auth");
             var token = protector.Protect($"{slug}:{UserId}");
-            IcalLink = Url.Action("GetGroupCalendarAsIcal", "Ical", new {slug, u = UserId, t = token});
+            IcalLink = Url.Action("GetGroupCalendarAsIcal", "Ical", new {slug, u = UserId, t = token}, Request.Scheme);
             
             var utcThreshold = DateTime.UtcNow - TimeSpan.FromHours(6);
             
