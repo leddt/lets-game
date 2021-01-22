@@ -50,10 +50,6 @@ namespace LetsGame.Web.Pages.Groups
         
         public async Task<IActionResult> OnGetAsync(string slug)
         {
-            var protector = _dataProtectionProvider.CreateProtector("ical auth");
-            var token = protector.Protect($"{slug}:{UserId}");
-            IcalLink = Url.Action("GetGroupCalendarAsIcal", "Ical", new {slug, u = UserId, t = token}, Request.Scheme);
-            
             var utcThreshold = DateTime.UtcNow - TimeSpan.FromHours(6);
             
             Group = await _db.Groups
@@ -73,6 +69,14 @@ namespace LetsGame.Web.Pages.Groups
                 .Include(x => x.Invites.OrderBy(i => i.CreatedAtUtc))
                 .OrderBy(x => x.Id)
                 .FirstOrDefaultAsync(x => x.Slug == slug);
+
+            if (string.IsNullOrWhiteSpace(Group.SharingKey))
+            {
+                Group.SharingKey = Guid.NewGuid().ToString("N");
+                await _db.SaveChangesAsync();
+            }
+            
+            IcalLink = Url.Action("GetGroupCalendarAsIcal", "Ical", new {slug, k = Group.SharingKey}, Request.Scheme);
             
             UserMembership = Group?.Memberships.FirstOrDefault(x => x.UserId == UserId);
 

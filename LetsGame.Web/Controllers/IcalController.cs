@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Ical.Net;
@@ -7,8 +6,6 @@ using Ical.Net.CalendarComponents;
 using Ical.Net.DataTypes;
 using Ical.Net.Serialization;
 using LetsGame.Web.Data;
-using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,26 +15,22 @@ namespace LetsGame.Web.Controllers
     public class IcalController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
-        private readonly IDataProtectionProvider _dataProtectionProvider;
 
-        public IcalController(ApplicationDbContext db, IDataProtectionProvider dataProtectionProvider)
+        public IcalController(ApplicationDbContext db)
         {
             _db = db;
-            _dataProtectionProvider = dataProtectionProvider;
         }
 
         [HttpGet("group/{slug}.ics")]
-        public async Task<IActionResult> GetGroupCalendarAsIcalAsync(string slug, string u, string t)
+        public async Task<IActionResult> GetGroupCalendarAsIcalAsync(string slug, string k)
         {
-            var protector = _dataProtectionProvider.CreateProtector("ical auth");
-            var expected = $"{slug}:{u}";
-            var actual = protector.Unprotect(t);
-            if (expected != actual) return NotFound();
-            
             var group = await _db.Groups
                 .Include(g => g.Events.Where(e => e.ChosenDateAndTimeUtc.HasValue)).ThenInclude(e => e.Game)
                 .Where(g => g.Slug == slug)
+                .Where(g => g.SharingKey == k)
                 .FirstOrDefaultAsync();
+
+            if (group == null) return NotFound();
 
             var calendar = new Calendar
             {

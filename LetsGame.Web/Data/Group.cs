@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace LetsGame.Web.Data
 {
@@ -7,6 +8,8 @@ namespace LetsGame.Web.Data
         public long Id { get; set; }
         public string Name { get; set; }
         public string Slug { get; set; }
+
+        public string SharingKey { get; set; } = Guid.NewGuid().ToString("N");
         
         public ICollection<AppUser> Members { get; set; }
         public ICollection<Membership> Memberships { get; set; }
