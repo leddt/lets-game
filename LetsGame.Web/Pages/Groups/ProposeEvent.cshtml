@@ -56,27 +56,34 @@
 
         <div id="propose-calendar">
             <p>
-                <em>Double click</em> in empty space or <em>click-and-drag</em> to add a slot.<br>
-                <em>Double click</em> a slot to remove it.
+                <em>Click</em> in empty space to add a slot.<br>
+                <em>Double click</em> a slot to remove it.<br>
+                Only the start time matters.
             </p>
             <div style="height: 600px; max-height: 80vh">
-                <vue-cal ref="vuecal" 
+                <vue-cal ref="vuecal"
                          active-view="week"
                          :disable-views="['years', 'year', 'month', 'day']"
                          :hide-view-selector="true"
-                         :editable-events="{title: false, create: true, drag: true, resize: true}"
+                         :editable-events="{title: false, create: false, drag: true, resize: false}"
                          :snap-to-time="15"
                          :today-button="true"
                          @@event-dblclick="handleEventDblclick"
-                         @@cell-dblclick="handleCellDblclick"
+                         @@cell-click="handleCellClick"
                          @@event-delete="eventRemoved"
                          @@event-create="eventUpdated"
                          @@event-drag-create="eventUpdated"
-                         @@event-change="eventUpdated"/>
+                         @@event-change="eventUpdated">
+                    <template v-slot:event="{event}">
+                        <div class="vuecal__event-time">{{event.start.formatTime("h:mm {am}")}}</div>
+                    </template>
+                </vue-cal>
             </div>
             <template v-for="(occurence, index) in occurences">
-                <input :key="`start-${index}`" type="hidden" :name="`Slots[${index}].Start`" :value="occurence.start"/>
-                <input :key="`start-${index}`" type="hidden" :name="`Slots[${index}].End`" :value="occurence.end"/>
+                <input :key="`start-${index}`" 
+                       type="hidden" 
+                       :name="`ProposedDatesAndTimes[${index}]`" 
+                       :value="occurence.start.format('{YYYY}-{MM}-{DD}T{HH}:{mm}')"/>
             </template>
         </div>
 

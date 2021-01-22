@@ -1,5 +1,8 @@
 ﻿const {ref, computed} = Vue;
 
+const cellClickPrecision = 30;
+const eventLength = 60
+
 const ProposeCalendar = {
     components: {
         'vue-cal': vuecal
@@ -27,9 +30,9 @@ const ProposeCalendar = {
             delete rawEvents.value[event._eid];
         };
 
-        const handleCellDblclick = (time) => {
-            time.setMinutes(Math.round(time.getMinutes()/15) * 15, 0, 0);
-            vuecal.value.createEvent(time, 120);
+        const handleCellClick = (time) => {
+            time.setMinutes(Math.floor(time.getMinutes()/cellClickPrecision) * cellClickPrecision, 0, 0);
+            vuecal.value.createEvent(time, eventLength);
         };
 
         const handleEventDblclick = (event, domEvent) => {
@@ -45,7 +48,7 @@ const ProposeCalendar = {
             occurences,
             eventUpdated,
             eventRemoved,
-            handleCellDblclick,
+            handleCellClick,
             handleEventDblclick
         };
     }
