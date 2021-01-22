@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using LetsGame.Web.Data;
 using LetsGame.Web.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -18,16 +19,19 @@ namespace LetsGame.Web.Pages.Groups
         private readonly ApplicationDbContext _db;
         private readonly UserManager<AppUser> _userManager;
         private readonly GroupService _groupService;
+        private readonly IDataProtectionProvider _dataProtectionProvider;
 
-        public GroupModel(ApplicationDbContext db, UserManager<AppUser> userManager, GroupService groupService)
+        public GroupModel(ApplicationDbContext db, UserManager<AppUser> userManager, GroupService groupService, IDataProtectionProvider dataProtectionProvider)
         {
             _db = db;
             _userManager = userManager;
             _groupService = groupService;
+            _dataProtectionProvider = dataProtectionProvider;
         }
 
         public Group Group { get; set; }
         public Membership UserMembership { get; set; }
+        public string IcalLink { get; set; }
         public IEnumerable<GroupEvent> ProposedEvents => Group.Events.Where(x => x.ChosenDateAndTimeUtc == null);
         public IEnumerable<GroupEvent> UpcomingEvents => Group.Events.Where(x => x.ChosenDateAndTimeUtc.HasValue).OrderBy(x => x.ChosenDateAndTimeUtc);
         
@@ -46,6 +50,10 @@ namespace LetsGame.Web.Pages.Groups
         
         public async Task<IActionResult> OnGetAsync(string slug)
         {
+            var protector = _dataProtectionProvider.CreateProtector("ical auth");
+            var token = protector.Protect($"{slug}:{UserId}");
+            IcalLink = Url.Action("GetGroupCalendarAsIcal", "Ical", new {slug, u = UserId, t = token});
+            
             var utcThreshold = DateTime.UtcNow - TimeSpan.FromHours(6);
             
             Group = await _db.Groups
