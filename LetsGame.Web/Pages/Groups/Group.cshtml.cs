@@ -47,6 +47,14 @@ namespace LetsGame.Web.Pages.Groups
 
         public bool IsGroupOwner => UserMembership.Role == GroupRole.Owner;
         public string UserId => _userManager.GetUserId(User);
+
+        public IReadOnlyCollection<Membership> GetMissingVotes(GroupEvent ev)
+        {
+            var voterIds = ev.Slots.SelectMany(s => s.Votes).Select(v => v.VoterId);
+            var cantPlays = ev.CantPlays.Select(x => x.UserId);
+            var allVoterIds = voterIds.Union(cantPlays).Distinct();
+            return Group.Memberships.Where(x => !allVoterIds.Contains(x.UserId)).ToList();
+        }
         
         public async Task<IActionResult> OnGetAsync(string slug)
         {

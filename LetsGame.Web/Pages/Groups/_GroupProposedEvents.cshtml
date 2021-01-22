@@ -90,6 +90,19 @@
                                 }
                             </div>
 
+                            @{ var missingVotes = Model.GetMissingVotes(e);}
+                            @if (missingVotes.Any())
+                            {
+                                <hr/>
+                                <div class="d-flex align-items-center flex-wrap">
+                                    <span class="mr-1">Missing votes:</span>
+                                    @foreach (var member in missingVotes)
+                                    {
+                                        <avatar name="@member.DisplayName"/>
+                                    }
+                                </div>
+                            }
+                            
                             <hr/>
 
                             @if (e.CantPlays.Any())
