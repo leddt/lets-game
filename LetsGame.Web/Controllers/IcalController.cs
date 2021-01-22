@@ -36,8 +36,6 @@ namespace LetsGame.Web.Controllers
             
             var group = await _db.Groups
                 .Include(g => g.Events.Where(e => e.ChosenDateAndTimeUtc.HasValue)).ThenInclude(e => e.Game)
-                .Include(g => g.Events).ThenInclude(e => e.Slots).ThenInclude(s => s.Votes)
-                .Include(g => g.Memberships)
                 .Where(g => g.Slug == slug)
                 .FirstOrDefaultAsync();
 
@@ -54,26 +52,14 @@ namespace LetsGame.Web.Controllers
 
         private CalendarEvent GetCalendarEvent(GroupEvent ev)
         {
-            var slot = ev.Slots.FirstOrDefault(x => x.ProposedDateAndTimeUtc == ev.ChosenDateAndTimeUtc);
             var dt = DateTime.SpecifyKind(ev.ChosenDateAndTimeUtc.Value, DateTimeKind.Utc);
 
             return new CalendarEvent
             {
                 Summary = ev.Game.Name,
                 Start = new CalDateTime(dt),
-                End = new CalDateTime(dt + TimeSpan.FromHours(1)),
-                
-                Attendees = slot?.Votes
-                    .Select(v => GetDisplayName(ev.Group.Memberships, v.VoterId))
-                    .Where(n => !string.IsNullOrWhiteSpace(n))
-                    .Select(n => new Attendee{CommonName = n})
-                    .ToList()
+                End = new CalDateTime(dt + TimeSpan.FromHours(1))
             };
-        }
-
-        private string GetDisplayName(ICollection<Membership> memberships, string voterId)
-        {
-            return memberships.FirstOrDefault(x => x.UserId == voterId)?.DisplayName;
         }
     }
 }
