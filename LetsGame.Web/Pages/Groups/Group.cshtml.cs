@@ -46,7 +46,7 @@ namespace LetsGame.Web.Pages.Groups
         
         public async Task<IActionResult> OnGetAsync(string slug)
         {
-            var utcNow = DateTime.UtcNow;
+            var utcThreshold = DateTime.UtcNow - TimeSpan.FromHours(6);
             
             Group = await _db.Groups
                 .TagWith("Load group page data")
@@ -54,11 +54,11 @@ namespace LetsGame.Web.Pages.Groups
                 .Include(x => x.Memberships.OrderBy(m => m.Role == GroupRole.Owner ? 0 : 1).ThenBy(m => m.DisplayName))
                 .Include(x => x.Games.OrderBy(g => g.Name))
                 .Include(x => x.Events
-                    .Where(e => e.ChosenDateAndTimeUtc > utcNow || 
-                                e.ChosenDateAndTimeUtc == null && e.Slots.Any(s => s.ProposedDateAndTimeUtc > utcNow)))
+                    .Where(e => e.ChosenDateAndTimeUtc > utcThreshold || 
+                                e.ChosenDateAndTimeUtc == null && e.Slots.Any(s => s.ProposedDateAndTimeUtc > utcThreshold)))
                     .ThenInclude(x => x.Game)
                 .Include(x => x.Events)
-                    .ThenInclude(x => x.Slots.Where(s => s.ProposedDateAndTimeUtc > utcNow).OrderBy(s => s.ProposedDateAndTimeUtc))
+                    .ThenInclude(x => x.Slots.Where(s => s.ProposedDateAndTimeUtc > utcThreshold).OrderBy(s => s.ProposedDateAndTimeUtc))
                     .ThenInclude(x => x.Votes.OrderBy(v => v.VotedAtUtc))
                 .Include(x => x.Events)
                     .ThenInclude(x => x.CantPlays.OrderBy(c => c.AddedAtUtc))
