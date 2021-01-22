@@ -211,29 +211,43 @@ namespace LetsGame.Web.Services
                 .Where(x => x.Group.Memberships.Any(m => m.UserId == CurrentUserId && m.Role == GroupRole.Owner))
                 .FirstOrDefaultAsync(x => x.GroupId == groupId && x.UserId == memberId && x.Role != GroupRole.Owner);
             
-            if (member != null)
-            {
-                _db.Memberships.Remove(member);
+            if (member != null) await DeleteMember(member);
+        }
 
-                var events = await _db.GroupEvents
-                    .Where(x => x.GroupId == groupId && x.CreatorId == memberId)
-                    .ToListAsync();
-                events.ForEach(ev => ev.CreatorId = null);
+        public async Task LeaveGroup(long groupId)
+        {
+            var member = await _db.Memberships
+                .Where(m => m.GroupId == groupId && m.UserId == CurrentUserId)
+                .FirstOrDefaultAsync();
 
-                var votes = await _db.GroupEventSlotVotes
-                    .Where(x => x.Slot.Event.GroupId == groupId && x.VoterId == memberId)
-                    .ToListAsync();
-                if (votes.Any())
-                    _db.GroupEventSlotVotes.RemoveRange(votes);
-                
-                var cantPlays = await _db.GroupEventCantPlays
-                    .Where(x => x.Event.GroupId == groupId && x.UserId == memberId)
-                    .ToListAsync();
-                if (cantPlays.Any())
-                    _db.GroupEventCantPlays.RemoveRange(cantPlays);
-                
-                await _db.SaveChangesAsync();
-            }
+            if (member.Role == GroupRole.Owner)
+                throw new InvalidOperationException("Owner can't leave group");
+
+            await DeleteMember(member);
+        }
+
+        private async Task DeleteMember(Membership member)
+        {
+            _db.Memberships.Remove(member);
+
+            var events = await _db.GroupEvents
+                .Where(x => x.GroupId == member.GroupId && x.CreatorId == member.UserId)
+                .ToListAsync();
+            events.ForEach(ev => ev.CreatorId = null);
+
+            var votes = await _db.GroupEventSlotVotes
+                .Where(x => x.Slot.Event.GroupId == member.GroupId && x.VoterId == member.UserId)
+                .ToListAsync();
+            if (votes.Any())
+                _db.GroupEventSlotVotes.RemoveRange(votes);
+
+            var cantPlays = await _db.GroupEventCantPlays
+                .Where(x => x.Event.GroupId == member.GroupId && x.UserId == member.UserId)
+                .ToListAsync();
+            if (cantPlays.Any())
+                _db.GroupEventCantPlays.RemoveRange(cantPlays);
+
+            await _db.SaveChangesAsync();
         }
 
         public async Task<Group> AcceptInviteAsync(string displayName, string inviteId)

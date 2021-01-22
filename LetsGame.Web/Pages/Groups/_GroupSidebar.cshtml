@@ -24,6 +24,13 @@
                         <button type="submit" class="btn btn-outline-danger btn-sm mb-1" data-tooltip title="Remove @membership.DisplayName from the group" onclick="return confirm('Remove @(JavaScriptEncoder.Default.Encode(membership.DisplayName)) from the group?')">&times;</button>
                     </form>
                 }
+                
+                @if (!Model.IsGroupOwner && isSelf)
+                {
+                    <form asp-page-handler="LeaveGroup" class="d-inline flex-fill text-right">
+                        <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Leave @(JavaScriptEncoder.Default.Encode(Model.Group.Name))?')">Leave</button>
+                    </form>
+                }
             </div>
         }
         @if (Model.IsGroupOwner && Model.Group.Memberships.Count == 1)

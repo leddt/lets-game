@@ -162,6 +162,14 @@ namespace LetsGame.Web.Pages.Groups
             return RedirectToPage("Group", new {slug});
         }
 
+        public async Task<IActionResult> OnPostLeaveGroup(string slug)
+        {
+            var group = await _groupService.FindBySlugAsync(slug);
+            await _groupService.LeaveGroup(group.Id);
+
+            return RedirectToPage("/Index");
+        }
+
         public async Task<IActionResult> OnPostRemoveGame(string slug)
         {
             var game = await _db.GroupGames
