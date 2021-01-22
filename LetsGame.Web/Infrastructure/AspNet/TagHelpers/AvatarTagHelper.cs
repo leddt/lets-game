@@ -43,6 +43,7 @@ namespace LetsGame.Web.Infrastructure.AspNet.TagHelpers
         {
             output.TagMode = TagMode.StartTagAndEndTag;
             output.AddClass("avatar", HtmlEncoder.Default);
+            output.Attributes.Add("data-tooltip", null);
             output.Attributes.SetAttribute("title", Name);
 
             if (IsLarge)

@@ -3,6 +3,4 @@
 
 // Write your JavaScript code.
 
-document.addEventListener("load", () => {
-    
-})
+$(() => $("[data-tooltip]").tooltip())

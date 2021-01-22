@@ -29,7 +29,7 @@
                                     {
                                         <form asp-page-handler="DeleteEvent">
                                             <input type="hidden" asp-for="EventId" value="@e.Id" />
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Cancel session" onclick="return confirm('Cancel this @(JavaScriptEncoder.Default.Encode(e.Game.Name)) session?')">&times;</button>
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" data-tooltip title="Cancel session" onclick="return confirm('Cancel this @(JavaScriptEncoder.Default.Encode(e.Game.Name)) session?')">&times;</button>
                                         </form>
                                     }
                                 </div>
