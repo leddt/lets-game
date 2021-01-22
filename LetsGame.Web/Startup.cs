@@ -63,8 +63,10 @@ namespace LetsGame.Web
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
             var googleConfig = Configuration.GetSection("Authentication:Google");
+
+            var auth = services.AddAuthentication()
+                .AddSteam();
             
-            var auth = services.AddAuthentication();
             if (!string.IsNullOrWhiteSpace(googleConfig["ClientId"]))
             {
                 auth
