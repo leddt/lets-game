@@ -1,7 +1,7 @@
 ﻿.vuecal__event {
     background-color: #666;
     color: #fff;
-    cursor: default;
+    cursor: move;
     display: flex;
     flex-direction: column;
     justify-content: space-around;
@@ -19,10 +19,46 @@
 .vuecal__cell--disabled {
     background-color: #eee
 }
-.vuecal__cell--disabled::before {
+.vuecal__cell--disabled:before {
     display: none;
 }
 
 .vuecal__no-event {
     display: none;
+}
+
+
+
+
+/* EXPERIMENTAL */
+.week-view {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: auto;
+}
+.vuecal__time-column {
+    width: 100%;
+}
+.vuecal--view-with-time .vuecal__weekdays-headings {
+    padding: 0;
+}
+.vuecal__time-column .vuecal__time-cell {
+    color: #aaa;
+}
+.vuecal__time-cell {
+    position: relative;
+}
+.vuecal__time-cell-line-mid:before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    border-top: 1px dashed hsla(0,0%,76.9%,.15);
+}
+.vuecal__bg {
+    padding-bottom: 1px;
 }

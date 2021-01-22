@@ -31,6 +31,7 @@ const ProposeCalendar = {
         };
 
         const handleCellClick = (time) => {
+            if (!time.getMinutes) return;
             time.setMinutes(Math.floor(time.getMinutes()/cellClickPrecision) * cellClickPrecision, 0, 0);
             vuecal.value.createEvent(time, eventLength);
         };
@@ -43,6 +44,13 @@ const ProposeCalendar = {
             domEvent.stopPropagation();
         };
         
+        const getTime = (hours, minutes) => {
+            const am = hours < 12 ? "am" : "pm";
+            hours = hours%12 || 12;
+            
+            return `${hours} ${am}`
+        }
+        
         return {
             vuecal,
             occurences,
@@ -50,6 +58,7 @@ const ProposeCalendar = {
             eventRemoved,
             handleCellClick,
             handleEventDblclick,
+            getTime,
             minimumDate: new Date()
         };
     }

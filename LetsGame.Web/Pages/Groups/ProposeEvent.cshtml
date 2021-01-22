@@ -82,6 +82,13 @@
                             <template v-slot:event="{event}">
                                 <div class="vuecal__event-time">{{event.start.formatTime("h:mm {am}")}}</div>
                             </template>
+                            <template v-slot:time-cell="{ hours, minutes }">
+                                <div class="vuecal__time-cell-line"></div>
+                                <div class="vuecal__time-cell-line-mid"></div>
+                                <div class="d-flex">
+                                    <div v-for="n in 7" class="flex-grow-1">{{getTime(hours, minutes)}}</div>
+                                </div>
+                            </template>
                         </vue-cal>
                         <template v-for="(occurence, index) in occurences">
                             <input :key="`start-${index}`"
