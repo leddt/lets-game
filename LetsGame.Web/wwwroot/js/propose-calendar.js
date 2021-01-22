@@ -1,7 +1,7 @@
 ﻿const {ref, computed} = Vue;
 
 const cellClickPrecision = 30;
-const eventLength = 60
+const eventLength = 120
 
 const ProposeCalendar = {
     components: {
@@ -42,14 +42,15 @@ const ProposeCalendar = {
             
             domEvent.stopPropagation();
         };
-
+        
         return {
             vuecal,
             occurences,
             eventUpdated,
             eventRemoved,
             handleCellClick,
-            handleEventDblclick
+            handleEventDblclick,
+            minimumDate: new Date()
         };
     }
 }

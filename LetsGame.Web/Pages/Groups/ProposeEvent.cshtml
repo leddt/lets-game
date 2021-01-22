@@ -28,7 +28,7 @@
 
 <h2>Which game will we play?</h2>
 
-<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4">
+<div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4">
     @foreach (var game in Model.Group.Games)
     {
         <form method="post" asp-page-handler="PickGame">
@@ -49,56 +49,54 @@
 @if (Model.PickedGameId.HasValue)
 {
     <form method="post" asp-page-handler="Propose">
-        <h2>When can we play?</h2>
-        <p>Add as many dates as you want</p>
+        <div class="row">
+            <div class="col col-xl-8">
+                <h2>When can we play?</h2>
+                <p>Add as many dates as you want</p>
 
-        <input asp-for="PickedGameId" type="hidden"/>
+                <input asp-for="PickedGameId" type="hidden"/>
 
-        <div id="propose-calendar">
-            <p>
-                <em>Click</em> in empty space to add a slot.<br>
-                <em>Double click</em> a slot to remove it.<br>
-                Only the start time matters.
-            </p>
-            <div style="height: 600px; max-height: 80vh">
-                <vue-cal ref="vuecal"
-                         active-view="week"
-                         :disable-views="['years', 'year', 'month', 'day']"
-                         :hide-view-selector="true"
-                         :editable-events="{title: false, create: false, drag: true, resize: false}"
-                         :snap-to-time="15"
-                         :today-button="true"
-                         @@event-dblclick="handleEventDblclick"
-                         @@cell-click="handleCellClick"
-                         @@event-delete="eventRemoved"
-                         @@event-create="eventUpdated"
-                         @@event-drag-create="eventUpdated"
-                         @@event-change="eventUpdated">
-                    <template v-slot:event="{event}">
-                        <div class="vuecal__event-time">{{event.start.formatTime("h:mm {am}")}}</div>
-                    </template>
-                </vue-cal>
+                <p>
+                    <em>Click</em> in empty space to add a slot.<br>
+                    <em>Double click</em> a slot to remove it.<br>
+                    Only the start time matters.
+                </p>
+                <div id="propose-calendar">
+                    <div style="height: 580px; max-height: 80vh" class="mb-3">
+                        <vue-cal ref="vuecal"
+                                 active-view="week"
+                                 :disable-views="['years', 'year', 'month', 'day']"
+                                 :hide-view-selector="true"
+                                 :editable-events="{title: false, create: false, drag: true, resize: false}"
+                                 :snap-to-time="15"
+                                 :time-cell-height="20"
+                                 :today-button="true"
+                                 :min-date="minimumDate"
+                                 :start-week-on-sunday="true"
+                                 @@event-dblclick="handleEventDblclick"
+                                 @@cell-click="handleCellClick"
+                                 @@event-delete="eventRemoved"
+                                 @@event-create="eventUpdated"
+                                 @@event-drag-create="eventUpdated"
+                                 @@event-change="eventUpdated">
+                            <template v-slot:event="{event}">
+                                <div class="vuecal__event-time">{{event.start.formatTime("h:mm {am}")}}</div>
+                            </template>
+                        </vue-cal>
+                        <template v-for="(occurence, index) in occurences">
+                            <input :key="`start-${index}`"
+                                   type="hidden"
+                                   :name="`ProposedDatesAndTimes[${index}]`"
+                                   :value="occurence.start.format('{YYYY}-{MM}-{DD}T{HH}:{mm}')"/>
+                        </template>
+                    </div>
+
+                    <h2>Anything to add?</h2>
+                    <form-group for="Details" as="TextArea"/>
+
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
             </div>
-            <template v-for="(occurence, index) in occurences">
-                <input :key="`start-${index}`" 
-                       type="hidden" 
-                       :name="`ProposedDatesAndTimes[${index}]`" 
-                       :value="occurence.start.format('{YYYY}-{MM}-{DD}T{HH}:{mm}')"/>
-            </template>
         </div>
-
-        @* <div class="row"> *@
-        @*     @for (var i = 0; i < Model.ProposedDatesAndTimes.Length; i++) *@
-        @*     { *@
-        @*         <div class="col col-md-6 col-xl-3 mb-3"> *@
-        @*             <input asp-for="ProposedDatesAndTimes[i]" type="datetime-local" class="form-control" min="@Model.MinDateTime.ToString("s")"/> *@
-        @*         </div> *@
-        @*     } *@
-        @* </div> *@
-
-        <h2>Anything to add?</h2>
-        <form-group for="Details" as="TextArea"/>
-
-        <button type="submit" class="btn btn-primary">Submit</button>
     </form>
 }

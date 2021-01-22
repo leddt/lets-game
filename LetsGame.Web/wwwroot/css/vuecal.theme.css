@@ -1,7 +1,28 @@
 ﻿.vuecal__event {
     background-color: #666;
     color: #fff;
+    cursor: default;
     display: flex;
     flex-direction: column;
     justify-content: space-around;
+}
+.vuecal__event-time {
+    user-select: none !important;
+}
+
+.vuecal__cell--today {
+    background-color: rgba(240,240,255,.4) !important;
+}
+.vuecal__cell--selected {
+    background-color: unset;
+}
+.vuecal__cell--disabled {
+    background-color: #eee
+}
+.vuecal__cell--disabled::before {
+    display: none;
+}
+
+.vuecal__no-event {
+    display: none;
 }
