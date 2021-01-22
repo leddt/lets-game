@@ -38,7 +38,10 @@
 {
     <h2>Welcome to your group!</h2>
     <p>The group does not have any game yet.</p>
-    <p>You should add one by clicking <em>Add game</em> in the sidebar.</p>
+    @if (Model.IsGroupOwner)
+    {
+        <p>You should add one by clicking <em>Add game</em> in the sidebar.</p>
+    }
 }
 else
 {
