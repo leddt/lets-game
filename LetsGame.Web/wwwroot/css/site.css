@@ -18,9 +18,9 @@
 
 .text-shadow {
   text-shadow: 
-          #000 1px 1px 1rem,
-          #000 1px 1px 0.5rem,
-          #000 1px 1px 0.25rem;
+          #000 0 0 0.25rem,
+          #000 0 0 0.25rem,
+          #000 0 0 0.25rem;
 }
 
 .outlined {
@@ -109,4 +109,20 @@ a.avatar.avatar-action:hover, button.avatar.avatar-action:hover {
 }
 .avatar-active svg path {
     fill: white;
+}
+
+
+.card-img-overlay .card-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical
+}
+
+.card-img-overlay .card-title.text-shadow {
+    padding-top: 0.25rem;
+    padding-left: 0.25rem;
+    margin-top: -0.25rem;
+    margin-left: -0.25rem;
 }

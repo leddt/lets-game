@@ -1,105 +1,117 @@
 ﻿@using System.Text.Encodings.Web
 @model GroupModel
 
-<div class="w-sm-25 border-left p-3" style="min-width: 15rem">
-    <h2>Members</h2>
-    @foreach (var membership in Model.Group.Memberships)
-    {
-        var isSelf = membership == Model.UserMembership;
+<div class="w-sm-25 border-left" style="min-width: 15rem; max-width: 25rem">
+    <div class="p-3 border-bottom">
+        <h2>Members</h2>
+        @foreach (var membership in Model.Group.Memberships)
+        {
+            var isSelf = membership == Model.UserMembership;
 
-        <div class="d-flex align-items-center">
-            <avatar name="@membership.DisplayName" />
-            <span class="@(isSelf ? "font-weight-bold" : "")">@membership.DisplayName</span>
+            <div class="d-flex align-items-center">
+                <avatar name="@membership.DisplayName"/>
+                <span class="@(isSelf ? "font-weight-bold" : "")">@membership.DisplayName</span>
 
-            @if (membership.Role == GroupRole.Owner)
-            {
-                <span class="text-muted mx-1">(Owner)</span>
-            }
-            
-            @if (Model.IsGroupOwner && !isSelf)
-            {
-                <form asp-page-handler="DeleteMember" class="d-inline flex-fill text-right">
-                    <input type="hidden" asp-for="MemberId" value="@membership.UserId" />
-                    <button type="submit" class="btn btn-outline-danger btn-sm mb-1" data-tooltip title="Remove @membership.DisplayName from the group" onclick="return confirm('Remove @(JavaScriptEncoder.Default.Encode(membership.DisplayName)) from the group?')">&times;</button>
-                </form>
-            }
-        </div>
-    }
-    @if (Model.IsGroupOwner && Model.Group.Memberships.Count == 1)
-    {
-        <p>It's lonely in here... You should invite your friends to join you!</p>
-    }
+                @if (membership.Role == GroupRole.Owner)
+                {
+                    <span class="text-muted mx-1">(Owner)</span>
+                }
+
+                @if (Model.IsGroupOwner && !isSelf)
+                {
+                    <form asp-page-handler="DeleteMember" class="d-inline flex-fill text-right">
+                        <input type="hidden" asp-for="MemberId" value="@membership.UserId"/>
+                        <button type="submit" class="btn btn-outline-danger btn-sm mb-1" data-tooltip title="Remove @membership.DisplayName from the group" onclick="return confirm('Remove @(JavaScriptEncoder.Default.Encode(membership.DisplayName)) from the group?')">&times;</button>
+                    </form>
+                }
+            </div>
+        }
+        @if (Model.IsGroupOwner && Model.Group.Memberships.Count == 1)
+        {
+            <p>It's lonely in here... You should invite your friends to join you!</p>
+        }
+    </div>
 
     @if (Model.IsGroupOwner)
     {
-        <h2>Invites</h2>
-        
-        @if (!Model.Group.Invites.Any())
-        {
-            <p>Create links to invite your friends to the group!</p>
-        }
-        
-        @foreach (var invite in Model.Group.Invites)
-        {
-            <div class="mb-1">
-                <form asp-page-handler="DeleteInvite">
-                    <input type="hidden" asp-for="InviteId" value="@invite.Id"/>
-                    <div class="d-flex align-items-center py-1 border-bottom">
-                        <button type="submit" class="btn btn-outline-danger btn-sm mr-2">&times;</button>
-                        <div class="flex-fill">
-                            <input onfocus="this.select()" class="w-100 border-0" readonly type="text" value="@Url.Page("/Invite", null, new {id = invite.Id}, this.Context.Request.Scheme)"/>
+        <div class="p-3 border-bottom">
+            <h2>Invites</h2>
 
-                            @if (invite.IsSingleUse)
-                            {
-                                <div class="text-muted">(single use)</div>
-                            }
-                            else
-                            {
-                                <div class="text-muted">(unlimited)</div>
-                            }
+            @if (!Model.Group.Invites.Any())
+            {
+                <p>Create links to invite your friends to the group!</p>
+            }
+
+            @foreach (var invite in Model.Group.Invites)
+            {
+                <div class="mb-1">
+                    <form asp-page-handler="DeleteInvite">
+                        <input type="hidden" asp-for="InviteId" value="@invite.Id"/>
+                        <div class="d-flex align-items-center py-1 border-bottom">
+                            <button type="submit" class="btn btn-outline-danger btn-sm mr-2">&times;</button>
+                            <div class="flex-fill">
+                                <input onfocus="this.select()" class="w-100 border-0" readonly type="text" value="@Url.Page("/Invite", null, new {id = invite.Id}, this.Context.Request.Scheme)"/>
+
+                                @if (invite.IsSingleUse)
+                                {
+                                    <div class="text-muted">(single use)</div>
+                                }
+                                else
+                                {
+                                    <div class="text-muted">(unlimited)</div>
+                                }
+                            </div>
                         </div>
-                    </div>
+                    </form>
+                </div>
+            }
+            <div class="mb-3">
+                <form asp-page-handler="CreateInvite" class="d-inline-block mt-2">
+                    <input type="hidden" asp-for="SingleUse" value="false"/>
+                    <button type="submit" class="btn btn-primary btn-sm">Create (unlimited)</button>
+                </form>
+                <form asp-page-handler="CreateInvite" class="d-inline-block mt-2">
+                    <input type="hidden" asp-for="SingleUse" value="true"/>
+                    <button type="submit" class="btn btn-primary btn-sm">Create (single-use)</button>
                 </form>
             </div>
-        }
-        <div class="mb-3">
-            <form asp-page-handler="CreateInvite" class="d-inline-block mt-2">
-                <input type="hidden" asp-for="SingleUse" value="false"/>
-                <button type="submit" class="btn btn-primary btn-sm">Create (unlimited)</button>
-            </form>
-            <form asp-page-handler="CreateInvite" class="d-inline-block mt-2">
-                <input type="hidden" asp-for="SingleUse" value="true"/>
-                <button type="submit" class="btn btn-primary btn-sm">Create (single-use)</button>
-            </form>
         </div>
     }
 
-    <h2>Games</h2>
-    
-    @if (!Model.Group.Games.Any())
-    {
-        <p>No game yet</p>
-    }
-    
-    @if (Model.IsGroupOwner)
-    {
-        <a asp-page="AddGame" asp-route-slug="@Model.Group.Slug" class="btn btn-primary btn-sm">Add game</a>
-    }
+    <div class="p-3">
+        <h2>Games</h2>
 
-    <div class="row row-cols-1 pt-3">
-        @foreach (var game in Model.Group.Games)
+        @if (!Model.Group.Games.Any())
         {
-            <div class="col mb-4">
-                <game-card name="@game.Name" image-id="@game.IgdbImageId">
-                    @if (Model.IsGroupOwner)
-                    {
-                        <form asp-page-handler="RemoveGame">
-                            <input type="hidden" asp-for="GameId" value="@game.Id"/>
-                            <button type="submit" class="btn btn-sm btn-danger" data-tooltip title="Remove @game.Name from this group" onclick="return confirm('Remove @(JavaScriptEncoder.Default.Encode(game.Name)) and all it\'s events from the group?')">&times;</button>
-                        </form>
-                    }
-                </game-card>
-            </div>
+            <p>No game yet</p>
         }
+
+        @if (Model.IsGroupOwner)
+        {
+            <a asp-page="AddGame" asp-route-slug="@Model.Group.Slug" class="btn btn-primary btn-sm">Add game</a>
+        }
+
+        <div class="row row-cols-1 pt-3">
+            @foreach (var game in Model.Group.Games)
+            {
+                <div class="col mb-4">
+                    <game-card name="@game.Name" image-id="@game.IgdbImageId">
+                        @if (Model.IsGroupOwner)
+                        {
+                            <form asp-page-handler="RemoveGame">
+                                <input type="hidden" asp-for="GameId" value="@game.Id"/>
+                                <button type="submit"
+                                        class="btn btn-sm btn-danger"
+                                        data-tooltip
+                                        title="Remove @game.Name from this group"
+                                        onclick="return confirm('Remove @(JavaScriptEncoder.Default.Encode(game.Name)) and all it\'s events from the group?')">
+                                    &times;
+                                </button>
+                            </form>
+                        }
+                    </game-card>
+                </div>
+            }
+        </div>
     </div>
 </div>
