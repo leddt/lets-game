@@ -16,7 +16,7 @@
         @foreach (var e in Model.UpcomingEvents)
         {
             <div class="col mb-4">
-                <div class="card bg-light">
+                <div class="card bg-light" id="upcoming-event-@e.Id">
                     <div class="row no-gutters">
                         <div class="col-md-4 fill">
                             <img src="@Image.GetScreenshotMedUrl(e.Game.IgdbImageId)" class="card-img" alt="Screenshot from @e.Game.Name"/>
@@ -52,14 +52,14 @@
                                     }
                                     @if (!slot.Votes.Any(v => v.VoterId == currentUserId))
                                     {
-                                        <form asp-page-handler="VoteSlot">
+                                        <form asp-page-handler="VoteSlot" data-update="upcoming-event-@e.Id">
                                             <input type="hidden" asp-for="SlotId" value="@slot.Id"/>
                                             <avatar is-button="true" is-add="true" name="Join this session"/>
                                         </form>
                                     }
                                     else
                                     {
-                                        <form asp-page-handler="UnvoteSlot">
+                                        <form asp-page-handler="UnvoteSlot" data-update="upcoming-event-@e.Id">
                                             <input type="hidden" asp-for="SlotId" value="@slot.Id"/>
                                             <avatar is-button="true" is-remove="true" name="Leave this session"/>
                                         </form>

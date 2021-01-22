@@ -22,7 +22,7 @@
     @foreach (var e in Model.ProposedEvents)
     {
         <div class="col mb-4">
-            <div class="card bg-light">
+            <div class="card bg-light" id="proposed-event-@e.Id">
                 <div class="row no-gutters">
                     <div class="col-md-4 fill">
                         <img src="@Image.GetScreenshotMedUrl(e.Game.IgdbImageId)" class="card-img" alt="Screenshot from @e.Game.Name"/>
@@ -73,14 +73,14 @@
                                             }
                                             @if (!slot.Votes.Any(v => v.VoterId == currentUserId))
                                             {
-                                                <form asp-page-handler="VoteSlot">
+                                                <form asp-page-handler="VoteSlot" data-update="proposed-event-@e.Id">
                                                     <input type="hidden" asp-for="SlotId" value="@slot.Id"/>
                                                     <avatar is-button="true" is-add="true" name="Add your vote for this slot"/>
                                                 </form>
                                             }
                                             else
                                             {
-                                                <form asp-page-handler="UnvoteSlot">
+                                                <form asp-page-handler="UnvoteSlot" data-update="proposed-event-@e.Id">
                                                     <input type="hidden" asp-for="SlotId" value="@slot.Id"/>
                                                     <avatar is-button="true" is-remove="true" name="Remove your vote from this slot"/>
                                                 </form>
@@ -105,7 +105,7 @@
 
                             @if (!e.CantPlays.Any(x => x.UserId == Model.UserId))
                             {
-                                <form asp-page-handler="CantPlay">
+                                <form asp-page-handler="CantPlay" data-update="proposed-event-@e.Id">
                                     <input type="hidden" asp-for="EventId" value="@e.Id"/>
                                     <button type="submit" class="btn btn-sm btn-secondary" data-tooltip title="Remove your votes from all slots and indicate that you can't join this session">I can't play</button>
                                 </form>
