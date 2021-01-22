@@ -14,7 +14,7 @@ namespace LetsGame.Web.Extensions
         
         public static string Sluggify(this string value)
         {
-            return Regex.Replace(value.RemoveAccents().ToLower(), @"[^a-z0-9]+", "-");
+            return Regex.Replace(value.RemoveAccents().ToLower(), @"[^a-z0-9]+", "-").Trim('-');
         }
 
         public static string ToInitials(this string value, int maxLength)
