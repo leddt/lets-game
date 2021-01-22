@@ -63,6 +63,16 @@ namespace LetsGame.Web.Pages.Groups
             if (Group == null) return NotFound();
             if (PickedGameId == null) return RedirectToPage("ProposeEvent", new {slug});
 
+            if (ProposedDatesAndTimes == null || ProposedDatesAndTimes.Length == 0)
+            {
+                ModelState.AddModelError("ProposedDatesAndTimes", "Please choose at least one time slot.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return Page();
+            }
+
             await _groupService.ProposeEventAsync(
                 groupId: Group.Id,
                 gameId: PickedGameId.Value,

@@ -21,6 +21,8 @@
 
 <h1 class="display-4">Propose a session</h1>
 
+<div asp-validation-summary="All" class="text-danger"></div>
+
 @if (Model.PickedGameId.HasValue)
 {
     <a asp-page="ProposeEvent" asp-route-slug="@Model.Group.Slug" class="btn btn-primary">Start over</a>
