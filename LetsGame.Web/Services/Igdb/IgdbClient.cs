@@ -10,7 +10,13 @@ using Microsoft.Extensions.Options;
 
 namespace LetsGame.Web.Services.Igdb
 {
-    public class IgdbClient
+    public interface IGameSearcher
+    {
+        Task<Game[]> SearchGamesAsync(string query);
+        Task<Game> GetGameAsync(long id);
+    }
+
+    public class IgdbClient : IGameSearcher
     {
         private const string DefaultGameFields = "name,screenshots.image_id,artworks.image_id,first_release_date";
         private static IgdbAccessToken _accessToken;

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using LetsGame.Web.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Memory;
 
@@ -22,7 +23,7 @@ namespace LetsGame.Tests
         public static ApplicationDbContext GetInMemoryDbContext()
         {
             var dbContextOptions = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseInMemoryDatabase("tests")
+                .UseInMemoryDatabase("tests", new InMemoryDatabaseRoot())
                 .Options;
             
             return new ApplicationDbContext(dbContextOptions);

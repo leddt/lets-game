@@ -20,7 +20,7 @@ namespace LetsGame.Web.Services
     {
         private readonly ApplicationDbContext _db;
         private readonly SlugGenerator _slugGenerator;
-        private readonly IgdbClient _igdbClient;
+        private readonly IGameSearcher _gameSearcher;
         private readonly ICurrentUserAccessor _currentUserAccessor;
         private readonly UserManager<AppUser> _userManager;
         private readonly IEmailSender _emailSender;
@@ -32,7 +32,7 @@ namespace LetsGame.Web.Services
         public GroupService(
             ApplicationDbContext db, 
             SlugGenerator slugGenerator, 
-            IgdbClient igdbClient, 
+            IGameSearcher gameSearcher, 
             ICurrentUserAccessor currentUserAccessor, 
             UserManager<AppUser> userManager,
             IEmailSender emailSender,
@@ -43,7 +43,7 @@ namespace LetsGame.Web.Services
         {
             _db = db;
             _slugGenerator = slugGenerator;
-            _igdbClient = igdbClient;
+            _gameSearcher = gameSearcher;
             _currentUserAccessor = currentUserAccessor;
             _userManager = userManager;
             _emailSender = emailSender;
@@ -91,7 +91,7 @@ namespace LetsGame.Web.Services
             
             if (groupGame != null) return;
             
-            var game = await _igdbClient.GetGameAsync(igdbId);
+            var game = await _gameSearcher.GetGameAsync(igdbId);
             if (game == null) throw new ArgumentException("Game not found", nameof(igdbId));
 
             groupGame = new GroupGame

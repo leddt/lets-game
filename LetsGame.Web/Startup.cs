@@ -84,7 +84,7 @@ namespace LetsGame.Web
             services.Configure<SendGridOptions>(Configuration.GetSection("SendGrid"));
             
             services.AddHttpClient<ItadClient>(ItadClient.Configure);
-            services.AddHttpClient<IgdbClient>(IgdbClient.Configure);
+            services.AddHttpClient<IGameSearcher, IgdbClient>(IgdbClient.Configure);
             
             services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();
             

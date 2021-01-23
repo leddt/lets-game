@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 using System.Threading.Tasks;
 using LetsGame.Web.Extensions;
 using LetsGame.Web.Helpers;
@@ -8,13 +7,6 @@ namespace LetsGame.Web.Services
 {
     public class SlugGenerator
     {
-        private Random random;
-
-        public SlugGenerator()
-        {
-            random = new Random();
-        }
-
         public async Task<string> GenerateWithCheck(string name, Func<string, Task<bool>> isInUse)
         {
             const int baseSuffixLength = 3;
