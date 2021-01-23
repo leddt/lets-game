@@ -18,9 +18,9 @@ namespace LetsGame.Tests.RecurringTasks
 
         public SendEventStartingSoonNotificationsTests()
         {
-            var config = TestUtils.GetConfiguration(new()
+            var config = TestUtils.CreateConfiguration(new()
             {
-                {"LocalTimezone", "Eastern Standard Time"}
+                {"LocalTimezone", TestConfiguration.Timezone}
             });
 
             _emailSender = new Mock<IEmailSender>();

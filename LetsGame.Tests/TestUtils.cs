@@ -8,7 +8,7 @@ namespace LetsGame.Tests
 {
     public static class TestUtils
     {
-        public static IConfiguration GetConfiguration(Dictionary<string, string> initialData)
+        public static IConfiguration CreateConfiguration(Dictionary<string, string> initialData)
         {
             return new ConfigurationRoot(new List<IConfigurationProvider>
             {
