@@ -104,8 +104,8 @@ a.avatar.avatar-action:hover, button.avatar.avatar-action:hover {
     background-color: #f8f9fa;
 }
 .avatar-active {
-    background-color: #343a40 !important;
     border: solid 0.2rem #007bff !important;
+    box-shadow: inset 0 0 0.5rem #fff, inset 0 0 0.2rem #007bff;
 }
 .avatar-active svg path {
     fill: white;

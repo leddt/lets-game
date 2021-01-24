@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using LetsGame.Web.Extensions;
@@ -82,10 +85,19 @@ namespace LetsGame.Web.Infrastructure.AspNet.TagHelpers
             }
             else
             {
+                output.Attributes.Add("style", $"background-color: {GetBackgroundColor(Name)};");
                 output.Content.Append(Name.ToInitials(3));   
             }
 
             return base.ProcessAsync(context, output);
+        }
+
+        public string GetBackgroundColor(string text)
+        {
+            var hash = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(text));
+            var intValue = BitConverter.ToUInt32(hash, 0);
+            var hue = intValue % 360;
+            return $"hsl({hue}, 100%, 30%)";
         }
     }
 }
