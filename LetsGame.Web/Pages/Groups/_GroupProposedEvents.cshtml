@@ -4,6 +4,7 @@
 @model GroupModel
 @inject UserManager<AppUser> UserManager;
 @inject DateService DateService;
+@inject GroupService GroupService;
 
 @{
     var currentUserId = UserManager.GetUserId(User);
@@ -89,19 +90,6 @@
                                     </div>
                                 }
                             </div>
-
-                            @{ var missingVotes = Model.GetMissingVotes(e);}
-                            @if (missingVotes.Any())
-                            {
-                                <hr/>
-                                <div class="d-flex align-items-center flex-wrap">
-                                    <span class="mr-1">Missing votes:</span>
-                                    @foreach (var member in missingVotes)
-                                    {
-                                        <avatar name="@member.DisplayName"/>
-                                    }
-                                </div>
-                            }
                             
                             <hr/>
 
@@ -122,6 +110,32 @@
                                     <input type="hidden" asp-for="EventId" value="@e.Id"/>
                                     <button type="submit" class="btn btn-sm btn-secondary" data-tooltip title="Remove your votes from all slots and indicate that you can't join this session">I can't play</button>
                                 </form>
+                            }
+
+                            @{ var missingVotes = GroupService.GetMissingVotes(Model.Group.Memberships, e).ToList(); }
+                            @if (missingVotes.Any())
+                            {
+                                <hr/>
+                                <div class="d-flex align-items-center flex-wrap">
+                                    <span class="mr-1">Missing votes:</span>
+                                    @foreach (var member in missingVotes)
+                                    {
+                                        <avatar name="@member.DisplayName"/>
+                                    }
+                                </div>
+                                
+                                @if (Model.IsGroupOwner || e.CreatorId == Model.UserId)
+                                {
+                                    <form asp-page-handler="Remind" data-update="proposed-event-@e.Id">
+                                        <input type="hidden" asp-for="EventId" value="@e.Id"/>
+                                        <button type="submit" class="btn btn-sm btn-secondary" data-tooltip title="Send an email to remind missing voters to vote on this session." onclick="return confirm('Send email reminder to @missingVotes.Count member(s)?')">Remind</button>
+                                    </form>
+                                
+                                    @if (e.ReminderSentAtUtc.HasValue)
+                                    {
+                                        <em>Reminder sent @DateService.FormatUtcToUserFriendlyDate(e.ReminderSentAtUtc.Value)</em>
+                                    }
+                                }
                             }
                         </div>
                     </div>

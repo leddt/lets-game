@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
@@ -11,7 +12,6 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
 
 namespace LetsGame.Web.Services
@@ -307,29 +307,97 @@ namespace LetsGame.Web.Services
                 .ToListAsync();
 
             var creator = allGroupMembers.First(x => x.UserId == CurrentUserId);
-            var urlHelper = _urlHelperFactory.GetUrlHelper(_actionContextAccessor.ActionContext);
-            var groupUrl = urlHelper.Page("/Groups/Group", null, new {slug = group.Slug}, _httpContextAccessor.HttpContext?.Request.Scheme ?? "http");
-            
-            static string Encode(string value) => HtmlEncoder.Default.Encode(value);
+            var groupUrl = GetGroupUrl(group);
+
             string GetMessage(Membership member)
             {
-                return $"<p>Hi {Encode(member.DisplayName)}!" +
-                       $"<p>A new session for <strong>{Encode(game.Name)}</strong> has been proposed by <strong>{Encode(creator.DisplayName)}</strong>." +
+                return $"<p>Hi {HtmlEncode(member.DisplayName)}!" +
+                       $"<p>A new session for <strong>{HtmlEncode(game.Name)}</strong> has been proposed by <strong>{HtmlEncode(creator.DisplayName)}</strong>." +
                        $"<p>The proposed time slots are:" +
                        $"<ul>" +
-                       string.Join("", slotsUtc.Select(x => $"<li>{Encode(_dateService.FormatUtcToUserFriendlyDate(x, member.User))}")) +
+                       string.Join("", slotsUtc.Select(x => $"<li>{HtmlEncode(_dateService.FormatUtcToUserFriendlyDate(x, member.User))}")) +
                        $"</ul>" +
                        $"<p><a href=\"{groupUrl}\">Go to your group's page to vote on it!</a>";
             }
 
-            foreach (var member in allGroupMembers)
+            await EmailMembersAsync(
+                allGroupMembers, 
+                $"A new session has been proposed in {group.Name}", 
+                GetMessage);
+        }
+
+        public async Task SendEventReminderAsync(long eventId)
+        {
+            var utcThreshold = DateTime.UtcNow - TimeSpan.FromHours(6);
+            
+            var groupEvent = await _db.GroupEvents
+                .Include(x => x.Slots.Where(s => s.ProposedDateAndTimeUtc > utcThreshold).OrderBy(s => s.ProposedDateAndTimeUtc)).ThenInclude(x => x.Votes)
+                .Include(x => x.Group.Memberships).ThenInclude(x => x.User)
+                .Include(x => x.CantPlays)
+                .Include(x => x.Game)
+                .FirstOrDefaultAsync(x => x.Id == eventId);
+            
+            groupEvent.ReminderSentAtUtc = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
+
+            if (!groupEvent.Slots.Any()) return;
+
+            var missingVotes = GetMissingVotes(groupEvent.Group.Memberships, groupEvent);
+            var groupUrl = GetGroupUrl(groupEvent.Group);
+
+            string GetMessage(Membership member)
+            {
+                return $"<p>Hi {HtmlEncode(member.DisplayName)}!" +
+                       $"<p>A session for <strong>{HtmlEncode(groupEvent.Game.Name)}</strong> is waiting for your vote." +
+                       $"<p>The proposed time slots are:" +
+                       $"<ul>" +
+                       string.Join("", groupEvent.Slots.Select(x => $"<li>{HtmlEncode(_dateService.FormatUtcToUserFriendlyDate(x.ProposedDateAndTimeUtc, member.User))}")) +
+                       $"</ul>" +
+                       $"<p><a href=\"{groupUrl}\">Go to your group's page to vote on it!</a>";
+            }
+            
+            await EmailMembersAsync(
+                missingVotes,
+                $"Don't forget to vote on this {groupEvent.Game.Name} session in {groupEvent.Group.Name}!",
+                GetMessage);
+        }
+
+        public IEnumerable<Membership> GetMissingVotes(IEnumerable<Membership> allMembers, GroupEvent groupEvent)
+        {
+            if (groupEvent.Slots == null) throw new InvalidOperationException("Event Slots must be loaded");
+            if (groupEvent.Slots.Any(s => s.Votes == null)) throw new InvalidOperationException("Slot Votes must be loaded");
+            if (groupEvent.CantPlays == null) throw new InvalidOperationException("Event CantPlays must be loaded");
+            
+            var voterIds = groupEvent.Slots.SelectMany(s => s.Votes).Select(v => v.VoterId);
+            var cantPlays = groupEvent.CantPlays.Select(x => x.UserId);
+            var allVoterIds = voterIds.Union(cantPlays).Distinct();
+            
+            return allMembers.Where(x => !allVoterIds.Contains(x.UserId));
+        }
+
+        private string GetGroupUrl(Group group)
+        {
+            var urlHelper = _urlHelperFactory.GetUrlHelper(_actionContextAccessor.ActionContext);
+
+            return urlHelper.Page(
+                pageName: "/Groups/Group",
+                pageHandler: null,
+                values: new {slug = group.Slug},
+                protocol: _httpContextAccessor.HttpContext?.Request.Scheme ?? "http"
+            );
+        }
+
+        private static string HtmlEncode(string value) => HtmlEncoder.Default.Encode(value);
+        private async Task EmailMembersAsync(IEnumerable<Membership> members, string subject, Func<Membership, string> getMessage)
+        {
+            foreach (var member in members)
             {
                 if (member.UserId == CurrentUserId) continue;
 
                 await _emailSender.SendEmailAsync(
                     member.User.Email,
-                    $"A new session has been proposed in {group.Name}",
-                    GetMessage(member));
+                    subject,
+                    getMessage(member));
             }
         }
 

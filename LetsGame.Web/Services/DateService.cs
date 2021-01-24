@@ -41,6 +41,7 @@ namespace LetsGame.Web.Services
 
             if (localDt.Date == localNow.Date) return $"Today at {GetFriendlyTime(localDt)}";
             if (localDt.Date == localNow.AddDays(1).Date) return $"Tomorrow at {GetFriendlyTime(localDt)}";
+            if (localDt.Date == localNow.AddDays(-1).Date) return $"Yesterday at {GetFriendlyTime(localDt)}";
             return $"{localDt.DayOfWeek}, {localDt:MMMM dd} at {GetFriendlyTime(localDt)}";
         }
 

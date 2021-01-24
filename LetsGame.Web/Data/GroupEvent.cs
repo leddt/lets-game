@@ -20,6 +20,7 @@ namespace LetsGame.Web.Data
         
         public DateTime? ChosenDateAndTimeUtc { get; set; }
         public DateTime? StartingSoonNotificationSentAtUtc { get; set; }
+        public DateTime? ReminderSentAtUtc { get; set; }
         
         public string Details { get; set; }
     }
