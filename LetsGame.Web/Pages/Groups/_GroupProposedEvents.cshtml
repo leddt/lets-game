@@ -19,7 +19,7 @@
 
 <a asp-page="ProposeEvent" asp-route-slug="@Model.Group.Slug" class="btn btn-primary">Propose a session</a>
 
-<div class="row row-cols-1 row-cols-xl-2 pt-3">
+<div class="row row-cols-1 pt-3">
     @foreach (var e in Model.ProposedEvents)
     {
         <div class="col mb-4">
@@ -35,7 +35,7 @@
                                 @if (Model.IsGroupOwner || e.CreatorId == Model.UserId)
                                 {
                                     <form asp-page-handler="DeleteEvent">
-                                        <input type="hidden" asp-for="EventId" value="@e.Id" />
+                                        <input type="hidden" asp-for="EventId" value="@e.Id"/>
                                         <button type="submit" class="btn btn-sm btn-outline-danger" data-tooltip title="Cancel session" onclick="return confirm('Cancel this @(JavaScriptEncoder.Default.Encode(e.Game.Name)) session?')">&times;</button>
                                     </form>
                                 }
@@ -45,23 +45,26 @@
                             {
                                 <p class="card-text">Created by @Model.GetDisplayName(e.CreatorId)</p>
                             }
-                            <div class="card-text">
-                                <h5>Proposed time slots</h5>
+                            
+                            <h5>Proposed time slots</h5>
+                            <div class="list-group mb-2">
                                 @foreach (var slot in e.Slots.OrderBy(x => x.ProposedDateAndTimeUtc))
                                 {
-                                    <div>
+                                    <div class="list-group-item">
                                         <div class="d-flex align-items-center justify-content-between">
                                             <h6>@DateService.FormatUtcToUserFriendlyDate(slot.ProposedDateAndTimeUtc)</h6>
                                             @if (Model.IsGroupOwner || e.CreatorId == Model.UserId)
                                             {
                                                 <form asp-page-handler="PickSlot">
                                                     <input type="hidden" asp-for="SlotId" value="@slot.Id"/>
-                                                    <button type="submit" 
-                                                            class="btn btn-sm btn-success" 
-                                                            data-tooltip 
-                                                            title="Pick this slot as the winner" 
+                                                    <button type="submit"
+                                                            class="btn btn-sm btn-success"
+                                                            data-tooltip
+                                                            title="Pick this slot as the winner"
                                                             onclick="return confirm('Pick @JavaScriptEncoder.Default.Encode(DateService.FormatUtcToUserFriendlyDate(slot.ProposedDateAndTimeUtc)) as the winning time slot for this @JavaScriptEncoder.Default.Encode(e.Game.Name) session?')">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="white" d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"/></svg>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                                                            <path fill="white" d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"/>
+                                                        </svg>
                                                     </button>
                                                 </form>
                                             }
@@ -90,8 +93,6 @@
                                     </div>
                                 }
                             </div>
-                            
-                            <hr/>
 
                             @if (e.CantPlays.Any())
                             {
@@ -123,14 +124,14 @@
                                         <avatar name="@member.DisplayName"/>
                                     }
                                 </div>
-                                
+
                                 @if (Model.IsGroupOwner || e.CreatorId == Model.UserId)
                                 {
                                     <form asp-page-handler="Remind" data-update="proposed-event-@e.Id">
                                         <input type="hidden" asp-for="EventId" value="@e.Id"/>
                                         <button type="submit" class="btn btn-sm btn-secondary" data-tooltip title="Send an email to remind missing voters to vote on this session." onclick="return confirm('Send email reminder to @missingVotes.Count member(s)?')">Remind</button>
                                     </form>
-                                
+
                                     @if (e.ReminderSentAtUtc.HasValue)
                                     {
                                         <em>Reminder sent @DateService.FormatUtcToUserFriendlyDate(e.ReminderSentAtUtc.Value)</em>
