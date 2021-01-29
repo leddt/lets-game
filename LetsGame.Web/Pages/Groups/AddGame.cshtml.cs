@@ -23,9 +23,9 @@ namespace LetsGame.Web.Pages.Groups
         
         public Game[] Results { get; set; }
 
-        public async Task OnPostSearch([FromServices] IgdbClient client)
+        public async Task OnPostSearch([FromServices] IGameSearcher searcher)
         {
-            Results = await client.SearchGamesAsync(SearchText);
+            Results = await searcher.SearchGamesAsync(SearchText);
         }
 
         public async Task<IActionResult> OnPostAdd(

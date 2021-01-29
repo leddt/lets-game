@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
@@ -20,7 +21,11 @@ namespace LetsGame.Web.Services
 
         public Task SendEmailAsync(string email, string subject, string htmlMessage)
         {
-            if (string.IsNullOrWhiteSpace(_sendgridOptions.Value.ApiKey)) return Task.CompletedTask;
+            if (string.IsNullOrWhiteSpace(_sendgridOptions.Value.ApiKey))
+            {
+                Console.WriteLine($"Not sending email because SendGrid is not configured.");
+                return Task.CompletedTask;
+            }
             
             var message = new SendGridMessage
             {

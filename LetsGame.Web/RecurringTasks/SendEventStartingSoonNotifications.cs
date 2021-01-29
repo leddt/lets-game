@@ -14,13 +14,13 @@ namespace LetsGame.Web.RecurringTasks
     public class SendEventStartingSoonNotifications : IRecurringTask
     {
         private readonly ApplicationDbContext _db;
-        private readonly IEmailSender _emailSender;
+        private readonly BatchMemberMailer _batchMemberMailer;
         private readonly DateService _dateService;
 
-        public SendEventStartingSoonNotifications(ApplicationDbContext db, IEmailSender emailSender, DateService dateService)
+        public SendEventStartingSoonNotifications(ApplicationDbContext db, BatchMemberMailer batchMemberMailer, DateService dateService)
         {
             _db = db;
-            _emailSender = emailSender;
+            _batchMemberMailer = batchMemberMailer;
             _dateService = dateService;
         }
 
@@ -67,13 +67,11 @@ namespace LetsGame.Web.RecurringTasks
                 .ToList();
 
             Console.WriteLine("Notifying {0} participants", participants.Count);
-            foreach (var member in participants)
-            {
-                await _emailSender.SendEmailAsync(
-                    member.User.Email,
-                    $"A session is starting soon in {ev.Group.Name}",
-                    GetMessage(ev, participants, member));
-            }
+            await _batchMemberMailer.EmailMembersAsync(
+                participants,
+                $"A session is starting soon in {ev.Group.Name}",
+                x => GetMessage(ev, participants, x),
+                x => x.UnsubscribeEventReminder);
         }
 
         private static string Encode(string value) => HtmlEncoder.Default.Encode(value);

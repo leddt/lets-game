@@ -90,12 +90,13 @@ namespace LetsGame.Web
             
             services.Replace(ServiceDescriptor.Singleton<IHtmlGenerator, CustomHtmlGenerator>());
 
-            services.AddScoped<SlugGenerator>();
-            services.AddScoped<GroupService>();
-            services.AddScoped<DateService>();
-            services.AddScoped<ICurrentUserAccessor, HttpContextCurrentUserAccessor>();
+            services.AddTransient<SlugGenerator>();
+            services.AddTransient<GroupService>();
+            services.AddTransient<DateService>();
+            services.AddTransient<ICurrentUserAccessor, HttpContextCurrentUserAccessor>();
             
             services.AddTransient<IEmailSender, EmailSender>();
+            services.AddTransient<BatchMemberMailer>();
 
             // Recurring tasks
             services.AddTransient<RecurringTaskRunner>();

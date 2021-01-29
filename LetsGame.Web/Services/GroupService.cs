@@ -8,7 +8,6 @@ using LetsGame.Web.Helpers;
 using LetsGame.Web.Services.Igdb;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
@@ -23,7 +22,7 @@ namespace LetsGame.Web.Services
         private readonly IGameSearcher _gameSearcher;
         private readonly ICurrentUserAccessor _currentUserAccessor;
         private readonly UserManager<AppUser> _userManager;
-        private readonly IEmailSender _emailSender;
+        private readonly BatchMemberMailer _memberMailer;
         private readonly DateService _dateService;
         private readonly IUrlHelperFactory _urlHelperFactory;
         private readonly IActionContextAccessor _actionContextAccessor;
@@ -35,7 +34,7 @@ namespace LetsGame.Web.Services
             IGameSearcher gameSearcher, 
             ICurrentUserAccessor currentUserAccessor, 
             UserManager<AppUser> userManager,
-            IEmailSender emailSender,
+            BatchMemberMailer memberMailer,
             DateService dateService,
             IUrlHelperFactory urlHelperFactory,
             IActionContextAccessor actionContextAccessor,
@@ -46,7 +45,7 @@ namespace LetsGame.Web.Services
             _gameSearcher = gameSearcher;
             _currentUserAccessor = currentUserAccessor;
             _userManager = userManager;
-            _emailSender = emailSender;
+            _memberMailer = memberMailer;
             _dateService = dateService;
             _urlHelperFactory = urlHelperFactory;
             _actionContextAccessor = actionContextAccessor;
@@ -320,10 +319,11 @@ namespace LetsGame.Web.Services
                        $"<p><a href=\"{groupUrl}\">Go to your group's page to vote on it!</a>";
             }
 
-            await EmailMembersAsync(
+            await _memberMailer.EmailMembersAsync(
                 allGroupMembers, 
                 $"A new session has been proposed in {group.Name}", 
-                GetMessage);
+                GetMessage,
+                x => x.UnsubscribeNewEvent);
         }
 
         public async Task SendEventReminderAsync(long eventId)
@@ -356,10 +356,11 @@ namespace LetsGame.Web.Services
                        $"<p><a href=\"{groupUrl}\">Go to your group's page to vote on it!</a>";
             }
             
-            await EmailMembersAsync(
+            await _memberMailer.EmailMembersAsync(
                 missingVotes,
                 $"Don't forget to vote on this {groupEvent.Game.Name} session in {groupEvent.Group.Name}!",
-                GetMessage);
+                GetMessage,
+                x => x.UnsubscribeVoteReminder);
         }
 
         public IEnumerable<Membership> GetMissingVotes(IEnumerable<Membership> allMembers, GroupEvent groupEvent)
@@ -388,18 +389,6 @@ namespace LetsGame.Web.Services
         }
 
         private static string HtmlEncode(string value) => HtmlEncoder.Default.Encode(value);
-        private async Task EmailMembersAsync(IEnumerable<Membership> members, string subject, Func<Membership, string> getMessage)
-        {
-            foreach (var member in members)
-            {
-                if (member.UserId == CurrentUserId) continue;
-
-                await _emailSender.SendEmailAsync(
-                    member.User.Email,
-                    subject,
-                    getMessage(member));
-            }
-        }
 
         private string CurrentUserId => _userManager.GetUserId(_currentUserAccessor.CurrentUser);
 

@@ -24,7 +24,7 @@ namespace LetsGame.Tests.RecurringTasks
             });
 
             _emailSender = new Mock<IEmailSender>();
-            _sut = new SendEventStartingSoonNotifications(_db, _emailSender.Object, new DateService(config));
+            _sut = new SendEventStartingSoonNotifications(_db, new BatchMemberMailer(Mock.Of<ICurrentUserAccessor>(), null, _emailSender.Object), new DateService(config));
         }
         
         [Fact]
