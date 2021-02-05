@@ -11,6 +11,8 @@ namespace LetsGame.Web.Areas.Identity.Pages.Account.Manage
         public static string Index => "Index";
 
         public static string Email => "Email";
+        
+        public static string Notifications => "Notifications";
 
         public static string ChangePassword => "ChangePassword";
 
@@ -27,6 +29,8 @@ namespace LetsGame.Web.Areas.Identity.Pages.Account.Manage
         public static string IndexNavClass(ViewContext viewContext) => PageNavClass(viewContext, Index);
 
         public static string EmailNavClass(ViewContext viewContext) => PageNavClass(viewContext, Email);
+        
+        public static string NotificationsNavClass(ViewContext viewContext) => PageNavClass(viewContext, Notifications);
 
         public static string ChangePasswordNavClass(ViewContext viewContext) => PageNavClass(viewContext, ChangePassword);
 

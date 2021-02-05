@@ -1,0 +1,29 @@
+﻿@page
+@model LetsGame.Web.Areas.Identity.Pages.Account.Manage.Notifications
+
+@{
+    ViewData["Title"] = "Manage Notifications";
+    ViewData["ActivePage"] = ManageNavPages.Notifications;
+}
+
+<partial name="_StatusMessage" for="StatusMessage" />
+<h4>@ViewData["Title"]</h4>
+
+<p>Select the kinds of email notifications you'd like to receive.</p>
+
+<form method="post">
+    <div class="form-check">
+        <input asp-for="NewEvent" class="form-check-inline" />
+        <label asp-for="NewEvent" class="form-check-label"></label>
+    </div>
+    <div class="form-check">
+        <input asp-for="EventReminder" class="form-check-inline" />
+        <label asp-for="EventReminder" class="form-check-label"></label>
+    </div>
+    <div class="form-check">
+        <input asp-for="VoteReminder" class="form-check-inline" />
+        <label asp-for="VoteReminder" class="form-check-label"></label>
+    </div>
+    
+    <button class="btn btn-primary mt-4" type="submit">Save</button>
+</form>
