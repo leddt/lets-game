@@ -9,7 +9,7 @@
             var isSelf = membership == Model.UserMembership;
 
             <div class="d-flex align-items-center">
-                <avatar name="@membership.DisplayName"/>
+                <avatar name="@membership.DisplayName" presence-id="@membership.UserId" />
                 <span class="@(isSelf ? "font-weight-bold" : "")">@membership.DisplayName</span>
 
                 @if (membership.Role == GroupRole.Owner)

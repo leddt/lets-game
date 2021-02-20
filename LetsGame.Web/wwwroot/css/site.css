@@ -78,6 +78,7 @@
     font-size: 1rem;
     height: 2.5rem;
     justify-content: center;
+    position: relative;
     width: 2.5rem;
 }
 a.avatar:hover, button.avatar:hover {
@@ -113,6 +114,19 @@ a.avatar.avatar-action:hover, button.avatar.avatar-action:hover {
 }
 .avatar-active svg path {
     fill: white;
+}
+
+.avatar-presence-indicator {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    bottom: -4px;
+    right: -4px;
+}
+.avatar-presence-indicator.active {
+    background-color: #0f0;
+    border: solid 2px #fff;
 }
 
 

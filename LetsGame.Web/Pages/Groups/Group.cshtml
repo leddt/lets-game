@@ -52,3 +52,13 @@ else
 @section Sidebar {
     <partial name="_GroupSidebar" />
 }
+
+@section Scripts
+{
+    <script>
+        window.currentGroup = '@Model.Group.Slug';
+        window.ownUserId = '@Model.UserId';
+    </script>
+    <script src="~/lib/signalr/dist/browser/signalr.min.js"></script>
+    <script src="~/js/group.js"></script>
+}

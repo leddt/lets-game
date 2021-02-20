@@ -28,6 +28,7 @@ namespace LetsGame.Web.Infrastructure.AspNet.TagHelpers
         }
 
         public string Name { get; set; }
+        public string PresenceId { get; set; }
         public bool IsButton { get; set; }
         public bool IsLink => !string.IsNullOrWhiteSpace(Page);
         public bool IsAdd { get; set; }
@@ -87,6 +88,11 @@ namespace LetsGame.Web.Infrastructure.AspNet.TagHelpers
             {
                 output.Attributes.Add("style", $"background-color: {GetBackgroundColor(Name)};");
                 output.Content.Append(Name.ToInitials(3));   
+            }
+
+            if (!string.IsNullOrWhiteSpace(PresenceId))
+            {
+                output.Content.AppendHtml($"<div class=\"avatar-presence-indicator\" data-presence-id=\"{PresenceId}\"></div>");
             }
 
             return base.ProcessAsync(context, output);

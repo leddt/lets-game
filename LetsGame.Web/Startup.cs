@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using LetsGame.Web.Data;
+using LetsGame.Web.Hubs;
 using LetsGame.Web.Infrastructure.AspNet;
 using LetsGame.Web.RecurringTasks;
 using LetsGame.Web.Services;
@@ -78,6 +79,7 @@ namespace LetsGame.Web
             }
 
             services.AddRazorPages();
+            services.AddSignalR();
 
             services.Configure<ItadOptions>(Configuration.GetSection("itad"));
             services.Configure<IgdbOptions>(Configuration.GetSection("igdb"));
@@ -157,6 +159,7 @@ namespace LetsGame.Web
             {
                 endpoints.MapRazorPages();
                 endpoints.MapControllers();
+                endpoints.MapHub<GroupHub>("/grouphub");
             });
         }
     }
