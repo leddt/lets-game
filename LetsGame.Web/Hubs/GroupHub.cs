@@ -12,7 +12,9 @@ namespace LetsGame.Web.Hubs
     [Authorize]
     public class GroupHub : Hub
     {
-        private static List<Connection> _connections = new List<Connection>();
+        private record Connection(string ConnectionId, string UserId, string GroupId);
+        private static readonly List<Connection> Connections = new();
+        
         private readonly UserManager<AppUser> _userManager;
 
         public GroupHub(UserManager<AppUser> userManager)
@@ -26,22 +28,38 @@ namespace LetsGame.Web.Hubs
         {
             var currentUserId = GetCurrentUserId();
             
-            _connections.Add(new Connection(Context.ConnectionId, currentUserId, group));
+            Connections.Add(new Connection(Context.ConnectionId, currentUserId, group));
             
             await Groups.AddToGroupAsync(Context.ConnectionId, group);
             await Clients.OthersInGroup(group).SendAsync("here", currentUserId);
+
+            var otherUserIds = Connections
+                .Where(x => x.GroupId == group)
+                .Select(x => x.UserId)
+                .Distinct()
+                .Where(x => x != currentUserId)
+                .ToList();
+            
+            if (otherUserIds.Any())
+            {
+                await Clients.Caller.SendAsync("hereToo", otherUserIds);
+            }
         }
 
         public override Task OnDisconnectedAsync(Exception? exception)
         {
             var currentUserId = GetCurrentUserId();
-            var groups = _connections.Where(x => x.ConnectionId == Context.ConnectionId).Select(x => x.GroupId).ToList();
+            var groups = Connections
+                .Where(x => x.ConnectionId == Context.ConnectionId)
+                .Select(x => x.GroupId)
+                .Distinct()
+                .ToList();
             
-            _connections.RemoveAll(x => x.ConnectionId == Context.ConnectionId);
+            Connections.RemoveAll(x => x.ConnectionId == Context.ConnectionId);
 
             foreach (var group in groups)
             {
-                if (!_connections.Any(x => x.GroupId == group && x.UserId == currentUserId))
+                if (!Connections.Any(x => x.GroupId == group && x.UserId == currentUserId))
                 {
                     Clients.OthersInGroup(group).SendAsync("left", currentUserId);
                 }
@@ -49,12 +67,5 @@ namespace LetsGame.Web.Hubs
 
             return base.OnDisconnectedAsync(exception);
         }
-
-        public async Task HereReply(string replyToUserId)
-        {
-            await Clients.User(replyToUserId).SendAsync("hereToo", GetCurrentUserId());
-        }
-
-        private record Connection(string ConnectionId, string UserId, string GroupId);
     }
 }
