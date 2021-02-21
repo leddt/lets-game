@@ -2,7 +2,10 @@
     let presences = [];
     
     const {currentGroup} = window;
-    const connection = new signalR.HubConnectionBuilder().withUrl("/grouphub").build();
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/grouphub")
+        .withAutomaticReconnect()
+        .build();
 
     connection.on("here", function(userId) {
         addPresence(userId);
@@ -19,10 +22,15 @@
         refreshPanel(elementId);
     });
     
+    connection.onreconnecting(() => {
+        clearPresences();
+    });
+    connection.onreconnected(async () => {
+        await onConnected();
+    });
+    
     await connection.start();
-    await connection.invoke("join", currentGroup);
-
-    addPresence(window.ownUserId);
+    await onConnected();
     
     function addPresence(userId) {
         if (presences.indexOf(userId) >= 0) return;
@@ -34,5 +42,14 @@
         presences = presences.filter(x => x !== userId);
         
         $(`[data-presence-id='${userId}']`).removeClass("active");
+    }
+    function clearPresences() {
+        presences = [];
+        $("[data-presence-id]").removeClass("active")
+    }
+    
+    async function onConnected() {
+        await connection.invoke("join", currentGroup);
+        addPresence(window.ownUserId);
     }
 })();
