@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using LetsGame.Web.Data;
+using LetsGame.Web.Hubs;
 using LetsGame.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace LetsGame.Web.Pages.Groups
@@ -20,13 +22,15 @@ namespace LetsGame.Web.Pages.Groups
         private readonly UserManager<AppUser> _userManager;
         private readonly GroupService _groupService;
         private readonly IDataProtectionProvider _dataProtectionProvider;
+        private readonly IHubContext<GroupHub> _hubContext;
 
-        public GroupModel(ApplicationDbContext db, UserManager<AppUser> userManager, GroupService groupService, IDataProtectionProvider dataProtectionProvider)
+        public GroupModel(ApplicationDbContext db, UserManager<AppUser> userManager, GroupService groupService, IDataProtectionProvider dataProtectionProvider, IHubContext<GroupHub> hubContext)
         {
             _db = db;
             _userManager = userManager;
             _groupService = groupService;
             _dataProtectionProvider = dataProtectionProvider;
+            _hubContext = hubContext;
         }
 
         public Group Group { get; set; }
@@ -110,13 +114,15 @@ namespace LetsGame.Web.Pages.Groups
         public async Task<IActionResult> OnPostVoteSlot(string slug)
         {
             await _groupService.AddSlotVoteAsync(SlotId);
+            NotifyClients(slug, $"event-{EventId}");
 
             return RedirectToPage("Group", new {slug});
         }
-        
+
         public async Task<IActionResult> OnPostUnvoteSlot(string slug)
         {
             await _groupService.RemoveSlotVoteAsync(SlotId);
+            NotifyClients(slug, $"event-{EventId}");
 
             return RedirectToPage("Group", new {slug});
         }
@@ -124,6 +130,7 @@ namespace LetsGame.Web.Pages.Groups
         public async Task<IActionResult> OnPostCantPlay(string slug)
         {
             await _groupService.SetCantPlayAsync(EventId);
+            NotifyClients(slug, $"event-{EventId}");
 
             return RedirectToPage("Group", new {slug});
         }
@@ -131,6 +138,7 @@ namespace LetsGame.Web.Pages.Groups
         public async Task<IActionResult> OnPostPickSlot(string slug)
         {
             await _groupService.PickSlotAsync(SlotId);
+            NotifyClients(slug, $"event-{EventId}");
             
             return RedirectToPage("Group", new {slug});
         }
@@ -204,8 +212,14 @@ namespace LetsGame.Web.Pages.Groups
         public async Task<IActionResult> OnPostRemind(string slug)
         {
             await _groupService.SendEventReminderAsync(EventId);
+            NotifyClients(slug, $"event-{EventId}");
             
             return RedirectToPage("Group", new {slug});
+        }
+
+        private void NotifyClients(string slug, string elementId)
+        {
+            _hubContext.Clients.Group(slug).SendAsync("update", elementId);
         }
     }
 }

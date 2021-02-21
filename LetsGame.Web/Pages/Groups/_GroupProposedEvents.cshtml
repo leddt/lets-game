@@ -23,7 +23,7 @@
     @foreach (var e in Model.ProposedEvents)
     {
         <div class="col mb-4">
-            <div class="card bg-light" id="proposed-event-@e.Id">
+            <div class="card bg-light" id="event-@e.Id">
                 <div class="row no-gutters">
                     <div class="col-md-4 fill">
                         <img src="@Image.GetScreenshotMedUrl(e.Game.IgdbImageId)" class="card-img" alt="Screenshot from @e.Game.Name"/>
@@ -57,6 +57,7 @@
                                             {
                                                 <form asp-page-handler="PickSlot">
                                                     <input type="hidden" asp-for="SlotId" value="@slot.Id"/>
+                                                    <input type="hidden" asp-for="EventId" value="@e.Id"/>
                                                     <button type="submit"
                                                             class="btn btn-sm btn-success"
                                                             data-tooltip
@@ -77,15 +78,17 @@
                                             }
                                             @if (!slot.Votes.Any(v => v.VoterId == currentUserId))
                                             {
-                                                <form asp-page-handler="VoteSlot" data-update="proposed-event-@e.Id">
+                                                <form asp-page-handler="VoteSlot" data-update="event-@e.Id">
                                                     <input type="hidden" asp-for="SlotId" value="@slot.Id"/>
+                                                    <input type="hidden" asp-for="EventId" value="@e.Id"/>
                                                     <avatar is-button="true" is-add="true" name="Add your vote for this slot"/>
                                                 </form>
                                             }
                                             else
                                             {
-                                                <form asp-page-handler="UnvoteSlot" data-update="proposed-event-@e.Id">
+                                                <form asp-page-handler="UnvoteSlot" data-update="event-@e.Id">
                                                     <input type="hidden" asp-for="SlotId" value="@slot.Id"/>
+                                                    <input type="hidden" asp-for="EventId" value="@e.Id"/>
                                                     <avatar is-button="true" is-remove="true" name="Remove your vote from this slot"/>
                                                 </form>
                                             }
@@ -107,7 +110,7 @@
 
                             @if (!e.CantPlays.Any(x => x.UserId == Model.UserId))
                             {
-                                <form asp-page-handler="CantPlay" data-update="proposed-event-@e.Id">
+                                <form asp-page-handler="CantPlay" data-update="event-@e.Id">
                                     <input type="hidden" asp-for="EventId" value="@e.Id"/>
                                     <button type="submit" class="btn btn-sm btn-secondary" data-tooltip title="Remove your votes from all slots and indicate that you can't join this session">I can't play</button>
                                 </form>
@@ -127,7 +130,7 @@
 
                                 @if (Model.IsGroupOwner || e.CreatorId == Model.UserId)
                                 {
-                                    <form asp-page-handler="Remind" data-update="proposed-event-@e.Id">
+                                    <form asp-page-handler="Remind" data-update="event-@e.Id">
                                         <input type="hidden" asp-for="EventId" value="@e.Id"/>
                                         <button type="submit" class="btn btn-sm btn-secondary" data-tooltip title="Send an email to remind missing voters to vote on this session." onclick="return confirm('Send email reminder to @missingVotes.Count member(s)?')">Remind</button>
                                     </form>

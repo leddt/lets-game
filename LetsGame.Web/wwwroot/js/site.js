@@ -5,13 +5,6 @@
 
 $(() => initUi(document));
 
-function initUi(container) {
-    $(container).find("[data-tooltip]").tooltip();
-}
-function cleanupUi(container) {
-    $(container).find("[data-tooltip]").tooltip("hide");
-}
-
 function copyToClipboard(text) {
     const elem = document.createElement('textarea');
     elem.value = text;
@@ -22,6 +15,7 @@ function copyToClipboard(text) {
 }
 
 // Update Panels
+let ignoreUpdates = false;
 document.addEventListener("submit", async (ev) => {
     if (!ev.target.matches("form[data-update]")) return;
     
@@ -33,6 +27,9 @@ document.addEventListener("submit", async (ev) => {
     
     new FormData(ev.target)
     
+    ignoreUpdates = true;
+    setTimeout(() => ignoreUpdates = false, 500)
+    
     const response = await fetch(ev.target.action, {
         credentials: "same-origin",
         method: ev.target.method,
@@ -43,7 +40,26 @@ document.addEventListener("submit", async (ev) => {
     });
     
     const resultHtml = await response.text();
-    const resultElement = getElementByIdFromHtml(containerId, resultHtml);
+    replaceElement(resultHtml, container);
+});
+
+async function refreshPanel(containerId) {
+    if (ignoreUpdates) return;
+    
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const response = await fetch(window.location.href, {
+        credentials: "same-origin",
+        method: "GET"
+    });
+
+    const resultHtml = await response.text();
+    replaceElement(resultHtml, container);
+}
+
+function replaceElement(resultHtml, container) {
+    const resultElement = getElementByIdFromHtml(container.id, resultHtml);
 
     if (!resultElement) {
         window.location.reload();
@@ -52,16 +68,24 @@ document.addEventListener("submit", async (ev) => {
 
     cleanupUi(container);
     initUi(resultElement);
-    
-    $(container).replaceWith(resultElement);
-    
-    function serializeForm(form) {
-        return new URLSearchParams(Array.from(new FormData(form))).toString();
-    }
 
-    function getElementByIdFromHtml(elementId, html) {
-        const tempContainer = document.createElement("div")
-        tempContainer.innerHTML = html;
-        return tempContainer.querySelector(`#${elementId}`);
-    }
-});
+    $(container).replaceWith(resultElement);
+}
+
+function initUi(container) {
+    $(container).find("[data-tooltip]").tooltip();
+}
+
+function cleanupUi(container) {
+    $(container).find("[data-tooltip]").tooltip("hide");
+}
+
+function getElementByIdFromHtml(elementId, html) {
+    const tempContainer = document.createElement("div")
+    tempContainer.innerHTML = html;
+    return tempContainer.querySelector(`#${elementId}`);
+}
+
+function serializeForm(form) {
+    return new URLSearchParams(Array.from(new FormData(form))).toString();
+}

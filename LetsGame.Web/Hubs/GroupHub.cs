@@ -46,7 +46,7 @@ namespace LetsGame.Web.Hubs
             }
         }
 
-        public override Task OnDisconnectedAsync(Exception? exception)
+        public override Task OnDisconnectedAsync(Exception exception)
         {
             var currentUserId = GetCurrentUserId();
             var groups = Connections

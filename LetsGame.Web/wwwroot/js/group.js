@@ -15,6 +15,9 @@
     connection.on("left", function(userId) {
         removePresence(userId);
     });
+    connection.on("update", function(elementId) {
+        refreshPanel(elementId);
+    });
     
     await connection.start();
     await connection.invoke("join", currentGroup);
