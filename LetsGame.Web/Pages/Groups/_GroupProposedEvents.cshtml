@@ -45,57 +45,8 @@
                             {
                                 <p class="card-text">Created by @Model.GetDisplayName(e.CreatorId)</p>
                             }
-                            
-                            <h5>Proposed time slots</h5>
-                            <div class="list-group mb-2">
-                                @foreach (var slot in e.Slots.OrderBy(x => x.ProposedDateAndTimeUtc))
-                                {
-                                    <div class="list-group-item">
-                                        <div class="d-flex align-items-center justify-content-between">
-                                            <h6>@DateService.FormatUtcToUserFriendlyDate(slot.ProposedDateAndTimeUtc)</h6>
-                                            @if (Model.IsGroupOwner || e.CreatorId == Model.UserId)
-                                            {
-                                                <form asp-page-handler="PickSlot">
-                                                    <input type="hidden" asp-for="SlotId" value="@slot.Id"/>
-                                                    <input type="hidden" asp-for="EventId" value="@e.Id"/>
-                                                    <button type="submit"
-                                                            class="btn btn-sm btn-success"
-                                                            data-tooltip
-                                                            title="Pick this slot as the winner"
-                                                            onclick="return confirm('Pick @JavaScriptEncoder.Default.Encode(DateService.FormatUtcToUserFriendlyDate(slot.ProposedDateAndTimeUtc)) as the winning time slot for this @JavaScriptEncoder.Default.Encode(e.Game.Name) session?')">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
-                                                            <path fill="white" d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"/>
-                                                        </svg>
-                                                    </button>
-                                                </form>
-                                            }
-                                        </div>
-                                        <div class="d-flex align-items-center flex-wrap">
-                                            <span class="mr-1">Votes:</span>
-                                            @foreach (var vote in slot.Votes.OrderBy(x => x.VotedAtUtc))
-                                            {
-                                                <avatar name="@Model.GetDisplayName(vote.VoterId)"/>
-                                            }
-                                            @if (!slot.Votes.Any(v => v.VoterId == currentUserId))
-                                            {
-                                                <form asp-page-handler="VoteSlot" data-update="event-@e.Id">
-                                                    <input type="hidden" asp-for="SlotId" value="@slot.Id"/>
-                                                    <input type="hidden" asp-for="EventId" value="@e.Id"/>
-                                                    <avatar is-button="true" is-add="true" name="Add your vote for this slot"/>
-                                                </form>
-                                            }
-                                            else
-                                            {
-                                                <form asp-page-handler="UnvoteSlot" data-update="event-@e.Id">
-                                                    <input type="hidden" asp-for="SlotId" value="@slot.Id"/>
-                                                    <input type="hidden" asp-for="EventId" value="@e.Id"/>
-                                                    <avatar is-button="true" is-remove="true" name="Remove your vote from this slot"/>
-                                                </form>
-                                            }
-                                        </div>
-                                    </div>
-                                }
-                            </div>
+
+
 
                             @if (e.CantPlays.Any())
                             {
@@ -106,14 +57,6 @@
                                         <avatar name="@Model.GetDisplayName(vote.UserId)"/>
                                     }
                                 </div>
-                            }
-
-                            @if (!e.CantPlays.Any(x => x.UserId == Model.UserId))
-                            {
-                                <form asp-page-handler="CantPlay" data-update="event-@e.Id">
-                                    <input type="hidden" asp-for="EventId" value="@e.Id"/>
-                                    <button type="submit" class="btn btn-sm btn-secondary" data-tooltip title="Remove your votes from all slots and indicate that you can't join this session">I can't play</button>
-                                </form>
                             }
 
                             @{ var missingVotes = GroupService.GetMissingVotes(Model.Group.Memberships, e).ToList(); }
@@ -142,6 +85,68 @@
                                 }
                             }
                         </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between pb-2">
+                        <h5>Proposed time slots</h5>
+
+                        @if (!e.CantPlays.Any(x => x.UserId == Model.UserId))
+                        {
+                            <form asp-page-handler="CantPlay" data-update="event-@e.Id">
+                                <input type="hidden" asp-for="EventId" value="@e.Id"/>
+                                <button type="submit" class="btn btn-sm btn-secondary" data-tooltip title="Remove your votes from all slots and indicate that you can't join this session">I can't play</button>
+                            </form>
+                        }
+                    </div>
+                    <div class="list-group mb-2">
+                        @foreach (var slot in e.Slots.OrderBy(x => x.ProposedDateAndTimeUtc))
+                        {
+                            <div class="list-group-item">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <h6>@DateService.FormatUtcToUserFriendlyDate(slot.ProposedDateAndTimeUtc)</h6>
+                                    @if (Model.IsGroupOwner || e.CreatorId == Model.UserId)
+                                    {
+                                        <form asp-page-handler="PickSlot">
+                                            <input type="hidden" asp-for="SlotId" value="@slot.Id"/>
+                                            <input type="hidden" asp-for="EventId" value="@e.Id"/>
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-success"
+                                                    data-tooltip
+                                                    title="Pick this slot as the winner"
+                                                    onclick="return confirm('Pick @JavaScriptEncoder.Default.Encode(DateService.FormatUtcToUserFriendlyDate(slot.ProposedDateAndTimeUtc)) as the winning time slot for this @JavaScriptEncoder.Default.Encode(e.Game.Name) session?')">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                                                    <path fill="white" d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"/>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                                <div class="d-flex align-items-center flex-wrap">
+                                    <span class="mr-1">Votes:</span>
+                                    @foreach (var vote in slot.Votes.OrderBy(x => x.VotedAtUtc))
+                                    {
+                                        <avatar name="@Model.GetDisplayName(vote.VoterId)"/>
+                                    }
+                                    @if (!slot.Votes.Any(v => v.VoterId == currentUserId))
+                                    {
+                                        <form asp-page-handler="VoteSlot" data-update="event-@e.Id">
+                                            <input type="hidden" asp-for="SlotId" value="@slot.Id"/>
+                                            <input type="hidden" asp-for="EventId" value="@e.Id"/>
+                                            <avatar is-button="true" is-add="true" name="Add your vote for this slot"/>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form asp-page-handler="UnvoteSlot" data-update="event-@e.Id">
+                                            <input type="hidden" asp-for="SlotId" value="@slot.Id"/>
+                                            <input type="hidden" asp-for="EventId" value="@e.Id"/>
+                                            <avatar is-button="true" is-remove="true" name="Remove your vote from this slot"/>
+                                        </form>
+                                    }
+                                </div>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
