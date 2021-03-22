@@ -49,7 +49,7 @@ namespace LetsGame.Web.Controllers
 
             return new CalendarEvent
             {
-                Summary = ev.Game.Name,
+                Summary = ev.Game == null ? "Any game" : ev.Game.Name,
                 Start = new CalDateTime(dt),
                 End = new CalDateTime(dt + TimeSpan.FromHours(1))
             };

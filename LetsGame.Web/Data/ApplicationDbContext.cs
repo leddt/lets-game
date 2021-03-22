@@ -60,7 +60,7 @@ namespace LetsGame.Web.Data
             Entity<GroupEvent>(_ =>
             {
                 _.HasOne(x => x.Group).WithMany(x => x.Events).IsRequired().OnDelete(DeleteBehavior.NoAction);
-                _.HasOne(x => x.Game).WithMany().IsRequired();
+                _.HasOne(x => x.Game).WithMany().IsRequired(false);
                 _.HasOne(x => x.Creator).WithMany().OnDelete(DeleteBehavior.SetNull);
                 _.HasMany(x => x.Slots).WithOne(x => x.Event).IsRequired();
             });

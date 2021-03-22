@@ -19,17 +19,33 @@
                 <div class="card bg-light" id="event-@e.Id">
                     <div class="row no-gutters">
                         <div class="col-md-4 fill">
-                            <img src="@Image.GetScreenshotMedUrl(e.Game.IgdbImageId)" class="card-img" alt="Screenshot from @e.Game.Name"/>
+                            @if (e.Game != null)
+                            {
+                                <img src="@Image.GetScreenshotMedUrl(e.Game.IgdbImageId)" class="card-img" alt="Screenshot from @e.Game.Name"/>
+                            }
+                            else
+                            {
+                                <img src="/img/any-game.jpg" class="card-img" alt="" />
+                            }
                         </div>
                         <div class="col-md-8">
                             <div class="card-body">
                                 <div class="d-flex align-items-center justify-content-between mb-2">
-                                    <h4 class="card-title m-0">@e.Game.Name</h4>
+                                    <h4 class="card-title m-0">
+                                        @if (e.Game != null)
+                                        {
+                                            @e.Game.Name
+                                        }
+                                        else
+                                        {
+                                            @:Any game
+                                        }
+                                    </h4>
                                     @if (Model.IsGroupOwner || e.CreatorId == Model.UserId)
                                     {
                                         <form asp-page-handler="DeleteEvent">
                                             <input type="hidden" asp-for="EventId" value="@e.Id" />
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" data-tooltip title="Cancel session" onclick="return confirm('Cancel this @(JavaScriptEncoder.Default.Encode(e.Game.Name)) session?')">&times;</button>
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" data-tooltip title="Cancel session" onclick="return confirm('Cancel this @(e.Game == null ? "gaming" : JavaScriptEncoder.Default.Encode(e.Game.Name)) session?')">&times;</button>
                                         </form>
                                     }
                                 </div>

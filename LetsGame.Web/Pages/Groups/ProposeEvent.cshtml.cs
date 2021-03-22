@@ -73,9 +73,11 @@ namespace LetsGame.Web.Pages.Groups
                 return Page();
             }
 
+            var gameId = PickedGameId.Value;
+            
             await _groupService.ProposeEventAsync(
                 groupId: Group.Id,
-                gameId: PickedGameId.Value,
+                gameId: gameId == -1 ? null : gameId,
                 details: Details,
                 slotsUtc: ProposedDatesAndTimes
                     .Where(x => x.HasValue)

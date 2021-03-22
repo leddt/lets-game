@@ -276,13 +276,17 @@ namespace LetsGame.Web.Services
             return invite.Group;
         }
 
-        public async Task ProposeEventAsync(long groupId, long gameId, string details, DateTime[] slotsUtc)
+        public async Task ProposeEventAsync(long groupId, long? gameId, string details, DateTime[] slotsUtc)
         {
             var group = await EnsureIsGroupMemberAsync(groupId);
 
-            var game = await _db.GroupGames.FirstOrDefaultAsync(x => x.GroupId == groupId && x.Id == gameId);
-            if (game == null) throw new InvalidOperationException($"Unknown game");
-            
+            GroupGame game = null;
+            if (gameId.HasValue)
+            {
+                game = await _db.GroupGames.FirstOrDefaultAsync(x => x.GroupId == groupId && x.Id == gameId);
+                if (game == null) throw new InvalidOperationException($"Unknown game");
+            }
+
             var groupEvent = new GroupEvent
             {
                 GroupId = groupId,
@@ -311,7 +315,7 @@ namespace LetsGame.Web.Services
             string GetMessage(Membership member)
             {
                 return $"<p>Hi {HtmlEncode(member.DisplayName)}!" +
-                       $"<p>A new session for <strong>{HtmlEncode(game.Name)}</strong> has been proposed by <strong>{HtmlEncode(creator.DisplayName)}</strong>." +
+                       $"<p>A new session for <strong>{(game == null ? "any game" : HtmlEncode(game.Name))}</strong> has been proposed by <strong>{HtmlEncode(creator.DisplayName)}</strong>." +
                        $"<p>The proposed time slots are:" +
                        $"<ul>" +
                        string.Join("", slotsUtc.Select(x => $"<li>{HtmlEncode(_dateService.FormatUtcToUserFriendlyDate(x, member.User))}")) +
@@ -348,7 +352,7 @@ namespace LetsGame.Web.Services
             string GetMessage(Membership member)
             {
                 return $"<p>Hi {HtmlEncode(member.DisplayName)}!" +
-                       $"<p>A session for <strong>{HtmlEncode(groupEvent.Game.Name)}</strong> is waiting for your vote." +
+                       $"<p>A session for <strong>{(groupEvent.Game == null ? "any game" : HtmlEncode(groupEvent.Game.Name))}</strong> is waiting for your vote." +
                        $"<p>The proposed time slots are:" +
                        $"<ul>" +
                        string.Join("", groupEvent.Slots.Select(x => $"<li>{HtmlEncode(_dateService.FormatUtcToUserFriendlyDate(x.ProposedDateAndTimeUtc, member.User))}")) +
@@ -358,7 +362,7 @@ namespace LetsGame.Web.Services
             
             await _memberMailer.EmailMembersAsync(
                 missingVotes,
-                $"Don't forget to vote on this {groupEvent.Game.Name} session in {groupEvent.Group.Name}!",
+                $"Don't forget to vote on this {groupEvent.Game?.Name ?? "gaming"} session in {groupEvent.Group.Name}!",
                 GetMessage,
                 x => x.UnsubscribeVoteReminder);
         }

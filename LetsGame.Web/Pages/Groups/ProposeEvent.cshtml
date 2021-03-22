@@ -31,6 +31,20 @@
 <h2>Which game will we play?</h2>
 
 <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4">
+    <form method="post" asp-page-handler="PickGame">
+        <input type="hidden" asp-for="PickedGameId" value="-1"/>
+
+        <div class="col mb-4">
+            <game-card name="Any game" class="@(Model.PickedGameId == -1 ? "outlined" : "")">
+                <p>I don't care what we play, let's game!</p>
+                @if (Model.PickedGameId == null)
+                {
+                    <button type="submit" class="btn btn-light stretched-link opacity-0" title="I don't care">Choose</button>
+                }
+            </game-card>
+        </div>
+    </form>
+    
     @foreach (var game in Model.Group.Games)
     {
         <form method="post" asp-page-handler="PickGame">

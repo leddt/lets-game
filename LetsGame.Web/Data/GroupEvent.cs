@@ -8,7 +8,7 @@ namespace LetsGame.Web.Data
     {
         public long Id { get; set; }
         
-        [ForeignKey("Game")] public long GameId { get; set; }
+        [ForeignKey("Game")] public long? GameId { get; set; }
         [ForeignKey("Group")] public long GroupId { get; set; }
         [ForeignKey("Creator")] public string CreatorId { get; set; }
         

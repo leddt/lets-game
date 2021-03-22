@@ -81,7 +81,7 @@ namespace LetsGame.Web.RecurringTasks
             var friendlyTime = _dateService.FormatUtcToUserFriendlyDate(ev.ChosenDateAndTimeUtc.Value, member.User);
 
             return $"<p>Hi {Encode(member.DisplayName)}!" +
-                   $"<p>You have a session for <strong>{Encode(ev.Game.Name)}</strong> starting soon." +
+                   $"<p>You have a session for <strong>{(ev.Game == null ? "any game" : Encode(ev.Game.Name))}</strong> starting soon." +
                    (string.IsNullOrWhiteSpace(ev.Details)
                        ? $""
                        : $"<p><em>{Encode(ev.Details)}</em>") +
