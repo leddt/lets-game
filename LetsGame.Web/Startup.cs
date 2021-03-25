@@ -147,7 +147,9 @@ namespace LetsGame.Web
                 MinimumSameSitePolicy = SameSiteMode.Lax
             });
 
-            app.UseHttpsRedirection();
+            // For now we'll rely on the hosting platform to redirect to https 
+            // app.UseHttpsRedirection();
+            
             app.UseStaticFiles();
 
             app.UseRouting();
