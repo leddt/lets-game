@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using LetsGame.Web.Data;
 using LetsGame.Web.Helpers;
 using LetsGame.Web.Services.Igdb;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.EntityFrameworkCore;
@@ -22,11 +20,7 @@ namespace LetsGame.Web.Services
         private readonly IGameSearcher _gameSearcher;
         private readonly ICurrentUserAccessor _currentUserAccessor;
         private readonly UserManager<AppUser> _userManager;
-        private readonly BatchMemberMailer _memberMailer;
-        private readonly DateService _dateService;
-        private readonly IUrlHelperFactory _urlHelperFactory;
-        private readonly IActionContextAccessor _actionContextAccessor;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly INotificationService _notificationService;
 
         public GroupService(
             ApplicationDbContext db, 
@@ -34,22 +28,14 @@ namespace LetsGame.Web.Services
             IGameSearcher gameSearcher, 
             ICurrentUserAccessor currentUserAccessor, 
             UserManager<AppUser> userManager,
-            BatchMemberMailer memberMailer,
-            DateService dateService,
-            IUrlHelperFactory urlHelperFactory,
-            IActionContextAccessor actionContextAccessor,
-            IHttpContextAccessor httpContextAccessor)
+            INotificationService notificationService)
         {
             _db = db;
             _slugGenerator = slugGenerator;
             _gameSearcher = gameSearcher;
             _currentUserAccessor = currentUserAccessor;
             _userManager = userManager;
-            _memberMailer = memberMailer;
-            _dateService = dateService;
-            _urlHelperFactory = urlHelperFactory;
-            _actionContextAccessor = actionContextAccessor;
-            _httpContextAccessor = httpContextAccessor;
+            _notificationService = notificationService;
         }
 
         public Task<Group> FindBySlugAsync(string slug)
@@ -278,8 +264,6 @@ namespace LetsGame.Web.Services
 
         public async Task ProposeEventAsync(long groupId, long? gameId, string details, DateTime[] slotsUtc)
         {
-            var group = await EnsureIsGroupMemberAsync(groupId);
-
             GroupGame game = null;
             if (gameId.HasValue)
             {
@@ -304,67 +288,7 @@ namespace LetsGame.Web.Services
             _db.GroupEvents.Add(groupEvent);
             await _db.SaveChangesAsync();
 
-            var allGroupMembers = await _db.Memberships
-                .Include(x => x.User)
-                .Where(x => x.GroupId == groupId)
-                .ToListAsync();
-
-            var creator = allGroupMembers.First(x => x.UserId == CurrentUserId);
-            var groupUrl = GetGroupUrl(group);
-
-            string GetMessage(Membership member)
-            {
-                return $"<p>Hi {HtmlEncode(member.DisplayName)}!" +
-                       $"<p>A new session for <strong>{(game == null ? "any game" : HtmlEncode(game.Name))}</strong> has been proposed by <strong>{HtmlEncode(creator.DisplayName)}</strong>." +
-                       $"<p>The proposed time slots are:" +
-                       $"<ul>" +
-                       string.Join("", slotsUtc.Select(x => $"<li>{HtmlEncode(_dateService.FormatUtcToUserFriendlyDate(x, member.User))}")) +
-                       $"</ul>" +
-                       $"<p><a href=\"{groupUrl}\">Go to your group's page to vote on it!</a>";
-            }
-
-            await _memberMailer.EmailMembersAsync(
-                allGroupMembers, 
-                $"A new session has been proposed in {group.Name}", 
-                GetMessage,
-                x => x.UnsubscribeNewEvent);
-        }
-
-        public async Task SendEventReminderAsync(long eventId)
-        {
-            var utcThreshold = DateTime.UtcNow - TimeSpan.FromHours(6);
-            
-            var groupEvent = await _db.GroupEvents
-                .Include(x => x.Slots.Where(s => s.ProposedDateAndTimeUtc > utcThreshold).OrderBy(s => s.ProposedDateAndTimeUtc)).ThenInclude(x => x.Votes)
-                .Include(x => x.Group.Memberships).ThenInclude(x => x.User)
-                .Include(x => x.CantPlays)
-                .Include(x => x.Game)
-                .FirstOrDefaultAsync(x => x.Id == eventId);
-            
-            groupEvent.ReminderSentAtUtc = DateTime.UtcNow;
-            await _db.SaveChangesAsync();
-
-            if (!groupEvent.Slots.Any()) return;
-
-            var missingVotes = GetMissingVotes(groupEvent.Group.Memberships, groupEvent);
-            var groupUrl = GetGroupUrl(groupEvent.Group);
-
-            string GetMessage(Membership member)
-            {
-                return $"<p>Hi {HtmlEncode(member.DisplayName)}!" +
-                       $"<p>A session for <strong>{(groupEvent.Game == null ? "any game" : HtmlEncode(groupEvent.Game.Name))}</strong> is waiting for your vote." +
-                       $"<p>The proposed time slots are:" +
-                       $"<ul>" +
-                       string.Join("", groupEvent.Slots.Select(x => $"<li>{HtmlEncode(_dateService.FormatUtcToUserFriendlyDate(x.ProposedDateAndTimeUtc, member.User))}")) +
-                       $"</ul>" +
-                       $"<p><a href=\"{groupUrl}\">Go to your group's page to vote on it!</a>";
-            }
-            
-            await _memberMailer.EmailMembersAsync(
-                missingVotes,
-                $"Don't forget to vote on this {groupEvent.Game?.Name ?? "gaming"} session in {groupEvent.Group.Name}!",
-                GetMessage,
-                x => x.UnsubscribeVoteReminder);
+            await _notificationService.NotifyEventAdded(groupEvent);
         }
 
         public IEnumerable<Membership> GetMissingVotes(IEnumerable<Membership> allMembers, GroupEvent groupEvent)
@@ -379,20 +303,6 @@ namespace LetsGame.Web.Services
             
             return allMembers.Where(x => !allVoterIds.Contains(x.UserId));
         }
-
-        private string GetGroupUrl(Group group)
-        {
-            var urlHelper = _urlHelperFactory.GetUrlHelper(_actionContextAccessor.ActionContext);
-
-            return urlHelper.Page(
-                pageName: "/Groups/Group",
-                pageHandler: null,
-                values: new {slug = group.Slug},
-                protocol: _httpContextAccessor.HttpContext?.Request.Scheme ?? "http"
-            );
-        }
-
-        private static string HtmlEncode(string value) => HtmlEncoder.Default.Encode(value);
 
         private string CurrentUserId => _userManager.GetUserId(_currentUserAccessor.CurrentUser);
 
@@ -410,15 +320,6 @@ namespace LetsGame.Web.Services
                                    m.UserId == CurrentUserId));
             
             if (!isGroupOwner) throw new InvalidOperationException("Not group owner");
-        }
-
-        private async Task<Group> EnsureIsGroupMemberAsync(long groupId)
-        {
-            var group = await _db.Groups
-                .FirstOrDefaultAsync(x => x.Id == groupId &&
-                                          x.Memberships.Any(m => m.UserId == CurrentUserId));
-            
-            return group ?? throw new InvalidOperationException("Not group member");;
         }
     }
 }

@@ -99,6 +99,7 @@ namespace LetsGame.Web
             
             services.AddTransient<IEmailSender, EmailSender>();
             services.AddTransient<BatchMemberMailer>();
+            services.AddTransient<INotificationService, NotificationService>();
 
             // Recurring tasks
             services.AddTransient<RecurringTaskRunner>();

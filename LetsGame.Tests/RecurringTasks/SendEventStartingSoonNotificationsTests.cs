@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using LetsGame.Web.Data;
 using LetsGame.Web.RecurringTasks;
 using LetsGame.Web.Services;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Moq;
 using Xunit;
 
@@ -13,59 +12,13 @@ namespace LetsGame.Tests.RecurringTasks
     public class SendEventStartingSoonNotificationsTests
     {
         private readonly ApplicationDbContext _db = TestUtils.GetInMemoryDbContext();
+        private readonly Mock<INotificationService> _notificationService;
         private readonly SendEventStartingSoonNotifications _sut;
-        private readonly Mock<IEmailSender> _emailSender;
 
         public SendEventStartingSoonNotificationsTests()
         {
-            var config = TestUtils.CreateConfiguration(new()
-            {
-                {"LocalTimezone", TestConfiguration.Timezone}
-            });
-
-            _emailSender = new Mock<IEmailSender>();
-            _sut = new SendEventStartingSoonNotifications(_db, new BatchMemberMailer(Mock.Of<ICurrentUserAccessor>(), null, _emailSender.Object), new DateService(config));
-        }
-        
-        [Fact]
-        public async Task SendsAnEmailToEachParticipant()
-        {
-            var ev = GetValidEvent();
-            await _sut.SendEventNotifications(ev);
-            
-            _emailSender.Verify(x => x.SendEmailAsync("user1@example.com", It.IsAny<string>(), It.IsAny<string>()));
-            _emailSender.Verify(x => x.SendEmailAsync("user2@example.com", It.IsAny<string>(), It.IsAny<string>()));
-            _emailSender.Verify(x => x.SendEmailAsync("user4@example.com", It.IsAny<string>(), It.IsAny<string>()));
-            _emailSender.Verify(x => x.SendEmailAsync("user5@example.com", It.IsAny<string>(), It.IsAny<string>()));
-        }
-
-        [Fact]
-        public async Task TheEmailContainsTheNamesOfTheOtherParticipants()
-        {
-            var ev = GetValidEvent();
-            await _sut.SendEventNotifications(ev);
-            
-            _emailSender.Verify(x => x.SendEmailAsync(
-                "user1@example.com", 
-                It.IsAny<string>(), 
-                It.Is<string>(s => s.Contains("Fifth user, Fourth user and Second user"))));
-            
-            _emailSender.Verify(x => x.SendEmailAsync(
-                "user2@example.com", 
-                It.IsAny<string>(), 
-                It.Is<string>(s => s.Contains("Fifth user, First user and Fourth user"))));
-        }
-
-        [Fact]
-        public async Task TheSubjectContainsTheGroupName()
-        {
-            var ev = GetValidEvent();
-            await _sut.SendEventNotifications(ev);
-            
-            _emailSender.Verify(x => x.SendEmailAsync(
-                "user1@example.com", 
-                It.Is<string>(x => x.Contains("Test group")), 
-                It.IsAny<string>()));
+            _notificationService = new Mock<INotificationService>();
+            _sut = new SendEventStartingSoonNotifications(_db, _notificationService.Object);
         }
 
         [Fact]
@@ -90,19 +43,7 @@ namespace LetsGame.Tests.RecurringTasks
             
             await _sut.Run();
 
-            _emailSender.Verify(
-                x => x.SendEmailAsync(
-                    It.IsAny<string>(),
-                    It.Is<string>(s => s.Contains("Valid")),
-                    It.IsAny<string>()),
-                Times.AtLeast(1));
-            
-            _emailSender.Verify(
-                x => x.SendEmailAsync(
-                    It.IsAny<string>(),
-                    It.Is<string>(s => s.Contains("Invalid")),
-                    It.IsAny<string>()),
-                Times.Never);
+            _notificationService.Verify(x => x.NotifyEventStartingSoon(It.Is<GroupEvent>(x => x.Id == validEvent.Id)));
         }
 
         private GroupEvent GetValidEvent()

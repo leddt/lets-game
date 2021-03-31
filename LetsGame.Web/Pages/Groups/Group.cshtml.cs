@@ -6,7 +6,6 @@ using LetsGame.Web.Data;
 using LetsGame.Web.Hubs;
 using LetsGame.Web.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -21,15 +20,20 @@ namespace LetsGame.Web.Pages.Groups
         private readonly ApplicationDbContext _db;
         private readonly UserManager<AppUser> _userManager;
         private readonly GroupService _groupService;
-        private readonly IDataProtectionProvider _dataProtectionProvider;
+        private readonly INotificationService _notificationService;
         private readonly IHubContext<GroupHub> _hubContext;
 
-        public GroupModel(ApplicationDbContext db, UserManager<AppUser> userManager, GroupService groupService, IDataProtectionProvider dataProtectionProvider, IHubContext<GroupHub> hubContext)
+        public GroupModel(
+            ApplicationDbContext db, 
+            UserManager<AppUser> userManager, 
+            GroupService groupService,
+            INotificationService notificationService,
+            IHubContext<GroupHub> hubContext)
         {
             _db = db;
             _userManager = userManager;
             _groupService = groupService;
-            _dataProtectionProvider = dataProtectionProvider;
+            _notificationService = notificationService;
             _hubContext = hubContext;
         }
 
@@ -211,7 +215,7 @@ namespace LetsGame.Web.Pages.Groups
 
         public async Task<IActionResult> OnPostRemind(string slug)
         {
-            await _groupService.SendEventReminderAsync(EventId);
+            await _notificationService.SendEventReminderAsync(EventId);
             NotifyClients(slug, $"event-{EventId}");
             
             return RedirectToPage("Group", new {slug});
