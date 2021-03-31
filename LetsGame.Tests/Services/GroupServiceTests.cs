@@ -47,7 +47,6 @@ namespace LetsGame.Tests.Services
                 new UserStore<AppUser>(_db),
                 null, null, null, null, null, null, null, null));
             _autoMocker.SetInstance(new DateService(config));
-            _autoMocker.SetInstance(_autoMocker.Create<BatchMemberMailer>());
 
             _autoMocker.GetMock<ICurrentUserAccessor>()
                 .Setup(x => x.CurrentUser)

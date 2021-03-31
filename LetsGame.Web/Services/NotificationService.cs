@@ -6,6 +6,8 @@ using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using LetsGame.Web.Data;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
@@ -24,28 +26,34 @@ namespace LetsGame.Web.Services
     {
         private readonly ApplicationDbContext _db;
         private readonly DateService _dateService;
-        private readonly BatchMemberMailer _memberMailer;
         private readonly GroupService _groupService;
+        private readonly UserManager<AppUser> _userManager;
+        private readonly IEmailSender _emailSender;
         private readonly IUrlHelperFactory _urlHelperFactory;
         private readonly IActionContextAccessor _actionContextAccessor;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ICurrentUserAccessor _currentUserAccessor;
 
         public NotificationService(
             ApplicationDbContext db, 
             DateService dateService,
-            BatchMemberMailer memberMailer,
             GroupService groupService,
+            UserManager<AppUser> userManager,
+            IEmailSender emailSender,
             IUrlHelperFactory urlHelperFactory, 
             IActionContextAccessor actionContextAccessor,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            ICurrentUserAccessor currentUserAccessor)
         {
             _db = db;
             _dateService = dateService;
-            _memberMailer = memberMailer;
             _groupService = groupService;
+            _userManager = userManager;
+            _emailSender = emailSender;
             _urlHelperFactory = urlHelperFactory;
             _actionContextAccessor = actionContextAccessor;
             _httpContextAccessor = httpContextAccessor;
+            _currentUserAccessor = currentUserAccessor;
         }
 
         public async Task NotifyEventAdded(GroupEvent newEvent)
@@ -61,7 +69,7 @@ namespace LetsGame.Web.Services
             var slotsUtc = newEvent.Slots.Select(x => x.ProposedDateAndTimeUtc);
             var groupUrl = GetGroupUrl(group);
 
-            await _memberMailer.EmailMembersAsync(
+            await EmailMembersAsync(
                 allGroupMembers.Where(x => x.UserId != newEvent.CreatorId), 
                 $"A new session has been proposed in {group.Name}", 
                 GetEmailMessage,
@@ -101,7 +109,7 @@ namespace LetsGame.Web.Services
             var group = await _db.Groups.FindAsync(ev.GroupId);
             var game = await _db.GroupGames.FindAsync(ev.GameId);
 
-            await _memberMailer.EmailMembersAsync(
+            await EmailMembersAsync(
                 participants,
                 $"A session is starting soon in {group.Name}",
                 GetEmailMessage,
@@ -142,7 +150,7 @@ namespace LetsGame.Web.Services
             var missingVotes = _groupService.GetMissingVotes(groupEvent.Group.Memberships, groupEvent);
             var groupUrl = GetGroupUrl(groupEvent.Group);
 
-            await _memberMailer.EmailMembersAsync(
+            await EmailMembersAsync(
                 missingVotes,
                 $"Don't forget to vote on this {groupEvent.Game?.Name ?? "gaming"} session in {groupEvent.Group.Name}!",
                 GetEmailMessage,
@@ -157,6 +165,25 @@ namespace LetsGame.Web.Services
                        string.Join("", groupEvent.Slots.Select(x => $"<li>{HtmlEncode(_dateService.FormatUtcToUserFriendlyDate(x.ProposedDateAndTimeUtc, member.User))}")) +
                        $"</ul>" +
                        $"<p><a href=\"{groupUrl}\">Go to your group's page to vote on it!</a>";
+            }
+        }
+        
+        
+        private async Task EmailMembersAsync(
+            IEnumerable<Membership> members, 
+            string subject, 
+            Func<Membership, string> getMessage, 
+            Func<AppUser, bool> isUnsubscribed)
+        {
+            foreach (var member in members)
+            {
+                if (isUnsubscribed(member.User))
+                    continue;
+
+                await _emailSender.SendEmailAsync(
+                    member.User.Email,
+                    subject,
+                    getMessage(member));
             }
         }
 

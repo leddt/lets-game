@@ -26,7 +26,9 @@ namespace LetsGame.Tests.Services
             _sut = new NotificationService(
                 _db,
                 new DateService(config),
-                new BatchMemberMailer(Mock.Of<ICurrentUserAccessor>(), null, _emailSender.Object),
+                null,
+                null,
+                _emailSender.Object,
                 null,
                 null,
                 null,
