@@ -3,6 +3,10 @@
 
 // Write your JavaScript code.
 
+if (navigator.serviceWorker) {
+    navigator.serviceWorker.register("/service-worker.js")
+}
+
 $(() => initUi(document));
 
 function copyToClipboard(text) {

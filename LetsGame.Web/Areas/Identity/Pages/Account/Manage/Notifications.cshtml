@@ -6,24 +6,63 @@
     ViewData["ActivePage"] = ManageNavPages.Notifications;
 }
 
+@section Scripts
+{
+    <script>
+        window.vapidPublicKey = `@Model.VapidPublicKey`;
+        window.activePushSubscriptions = @Json.Serialize(Model.PushSubscriptions)
+    </script>
+    <script src="/js/notifications.js"></script>
+}
+
 <partial name="_StatusMessage" for="StatusMessage" />
 <h4>@ViewData["Title"]</h4>
 
-<p>Select the kinds of email notifications you'd like to receive.</p>
+<p>Select the kinds of notifications you'd like to receive.</p>
 
 <form method="post">
-    <div class="form-check">
-        <input asp-for="NewEvent" class="form-check-inline" />
-        <label asp-for="NewEvent" class="form-check-label"></label>
-    </div>
-    <div class="form-check">
-        <input asp-for="EventReminder" class="form-check-inline" />
-        <label asp-for="EventReminder" class="form-check-label"></label>
-    </div>
-    <div class="form-check">
-        <input asp-for="VoteReminder" class="form-check-inline" />
-        <label asp-for="VoteReminder" class="form-check-label"></label>
-    </div>
-    
+    <input type="hidden" asp-for="AddPushSubscription" />
+    <input type="hidden" asp-for="RemovePushSubscription" />
+
+    <table class="table table-borderless table-striped table-responsive">
+        <thead>
+        <tr>
+            <td></td>
+            <td class="text-center text-nowrap">E-Mail</td>
+            <td class="text-center text-nowrap d-flex flex-column">
+                <span>Push notification</span>
+                <button class="btn btn-sm btn-outline-primary" type="button" data-push="hide" onclick="enablePushNotifications()">Enable on this device</button>
+                <button class="btn btn-sm btn-outline-primary" type="button" data-push="show" style="display:none" onclick="disablePushNotifications()">Disable on this device</button>
+            </td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>A new event is added to one of my groups</td>
+            <td class="text-center"><input asp-for="NewEvent" class="form-check-inline m-0"/></td>
+            <td class="text-center"><input asp-for="NewEventPush" class="form-check-inline m-0" data-push="show" style="display:none"/></td>
+        </tr>
+        <tr>
+            <td>An event I'm participating in is starting soon</td>
+            <td class="text-center"><input asp-for="EventReminder" class="form-check-inline m-0"/></td>
+            <td class="text-center"><input asp-for="EventReminderPush" class="form-check-inline m-0" data-push="show" style="display:none"/></td>
+        </tr>
+        <tr>
+            <td>An organizer reminds group members to vote on their event</td>
+            <td class="text-center"><input asp-for="VoteReminder" class="form-check-inline m-0"/></td>
+            <td class="text-center"><input asp-for="VoteReminderPush" class="form-check-inline m-0" data-push="show" style="display:none"/></td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <tr>
+            <td></td>
+            <td></td>
+            <td class="text-center">
+                <button class="btn btn-sm btn-outline-primary" type="button" data-push="show" style="display:none" onclick="testPushNotifications()">Test</button>
+            </td>
+        </tr>
+        </tfoot>
+    </table>
+
     <button class="btn btn-primary mt-4" type="submit">Save</button>
 </form>
