@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 
 namespace LetsGame.Web.Data
 {
@@ -23,5 +24,21 @@ namespace LetsGame.Web.Data
         public DateTime? ReminderSentAtUtc { get; set; }
         
         public string Details { get; set; }
+        
+
+        public IEnumerable<Membership> GetMissingVotes()
+        {
+            if (Slots == null) throw new InvalidOperationException("Event Slots must be loaded");
+            if (Slots.Any(s => s.Votes == null)) throw new InvalidOperationException("Slot Votes must be loaded");
+            if (CantPlays == null) throw new InvalidOperationException("Event CantPlays must be loaded");
+            if (Group == null) throw new InvalidOperationException("Group must be loaded");
+            if (Group.Memberships == null) throw new InvalidOperationException("Group memberships must be loaded");
+            
+            var voterIds = Slots.SelectMany(s => s.Votes).Select(v => v.VoterId);
+            var cantPlays = CantPlays.Select(x => x.UserId);
+            var allVoterIds = voterIds.Union(cantPlays).Distinct();
+            
+            return Group.Memberships.Where(x => !allVoterIds.Contains(x.UserId));
+        }
     }
 }

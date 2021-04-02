@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using LetsGame.Web.Data;
 using LetsGame.Web.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Routing;
 using Moq;
 using Xunit;
 
@@ -26,13 +28,10 @@ namespace LetsGame.Tests.Services
             _sut = new NotificationService(
                 _db,
                 new DateService(config),
-                null,
-                null,
                 _emailSender.Object,
-                null,
-                null,
-                null,
-                null);
+                Mock.Of<IPushSender>(),
+                Mock.Of<LinkGenerator>(),
+                Mock.Of<IHttpContextAccessor>());
         }
 
         [Fact]

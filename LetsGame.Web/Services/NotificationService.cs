@@ -5,12 +5,10 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using LetsGame.Web.Data;
+using LetsGame.Web.Services.Igdb.Models;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 
 namespace LetsGame.Web.Services
@@ -26,54 +24,58 @@ namespace LetsGame.Web.Services
     {
         private readonly ApplicationDbContext _db;
         private readonly DateService _dateService;
-        private readonly GroupService _groupService;
-        private readonly UserManager<AppUser> _userManager;
         private readonly IEmailSender _emailSender;
-        private readonly IUrlHelperFactory _urlHelperFactory;
-        private readonly IActionContextAccessor _actionContextAccessor;
+        private readonly IPushSender _pushSender;
+        private readonly LinkGenerator _linkGenerator;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly ICurrentUserAccessor _currentUserAccessor;
 
         public NotificationService(
             ApplicationDbContext db, 
             DateService dateService,
-            GroupService groupService,
-            UserManager<AppUser> userManager,
             IEmailSender emailSender,
-            IUrlHelperFactory urlHelperFactory, 
-            IActionContextAccessor actionContextAccessor,
-            IHttpContextAccessor httpContextAccessor,
-            ICurrentUserAccessor currentUserAccessor)
+            IPushSender pushSender,
+            LinkGenerator linkGenerator,
+            IHttpContextAccessor httpContextAccessor)
         {
             _db = db;
             _dateService = dateService;
-            _groupService = groupService;
-            _userManager = userManager;
             _emailSender = emailSender;
-            _urlHelperFactory = urlHelperFactory;
-            _actionContextAccessor = actionContextAccessor;
+            _pushSender = pushSender;
+            _linkGenerator = linkGenerator;
             _httpContextAccessor = httpContextAccessor;
-            _currentUserAccessor = currentUserAccessor;
         }
 
         public async Task NotifyEventAdded(GroupEvent newEvent)
         {
             var allGroupMembers = await _db.Memberships
-                .Include(x => x.User)
+                .Include(x => x.User).ThenInclude(x => x.PushSubscriptions)
                 .Where(x => x.GroupId == newEvent.GroupId)
                 .ToListAsync();
 
             var creator = allGroupMembers.First(x => x.UserId == newEvent.CreatorId);
             var game = await _db.GroupGames.FindAsync(newEvent.GameId);
             var group = await _db.Groups.FindAsync(newEvent.GroupId);
-            var slotsUtc = newEvent.Slots.Select(x => x.ProposedDateAndTimeUtc);
+            var slotsUtc = newEvent.Slots.Select(x => x.ProposedDateAndTimeUtc).ToList();
             var groupUrl = GetGroupUrl(group);
 
+            var membersToNotify = allGroupMembers.Where(x => x.UserId != newEvent.CreatorId).ToList();
+            
             await EmailMembersAsync(
-                allGroupMembers.Where(x => x.UserId != newEvent.CreatorId), 
+                membersToNotify, 
                 $"A new session has been proposed in {group.Name}", 
                 GetEmailMessage,
                 x => x.UnsubscribeNewEvent);
+
+            await PushMembersAsync(
+                membersToNotify,
+                new SimpleNotificationPayload
+                {
+                    Title = group.Name,
+                    Body = $"New session proposed for {game?.Name ?? "any game"}",
+                    Image = Image.GetScreenshotMedUrl(game?.IgdbImageId),
+                    Url = GetGroupUrl(group) 
+                },
+                x => x.UnsubscribeNewEventPush);
 
             string GetEmailMessage(Membership member)
             {
@@ -86,7 +88,7 @@ namespace LetsGame.Web.Services
                        $"<p><a href=\"{groupUrl}\">Go to your group's page to vote on it!</a>";
             }
         }
-        
+
         public async Task NotifyEventStartingSoon(GroupEvent ev)
         {
             // Sanity checks
@@ -100,7 +102,7 @@ namespace LetsGame.Web.Services
             if (eventSlot == null) return;
             
             var participants = await _db.Memberships
-                .Include(x => x.User)
+                .Include(x => x.User).ThenInclude(x => x.PushSubscriptions)
                 .Where(m => eventSlot.Votes.Select(v => v.VoterId).Contains(m.UserId))
                 .Where(x => x.GroupId == ev.GroupId)
                 .OrderBy(x => x.DisplayName)
@@ -114,6 +116,17 @@ namespace LetsGame.Web.Services
                 $"A session is starting soon in {group.Name}",
                 GetEmailMessage,
                 x => x.UnsubscribeEventReminder);
+
+            await PushMembersAsync(
+                participants,
+                new SimpleNotificationPayload
+                {
+                    Title = group.Name,
+                    Body = $"A session for {game?.Name ?? "any game"} is starting at {eventSlot.ProposedDateAndTimeUtc.TimeOfDay}",
+                    Image = Image.GetScreenshotMedUrl(game?.IgdbImageId),
+                    Url = GetGroupUrl(group)
+                },
+                x => x.UnsubscribeEventReminderPush);
             
             string GetEmailMessage(Membership member)
             {
@@ -137,7 +150,7 @@ namespace LetsGame.Web.Services
             
             var groupEvent = await _db.GroupEvents
                 .Include(x => x.Slots.Where(s => s.ProposedDateAndTimeUtc > utcThreshold).OrderBy(s => s.ProposedDateAndTimeUtc)).ThenInclude(x => x.Votes)
-                .Include(x => x.Group.Memberships).ThenInclude(x => x.User)
+                .Include(x => x.Group.Memberships).ThenInclude(x => x.User).ThenInclude(x => x.PushSubscriptions)
                 .Include(x => x.CantPlays)
                 .Include(x => x.Game)
                 .FirstOrDefaultAsync(x => x.Id == eventId);
@@ -147,7 +160,7 @@ namespace LetsGame.Web.Services
 
             if (!groupEvent.Slots.Any()) return;
 
-            var missingVotes = _groupService.GetMissingVotes(groupEvent.Group.Memberships, groupEvent);
+            var missingVotes = groupEvent.GetMissingVotes().ToList();
             var groupUrl = GetGroupUrl(groupEvent.Group);
 
             await EmailMembersAsync(
@@ -155,6 +168,17 @@ namespace LetsGame.Web.Services
                 $"Don't forget to vote on this {groupEvent.Game?.Name ?? "gaming"} session in {groupEvent.Group.Name}!",
                 GetEmailMessage,
                 x => x.UnsubscribeVoteReminder);
+
+            await PushMembersAsync(
+                missingVotes,
+                new SimpleNotificationPayload
+                {
+                    Title = groupEvent.Group.Name,
+                    Body = $"Remember to vote on the {groupEvent.Game?.Name ?? "gaming"} session",
+                    Image = Image.GetScreenshotMedUrl(groupEvent.Game?.IgdbImageId),
+                    Url = GetGroupUrl(groupEvent.Group)
+                },
+                x => x.UnsubscribeVoteReminderPush);
 
             string GetEmailMessage(Membership member)
             {
@@ -187,18 +211,52 @@ namespace LetsGame.Web.Services
             }
         }
 
+        private async Task PushMembersAsync(
+            IEnumerable<Membership> members, 
+            SimpleNotificationPayload payload,
+            Func<AppUser, bool> isUnsubscribed)
+        {
+            var allSubscriptions = new List<string>();
+            
+            foreach (var member in members)
+            {
+                if (isUnsubscribed(member.User))
+                    continue;
+
+                allSubscriptions.AddRange(member.User.PushSubscriptions.Select(x => x.SubscriptionJson));
+            }
+
+            await _pushSender.SendNotification(allSubscriptions, payload);
+        }
+
         private static string HtmlEncode(string value) => HtmlEncoder.Default.Encode(value);
         
         private string GetGroupUrl(Group group)
         {
-            var urlHelper = _urlHelperFactory.GetUrlHelper(_actionContextAccessor.ActionContext);
-
-            return urlHelper.Page(
-                pageName: "/Groups/Group",
-                pageHandler: null,
-                values: new {slug = group.Slug},
-                protocol: _httpContextAccessor.HttpContext?.Request.Scheme ?? "http"
-            );
+            if (_httpContextAccessor.HttpContext == null)
+            {
+                return _linkGenerator.GetPathByPage(
+                    "/Groups/Group",
+                    null,
+                    new {slug = group.Slug});
+            }
+            else
+            {
+                return _linkGenerator.GetUriByPage(
+                    _httpContextAccessor.HttpContext,
+                    "/Groups/Group",
+                    null,
+                    new {slug = group.Slug});
+                
+                // var urlHelper = _urlHelperFactory.GetUrlHelper(_actionContextAccessor.ActionContext);
+                //
+                // return urlHelper.Page(
+                //     pageName: "/Groups/Group",
+                //     pageHandler: null,
+                //     values: new {slug = group.Slug},
+                //     protocol: _httpContextAccessor.HttpContext?.Request.Scheme ?? "http"
+                // );
+            }
         }
         
         private string GetOtherMemberNames(IEnumerable<Membership> members, Membership except)

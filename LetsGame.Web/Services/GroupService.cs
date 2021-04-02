@@ -291,19 +291,6 @@ namespace LetsGame.Web.Services
             await _notificationService.NotifyEventAdded(groupEvent);
         }
 
-        public IEnumerable<Membership> GetMissingVotes(IEnumerable<Membership> allMembers, GroupEvent groupEvent)
-        {
-            if (groupEvent.Slots == null) throw new InvalidOperationException("Event Slots must be loaded");
-            if (groupEvent.Slots.Any(s => s.Votes == null)) throw new InvalidOperationException("Slot Votes must be loaded");
-            if (groupEvent.CantPlays == null) throw new InvalidOperationException("Event CantPlays must be loaded");
-            
-            var voterIds = groupEvent.Slots.SelectMany(s => s.Votes).Select(v => v.VoterId);
-            var cantPlays = groupEvent.CantPlays.Select(x => x.UserId);
-            var allVoterIds = voterIds.Union(cantPlays).Distinct();
-            
-            return allMembers.Where(x => !allVoterIds.Contains(x.UserId));
-        }
-
         private string CurrentUserId => _userManager.GetUserId(_currentUserAccessor.CurrentUser);
 
         private Task<string> CreateSlugFromGroupNameAsync(string name)

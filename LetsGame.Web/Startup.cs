@@ -20,6 +20,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using WebPush;
 
 namespace LetsGame.Web
 {
@@ -99,6 +100,13 @@ namespace LetsGame.Web
             
             services.AddTransient<IEmailSender, EmailSender>();
             services.AddTransient<INotificationService, NotificationService>();
+
+            services.AddSingleton(new VapidDetails(
+                Configuration["vapid:subject"],
+                Configuration["vapid:publicKey"],
+                Configuration["vapid:privateKey"]));
+            services.AddTransient<WebPushClient>();
+            services.AddTransient<IPushSender, PushSender>();
 
             // Recurring tasks
             services.AddTransient<RecurringTaskRunner>();

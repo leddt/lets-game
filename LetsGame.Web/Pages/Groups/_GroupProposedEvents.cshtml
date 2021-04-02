@@ -75,7 +75,7 @@
                                 </div>
                             }
 
-                            @{ var missingVotes = GroupService.GetMissingVotes(Model.Group.Memberships, e).ToList(); }
+                            @{ var missingVotes = e.GetMissingVotes().ToList(); }
                             @if (missingVotes.Any())
                             {
                                 <hr/>
