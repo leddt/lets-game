@@ -71,7 +71,7 @@ namespace LetsGame.Web.Services
                 new SimpleNotificationPayload
                 {
                     Title = group.Name,
-                    Body = $"New session proposed for {game?.Name ?? "any game"}",
+                    Body = $"New {game?.Name ?? "gaming"} session proposed",
                     Image = Image.GetScreenshotMedUrl(game?.IgdbImageId),
                     Url = GetGroupUrl(group) 
                 },
@@ -122,7 +122,7 @@ namespace LetsGame.Web.Services
                 new SimpleNotificationPayload
                 {
                     Title = group.Name,
-                    Body = $"A session for {game?.Name ?? "any game"} is starting at {eventSlot.ProposedDateAndTimeUtc.TimeOfDay}",
+                    Body = $"{game?.Name ?? "Gaming"} session starting at {_dateService.ConvertFromUtcToUserTimezone(eventSlot.ProposedDateAndTimeUtc):h:mm tt}.",
                     Image = Image.GetScreenshotMedUrl(game?.IgdbImageId),
                     Url = GetGroupUrl(group)
                 },
@@ -174,7 +174,7 @@ namespace LetsGame.Web.Services
                 new SimpleNotificationPayload
                 {
                     Title = groupEvent.Group.Name,
-                    Body = $"Remember to vote on the {groupEvent.Game?.Name ?? "gaming"} session",
+                    Body = $"{groupEvent.Game?.Name ?? "Gaming"} session needs your vote.",
                     Image = Image.GetScreenshotMedUrl(groupEvent.Game?.IgdbImageId),
                     Url = GetGroupUrl(groupEvent.Group)
                 },
