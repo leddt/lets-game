@@ -49,6 +49,7 @@ namespace LetsGame.Web.Pages.Groups
         [BindProperty] public bool SingleUse { get; set; }
         [BindProperty] public string InviteId { get; set; }
         [BindProperty] public string MemberId { get; set; }
+        [BindProperty] public int AvailabilityLength { get; set; }
         
         public string GetDisplayName(string userId) =>
             Group.Memberships.FirstOrDefault(x => x.UserId == userId)?.DisplayName ?? "Unknown member";
@@ -218,6 +219,39 @@ namespace LetsGame.Web.Pages.Groups
             await _notificationService.SendEventReminderAsync(EventId);
             NotifyClients(slug, $"event-{EventId}");
             
+            return RedirectToPage("Group", new {slug});
+        }
+
+        public async Task<IActionResult> OnPostSetAvailability(string slug)
+        {
+            var member = await _db.Memberships
+                .Include(x => x.Group)
+                .Where(x => x.Group.Slug == slug)
+                .Where(x => x.UserId == UserId)
+                .FirstOrDefaultAsync();
+
+            if (member != null)
+            {
+                var wasAvailable = member.IsAvailableNow();
+
+                var utcNow = DateTime.UtcNow;
+                member.AvailableUntilUtc = utcNow + TimeSpan.FromSeconds(AvailabilityLength);
+                await _db.SaveChangesAsync();
+
+                if (member.IsAvailableNow() &&
+                    !wasAvailable &&
+                    (member.AvailabilityNotificationSentAtUtc == null ||
+                     member.AvailabilityNotificationSentAtUtc < utcNow - TimeSpan.FromHours(1)))
+                {
+                    member.AvailabilityNotificationSentAtUtc = utcNow;
+                    await _db.SaveChangesAsync();
+
+                    await _notificationService.NotifyMemberAvailable(member.Group, member);
+                }
+
+                NotifyClients(slug, "members");
+            }
+
             return RedirectToPage("Group", new {slug});
         }
 

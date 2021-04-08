@@ -19,7 +19,7 @@ function copyToClipboard(text) {
 }
 
 // Update Panels
-let ignoreUpdates = false;
+let ignoreUpdates = null;
 document.addEventListener("submit", async (ev) => {
     if (!ev.target.matches("form[data-update]")) return;
     
@@ -28,10 +28,8 @@ document.addEventListener("submit", async (ev) => {
     if (!container) return;
     
     ev.preventDefault();
-    
-    new FormData(ev.target)
-    
-    ignoreUpdates = true;
+        
+    ignoreUpdates = containerId;
     setTimeout(() => ignoreUpdates = false, 500)
     
     const response = await fetch(ev.target.action, {
@@ -40,7 +38,7 @@ document.addEventListener("submit", async (ev) => {
         headers: {
             "Content-Type": "application/x-www-form-urlencoded"
         },
-        body: serializeForm(ev.target)
+        body: serializeForm(ev.target, ev.submitter)
     });
     
     const resultHtml = await response.text();
@@ -48,7 +46,7 @@ document.addEventListener("submit", async (ev) => {
 });
 
 async function refreshPanel(containerId) {
-    if (ignoreUpdates) return;
+    if (ignoreUpdates === containerId) return;
     
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -90,6 +88,11 @@ function getElementByIdFromHtml(elementId, html) {
     return tempContainer.querySelector(`#${elementId}`);
 }
 
-function serializeForm(form) {
-    return new URLSearchParams(Array.from(new FormData(form))).toString();
+function serializeForm(form, submitter) {
+    const formData = new FormData(form);
+    if (submitter && submitter.name) {
+        formData.append(submitter.name, submitter.value)
+    }
+    
+    return new URLSearchParams(Array.from(formData)).toString();
 }

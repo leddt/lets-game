@@ -37,6 +37,11 @@ namespace LetsGame.Web.Areas.Identity.Pages.Account.Manage
         [BindProperty] 
         public bool VoteReminderPush { get; set; }
         
+        [BindProperty] 
+        public bool MemberAvailable { get; set; }
+        [BindProperty] 
+        public bool MemberAvailablePush { get; set; }
+        
         [TempData]
         public string StatusMessage { get; set; }
 
@@ -52,10 +57,12 @@ namespace LetsGame.Web.Areas.Identity.Pages.Account.Manage
             NewEvent = !user.UnsubscribeNewEvent;
             EventReminder = !user.UnsubscribeEventReminder;
             VoteReminder = !user.UnsubscribeVoteReminder;
+            MemberAvailable = !user.UnsubscribeMemberAvailable;
             
             NewEventPush = !user.UnsubscribeNewEventPush;
             EventReminderPush = !user.UnsubscribeEventReminderPush;
             VoteReminderPush = !user.UnsubscribeVoteReminderPush;
+            MemberAvailablePush = !user.UnsubscribeMemberAvailablePush;
         }
 
         public async Task<IActionResult> OnPostAsync([FromServices] UserManager<AppUser> userManager, [FromServices] ApplicationDbContext db)
@@ -67,10 +74,12 @@ namespace LetsGame.Web.Areas.Identity.Pages.Account.Manage
             user.UnsubscribeNewEvent = !NewEvent;
             user.UnsubscribeEventReminder = !EventReminder;
             user.UnsubscribeVoteReminder = !VoteReminder;
+            user.UnsubscribeMemberAvailable = !MemberAvailable;
             
             user.UnsubscribeNewEventPush = !NewEventPush;
             user.UnsubscribeEventReminderPush = !EventReminderPush;
             user.UnsubscribeVoteReminderPush = !VoteReminderPush;
+            user.UnsubscribeMemberAvailablePush = !MemberAvailablePush;
 
             if (!string.IsNullOrWhiteSpace(AddPushSubscription))
             {

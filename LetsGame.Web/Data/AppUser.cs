@@ -16,5 +16,7 @@ namespace LetsGame.Web.Data
         public bool UnsubscribeNewEventPush { get; set; }
         public bool UnsubscribeVoteReminderPush { get; set; }
         public bool UnsubscribeEventReminderPush { get; set; }
+        public bool UnsubscribeMemberAvailable { get; set; } = true;
+        public bool UnsubscribeMemberAvailablePush { get; set; }
     }
 }

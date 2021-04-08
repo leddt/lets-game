@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LetsGame.Web.Data
 {
@@ -13,5 +15,11 @@ namespace LetsGame.Web.Data
         public string DisplayName { get; set; }
         
         public GroupRole Role { get; set; }
+        
+        public DateTime? AvailableUntilUtc { get; set; }
+        public DateTime? AvailabilityNotificationSentAtUtc { get; set; }
+
+        [MemberNotNullWhen(true, nameof(AvailableUntilUtc))]
+        public bool IsAvailableNow() => AvailableUntilUtc > DateTime.UtcNow;
     }
 }

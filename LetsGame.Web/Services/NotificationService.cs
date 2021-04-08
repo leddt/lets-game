@@ -18,6 +18,7 @@ namespace LetsGame.Web.Services
         Task NotifyEventAdded(GroupEvent newEvent);
         Task NotifyEventStartingSoon(GroupEvent ev);
         Task SendEventReminderAsync(long eventId);
+        Task NotifyMemberAvailable(Group group, Membership availableMember);
     }
 
     public class NotificationService : INotificationService
@@ -73,7 +74,7 @@ namespace LetsGame.Web.Services
                     Title = group.Name,
                     Body = $"New {game?.Name ?? "gaming"} session proposed",
                     Image = Image.GetScreenshotMedUrl(game?.IgdbImageId),
-                    Url = GetGroupUrl(group) 
+                    Url = groupUrl
                 },
                 x => x.UnsubscribeNewEventPush);
 
@@ -191,8 +192,50 @@ namespace LetsGame.Web.Services
                        $"<p><a href=\"{groupUrl}\">Go to your group's page to vote on it!</a>";
             }
         }
-        
-        
+
+        public async Task NotifyMemberAvailable(Group group, Membership availableMember)
+        {
+            if (!availableMember.IsAvailableNow()) return;
+            
+            var otherMembers = await _db.Memberships
+                .Include(x => x.User).ThenInclude(x => x.PushSubscriptions)
+                .Where(x => x.GroupId == group.Id)
+                .Where(x => x.UserId != availableMember.UserId)
+                .ToListAsync();
+            
+            var groupUrl = GetGroupUrl(group);
+            
+            await EmailMembersAsync(
+                otherMembers,
+                $"{availableMember.DisplayName} is available to game!",
+                GetEmailMessage,
+                x => x.UnsubscribeMemberAvailable);
+
+            await PushMembersAsync(
+                otherMembers,
+                new SimpleNotificationPayload
+                {
+                    Title = group.Name,
+                    Body = $"{availableMember.DisplayName} is available to game!",
+                    Url = groupUrl
+                },
+                x => x.UnsubscribeMemberAvailablePush);
+
+            string GetEmailMessage(Membership member)
+            {
+                var availableUntilFormatted = _dateService
+                    .ConvertFromUtcToUserTimezone(
+                        availableMember.AvailableUntilUtc.Value, 
+                        member.User)
+                    .ToString("h:mm tt");
+                
+                return $"<p>Hi {HtmlEncode(member.DisplayName)}," +
+                       $"<p>{availableMember.DisplayName}, from your group <a href=\"{groupUrl}\">{group.Name}</a>, " +
+                       $"is available to game until {availableUntilFormatted}!";
+            }
+        }
+
+
         private async Task EmailMembersAsync(
             IEnumerable<Membership> members, 
             string subject, 

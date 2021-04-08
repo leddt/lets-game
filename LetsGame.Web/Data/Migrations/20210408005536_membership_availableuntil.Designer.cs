@@ -3,15 +3,17 @@ using System;
 using LetsGame.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace LetsGame.Web.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210408005536_membership_availableuntil")]
+    partial class membership_availableuntil
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -71,12 +73,6 @@ namespace LetsGame.Web.Data.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<bool>("UnsubscribeEventReminderPush")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("UnsubscribeMemberAvailable")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("UnsubscribeMemberAvailablePush")
                         .HasColumnType("boolean");
 
                     b.Property<bool>("UnsubscribeNewEvent")
@@ -277,9 +273,6 @@ namespace LetsGame.Web.Data.Migrations
 
                     b.Property<string>("UserId")
                         .HasColumnType("text");
-
-                    b.Property<DateTime?>("AvailabilityNotificationSentAtUtc")
-                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("AvailableUntilUtc")
                         .HasColumnType("timestamp without time zone");

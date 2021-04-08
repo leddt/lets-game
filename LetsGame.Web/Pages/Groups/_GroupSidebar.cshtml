@@ -1,21 +1,36 @@
 ﻿@using System.Text.Encodings.Web
+@using LetsGame.Web.Services
 @model GroupModel
+@inject DateService DateService
 
 <div class="w-sm-25 border-left" style="min-width: 15rem; max-width: 25rem">
-    <div class="p-3 border-bottom">
+    <div class="p-3 border-bottom" id="members">
         <h2>Members</h2>
         @foreach (var membership in Model.Group.Memberships)
         {
             var isSelf = membership == Model.UserMembership;
+            var isAvailable = membership.IsAvailableNow();
 
             <div class="d-flex align-items-center">
-                <avatar name="@membership.DisplayName" presence-id="@membership.UserId" />
-                <span class="@(isSelf ? "font-weight-bold" : "")">@membership.DisplayName</span>
+                <avatar name="@membership.DisplayName" presence-id="@membership.UserId" is-highlighted="@isAvailable" class="mr-2" />
+                
+                <div class="d-flex flex-column">
+                    <div class="d-flex">
+                        <span class="@(isSelf ? "font-weight-bold" : "")">@membership.DisplayName</span>
 
-                @if (membership.Role == GroupRole.Owner)
-                {
-                    <span class="text-muted mx-1">(Owner)</span>
-                }
+                        @if (membership.Role == GroupRole.Owner)
+                        {
+                            <span class="text-muted mx-1">(Owner)</span>
+                        }
+                    </div>
+                    
+                    @if (isAvailable)
+                    {
+                        <div class="small">
+                            Available until @DateService.ConvertFromUtcToUserTimezone(membership.AvailableUntilUtc.Value).ToString("h:mm tt")!
+                        </div>
+                    }
+                </div>
 
                 @if (Model.IsGroupOwner && !isSelf)
                 {
@@ -37,6 +52,40 @@
         {
             <p>It's lonely in here... You should invite your friends to join you!</p>
         }
+    </div>
+    
+    <div class="p-3 border-bottom" id="availability">
+        <h2>Available?</h2>
+        
+        @if (Model.UserMembership.IsAvailableNow())
+        {
+            <p>You are available until @DateService.ConvertFromUtcToUserTimezone(Model.UserMembership.AvailableUntilUtc.Value).ToString("h:mm tt")</p>
+        }
+        else
+        {
+            <p>Use this button to tell other members you are available to game right now.</p>
+        }
+        <form asp-page-handler="SetAvailability" data-update="availability">
+            <div class="dropdown">
+                <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+                    I'm available for the next...
+                </button>
+                <div class="dropdown-menu">
+                    @if (Model.UserMembership.IsAvailableNow())
+                    {
+                        <button class="dropdown-item" type="submit" name="AvailabilityLength" value="-1">I'm no longer available</button>
+                        <div class="dropdown-divider"></div>
+                    }
+                    
+                    <button class="dropdown-item" type="submit" name="AvailabilityLength" value="3600">1 hour</button>
+                    <button class="dropdown-item" type="submit" name="AvailabilityLength" value="7200">2 hours</button>
+                    <button class="dropdown-item" type="submit" name="AvailabilityLength" value="10800">3 hours</button>
+                    <button class="dropdown-item" type="submit" name="AvailabilityLength" value="14400">4 hours</button>
+                    <button class="dropdown-item" type="submit" name="AvailabilityLength" value="18000">5 hours</button>
+                    <button class="dropdown-item" type="submit" name="AvailabilityLength" value="21600">6 hours</button>
+                </div>
+            </div>
+        </form>
     </div>
 
     @if (Model.IsGroupOwner)

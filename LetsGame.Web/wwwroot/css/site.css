@@ -98,6 +98,9 @@ a.avatar:hover, button.avatar:hover {
     height: 4rem;
     width: 4rem;
 }
+.avatar-highlight {
+    border-color: #0f0;
+}
 .avatar-action {
     background-color: #FFF;
     border: dashed 0.1rem #6c757d;

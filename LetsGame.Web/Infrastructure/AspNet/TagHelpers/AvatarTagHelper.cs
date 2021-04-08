@@ -34,6 +34,7 @@ namespace LetsGame.Web.Infrastructure.AspNet.TagHelpers
         public bool IsAdd { get; set; }
         public bool IsRemove { get; set; }
         public bool IsLarge { get; set; }
+        public bool IsHighlighted { get; set; }
         
         [HtmlAttributeName("asp-page")] public string Page { get; set; }
         [HtmlAttributeName("asp-all-route-data", DictionaryAttributePrefix = "asp-route-")]
@@ -53,6 +54,11 @@ namespace LetsGame.Web.Infrastructure.AspNet.TagHelpers
             if (IsLarge)
             {
                 output.AddClass("avatar-large", HtmlEncoder.Default);
+            }
+
+            if (IsHighlighted)
+            {
+                output.AddClass("avatar-highlight", HtmlEncoder.Default);
             }
 
             if (IsLink)
