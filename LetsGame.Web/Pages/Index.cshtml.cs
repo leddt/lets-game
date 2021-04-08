@@ -29,7 +29,10 @@ namespace LetsGame.Web.Pages
         public async Task OnGet()
         {
             var userId = _userManager.GetUserId(User);
-            Groups = await _db.Groups.Where(x => x.Memberships.Any(m => m.UserId == userId)).ToListAsync();
+            Groups = await _db.Groups
+                .Where(x => x.Memberships.Any(m => m.UserId == userId))
+                .OrderBy(x => x.Name)
+                .ToListAsync();
         }
     }
 }
