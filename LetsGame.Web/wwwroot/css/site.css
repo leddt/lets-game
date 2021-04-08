@@ -68,9 +68,15 @@
 .game-groups .avatar-action {
     margin: 0 0 0 1rem;
 }
+.game-groups .game-groups-tool {
+    margin: 0 0 0 2rem;
+}
 @media (min-width: 576px) {
     .game-groups .avatar-action {
         margin: 1rem 0 0 0;
+    }
+    .game-groups .game-groups-tool {
+        margin: 2rem 0 0 0;
     }
 }
 
