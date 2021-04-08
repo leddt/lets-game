@@ -42,7 +42,14 @@ document.addEventListener("submit", async (ev) => {
     });
     
     const resultHtml = await response.text();
-    replaceElement(resultHtml, container);
+    const newElement = replaceElement(resultHtml, container);
+    
+    document.dispatchEvent(new CustomEvent("panelupdate", {
+        detail: {
+            containerId,
+            newElement
+        }
+    }))
 });
 
 async function refreshPanel(containerId) {
@@ -57,7 +64,14 @@ async function refreshPanel(containerId) {
     });
 
     const resultHtml = await response.text();
-    replaceElement(resultHtml, container);
+    const newElement = replaceElement(resultHtml, container);
+
+    document.dispatchEvent(new CustomEvent("panelupdate", {
+        detail: {
+            containerId,
+            newElement
+        }
+    }))
 }
 
 function replaceElement(resultHtml, container) {
@@ -72,6 +86,8 @@ function replaceElement(resultHtml, container) {
     initUi(resultElement);
 
     $(container).replaceWith(resultElement);
+    
+    return resultElement;
 }
 
 function initUi(container) {

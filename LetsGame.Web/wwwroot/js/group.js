@@ -32,6 +32,14 @@
     await connection.start();
     await onConnected();
     
+    document.addEventListener("panelupdate", function(ev) {
+        if (ev.detail?.containerId !== "members") return;
+        
+        for (const userId of presences) {
+            $(`[data-presence-id='${userId}']`).addClass("active");
+        }
+    });
+    
     function addPresence(userId) {
         if (presences.indexOf(userId) >= 0) return;
         presences.push(userId);
