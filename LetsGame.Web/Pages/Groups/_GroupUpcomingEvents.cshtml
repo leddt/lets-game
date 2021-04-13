@@ -11,7 +11,8 @@
 
 @if (Model.UpcomingEvents.Any())
 {
-    <h2>Upcoming sessions</h2>
+    <h2>Upcoming sessions (@Model.UpcomingEvents.Count())</h2>
+    
     <div class="row row-cols-1 row-cols-xl-2 pt-3">
         @foreach (var e in Model.UpcomingEvents)
         {

@@ -54,40 +54,43 @@
         }
     </div>
     
-    <div class="p-3 border-bottom" id="availability">
-        <h2>Available?</h2>
-        
-        @if (Model.UserMembership.IsAvailableNow())
-        {
-            <p>You are available until @DateService.ConvertFromUtcToUserTimezone(Model.UserMembership.AvailableUntilUtc.Value).ToString("h:mm tt")</p>
-        }
-        else
-        {
-            <p>Use this button to tell other members you are available to game right now.</p>
-        }
-        <form asp-page-handler="SetAvailability" data-update="availability">
-            <div class="dropdown">
-                <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
-                    I'm available for the next...
-                </button>
-                <div class="dropdown-menu">
-                    @if (Model.UserMembership.IsAvailableNow())
-                    {
-                        <button class="dropdown-item" type="submit" name="AvailabilityLength" value="-1">I'm no longer available</button>
-                        <div class="dropdown-divider"></div>
-                    }
-                    
-                    <button class="dropdown-item" type="submit" name="AvailabilityLength" value="3600">1 hour</button>
-                    <button class="dropdown-item" type="submit" name="AvailabilityLength" value="7200">2 hours</button>
-                    <button class="dropdown-item" type="submit" name="AvailabilityLength" value="10800">3 hours</button>
-                    <button class="dropdown-item" type="submit" name="AvailabilityLength" value="14400">4 hours</button>
-                    <button class="dropdown-item" type="submit" name="AvailabilityLength" value="18000">5 hours</button>
-                    <button class="dropdown-item" type="submit" name="AvailabilityLength" value="21600">6 hours</button>
-                </div>
-            </div>
-        </form>
-    </div>
+    @if (Model.Group.Memberships.Count > 1)
+    {
+        <div class="p-3 border-bottom" id="availability">
+            <h2>Available?</h2>
 
+            @if (Model.UserMembership.IsAvailableNow())
+            {
+                <p>You are available until @DateService.ConvertFromUtcToUserTimezone(Model.UserMembership.AvailableUntilUtc.Value).ToString("h:mm tt")</p>
+            }
+            else
+            {
+                <p>Use this button to tell other members you are available to game right now.</p>
+            }
+            <form asp-page-handler="SetAvailability" data-update="availability">
+                <div class="dropdown">
+                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-toggle="dropdown">
+                        I'm available for the next...
+                    </button>
+                    <div class="dropdown-menu">
+                        @if (Model.UserMembership.IsAvailableNow())
+                        {
+                            <button class="dropdown-item" type="submit" name="AvailabilityLength" value="-1">I'm no longer available</button>
+                            <div class="dropdown-divider"></div>
+                        }
+
+                        <button class="dropdown-item" type="submit" name="AvailabilityLength" value="3600">1 hour</button>
+                        <button class="dropdown-item" type="submit" name="AvailabilityLength" value="7200">2 hours</button>
+                        <button class="dropdown-item" type="submit" name="AvailabilityLength" value="10800">3 hours</button>
+                        <button class="dropdown-item" type="submit" name="AvailabilityLength" value="14400">4 hours</button>
+                        <button class="dropdown-item" type="submit" name="AvailabilityLength" value="18000">5 hours</button>
+                        <button class="dropdown-item" type="submit" name="AvailabilityLength" value="21600">6 hours</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    }
+    
     @if (Model.IsGroupOwner)
     {
         <div class="p-3 border-bottom">

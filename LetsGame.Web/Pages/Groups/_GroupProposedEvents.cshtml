@@ -10,7 +10,13 @@
     var currentUserId = UserManager.GetUserId(User);
 }
 
-<h2>Proposed sessions</h2>
+<h2>
+    Proposed sessions
+    @if (Model.ProposedEvents.Any())
+    {
+        @:(@Model.ProposedEvents.Count())
+    }
+</h2>
 
 @if (!Model.ProposedEvents.Any())
 {
