@@ -1,4 +1,7 @@
 ﻿@page
+@using LetsGame.Web.Services
+@inject DateService DateService
+
 @model IndexModel
 @{
     ViewData["Title"] = "Welcome";
@@ -22,13 +25,52 @@
     else
     {
         <p>
-            Pick a group, or <a asp-page="/Groups/Create">create a new one</a>!
+            Pick a group <span class="d-none d-sm-inline">on the left</span><span class="d-sm-none">above</span>, or <a asp-page="/Groups/Create">create a new one</a>!
         </p>
-        @foreach (var group in Model.Groups)
-        {
-            <div>
-                <a asp-page="/Groups/Group" asp-route-slug="@group.Slug" class="btn btn-primary mb-2">@group.Name</a>
+    }
+</div>
+    
+<div class="row">
+    @if (Model.UpcomingEvents.Any())
+    {
+        <div class="col-md-6 mb-2">
+            <h3>Upcoming sessions</h3>
+
+            <div class="list-group">
+                @foreach (var e in Model.UpcomingEvents)
+                {
+                    <a asp-page="/Groups/Group" asp-route-slug="@e.Group.Slug" class="list-group-item list-group-item-action">
+                        <strong>@(e.Game?.Name ?? "Any game")</strong> with <span class="text-primary">@e.Group.Name</span> 
+                        <span class="text-muted d-block">@DateService.FormatUtcToUserFriendlyDate(e.ChosenDateAndTimeUtc.Value)</span>
+                    </a>
+                }
             </div>
-        }
+        </div>
+    }
+    @if (Model.ProposedEvents.Any())
+    {
+        <div class="col-md-6 mb-2">
+            <h3>Proposed sessions</h3>
+
+            <div class="list-group">
+                @foreach (var e in Model.ProposedEvents)
+                {
+                    <a asp-page="/Groups/Group" asp-route-slug="@e.Group.Slug" class="list-group-item list-group-item-action">
+                        <strong>@(e.Game?.Name ?? "Any game")</strong> with <span class="text-primary">@e.Group.Name</span>
+                        <span class="text-muted d-block">
+                            @e.Slots.Count slots
+                            @if (e.Slots.SelectMany(s => s.Votes).Any(v => v.VoterId == Model.UserId))
+                            {
+                                <span class="text-success">(✓ you voted)</span> 
+                            }
+                            else
+                            {
+                                <span class="text-danger">(your vote is missing)</span>
+                            }
+                        </span>
+                    </a>
+                }
+            </div>
+        </div>
     }
 </div>

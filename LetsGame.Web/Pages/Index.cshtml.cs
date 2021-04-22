@@ -18,7 +18,17 @@ namespace LetsGame.Web.Pages
         private readonly ApplicationDbContext _db;
         private readonly UserManager<AppUser> _userManager;
 
+        public string UserId { get; set; }
         public IList<Group> Groups { get; set; }
+        public IList<GroupEvent> AllEvents { get; set; }
+
+        public IEnumerable<GroupEvent> UpcomingEvents => AllEvents
+            .Where(x => x.ChosenDateAndTimeUtc.HasValue)
+            .OrderBy(x => x.ChosenDateAndTimeUtc);
+
+        public IEnumerable<GroupEvent> ProposedEvents => AllEvents
+            .Where(x => x.ChosenDateAndTimeUtc == null)
+            .OrderBy(x => x.Slots.Min(s => s.ProposedDateAndTimeUtc));
         
         public IndexModel(ApplicationDbContext db, UserManager<AppUser> userManager)
         {
@@ -28,11 +38,23 @@ namespace LetsGame.Web.Pages
 
         public async Task OnGet()
         {
-            var userId = _userManager.GetUserId(User);
+            UserId = _userManager.GetUserId(User);
+            var now = DateTime.UtcNow;
+            
             Groups = await _db.Groups
-                .Where(x => x.Memberships.Any(m => m.UserId == userId))
+                .Where(x => x.Memberships.Any(m => m.UserId == UserId))
                 .OrderBy(x => x.Name)
                 .ToListAsync();
+
+            AllEvents = await _db.GroupEvents
+                .Include(x => x.Group)
+                .Include(x => x.Game)
+                .Include(x => x.Slots.Where(s => s.ProposedDateAndTimeUtc > now)).ThenInclude(x => x.Votes)
+                .Where(x => x.Group.Memberships.Any(m => m.UserId == UserId))
+                .Where(x => x.ChosenDateAndTimeUtc > now ||
+                            x.ChosenDateAndTimeUtc == null && x.Slots.Any(s => s.ProposedDateAndTimeUtc > now))
+                .ToListAsync();
         }
+
     }
 }
