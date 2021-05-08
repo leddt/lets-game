@@ -47,7 +47,8 @@ namespace LetsGame.Web.Pages
                 .ToListAsync();
 
             AllEvents = await _db.GroupEvents
-                .Include(x => x.Group)
+                .AsSplitQuery()
+                .Include(x => x.Group).ThenInclude(x => x.Memberships)
                 .Include(x => x.Game)
                 .Include(x => x.Slots.Where(s => s.ProposedDateAndTimeUtc > now)).ThenInclude(x => x.Votes)
                 .Where(x => x.Group.Memberships.Any(m => m.UserId == UserId))

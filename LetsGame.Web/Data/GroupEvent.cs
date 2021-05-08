@@ -40,5 +40,10 @@ namespace LetsGame.Web.Data
             
             return Group.Memberships.Where(x => !allVoterIds.Contains(x.UserId));
         }
+
+        public GroupEventSlot GetChosenSlot()
+        {
+            return Slots.FirstOrDefault(s => s.ProposedDateAndTimeUtc == ChosenDateAndTimeUtc);
+        }
     }
 }

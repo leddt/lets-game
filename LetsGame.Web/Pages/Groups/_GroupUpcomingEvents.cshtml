@@ -59,7 +59,7 @@
                                     @DateService.FormatUtcToUserFriendlyDate(e.ChosenDateAndTimeUtc.Value)
                                 </h5>
                                 @{
-                                    var slot = e.Slots.FirstOrDefault(s => s.ProposedDateAndTimeUtc == e.ChosenDateAndTimeUtc);
+                                    var slot = e.GetChosenSlot();
                                 }
                                 <div class="d-flex align-items-center flex-wrap">
                                     <span class="mr-1">Gamers:</span>

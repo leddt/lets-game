@@ -39,9 +39,26 @@
             <div class="list-group">
                 @foreach (var e in Model.UpcomingEvents)
                 {
+                    var slot = e.GetChosenSlot();
+                    var playerCount = slot.Votes.Count;
+                    
                     <a asp-page="/Groups/Group" asp-route-slug="@e.Group.Slug" class="list-group-item list-group-item-action">
                         <strong>@(e.Game?.Name ?? "Any game")</strong> with <span class="text-primary">@e.Group.Name</span> 
-                        <span class="text-muted d-block">@DateService.FormatUtcToUserFriendlyDate(e.ChosenDateAndTimeUtc.Value)</span>
+                        <span class="text-muted d-block">
+                            @DateService.FormatUtcToUserFriendlyDate(e.ChosenDateAndTimeUtc.Value),
+                            @if (playerCount == 0) 
+                            {
+                                @:no confirmed players
+                            } 
+                            else if (playerCount == 1)
+                            {
+                                @:one confirmed player
+                            }
+                            else
+                            {
+                                @:@playerCount confirmed players
+                            }
+                        </span>
                     </a>
                 }
             </div>
@@ -55,17 +72,30 @@
             <div class="list-group">
                 @foreach (var e in Model.ProposedEvents)
                 {
+                    var voteCount = e.Slots.SelectMany(s => s.Votes).Select(v => v.VoterId).Distinct().Count();
+                    var memberCount = e.Group.Memberships.Count;
+                    
                     <a asp-page="/Groups/Group" asp-route-slug="@e.Group.Slug" class="list-group-item list-group-item-action">
                         <strong>@(e.Game?.Name ?? "Any game")</strong> with <span class="text-primary">@e.Group.Name</span>
                         <span class="text-muted d-block">
-                            @e.Slots.Count slots
-                            @if (e.Slots.SelectMany(s => s.Votes).Any(v => v.VoterId == Model.UserId))
+                            @e.Slots.Count slots,
+                            
+                            @if (voteCount == memberCount)
                             {
-                                <span class="text-success">(✓ you voted)</span> 
+                                <span class="text-success">all votes are in</span>
                             }
                             else
                             {
-                                <span class="text-danger">(your vote is missing)</span>
+                                @:@voteCount/@memberCount votes      
+                            
+                                if (e.Slots.SelectMany(s => s.Votes).Any(v => v.VoterId == Model.UserId))
+                                {
+                                    <span class="text-success">(✓ you voted)</span> 
+                                }
+                                else
+                                {
+                                    <span class="text-danger">(your vote is missing)</span>
+                                }                          
                             }
                         </span>
                     </a>
