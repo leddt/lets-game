@@ -12,6 +12,7 @@ using LetsGame.Web.Services.Igdb;
 using LetsGame.Web.Services.Itad;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -79,6 +80,12 @@ namespace LetsGame.Web
                     });
             }
 
+            services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.ForwardedHeaders = ForwardedHeaders.XForwardedFor |
+                                           ForwardedHeaders.XForwardedProto;
+            });
+            
             services.AddRazorPages();
             services.AddSignalR();
 
@@ -137,6 +144,8 @@ namespace LetsGame.Web
             {
                 db.Database.Migrate();
             }
+            
+            app.UseForwardedHeaders();
 
             if (env.IsDevelopment())
             {
