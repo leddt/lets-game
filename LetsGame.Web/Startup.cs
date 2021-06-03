@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Text;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -82,6 +83,7 @@ namespace LetsGame.Web
 
             services.Configure<ForwardedHeadersOptions>(options =>
             {
+                options.KnownNetworks.Add(new IPNetwork(IPAddress.Parse("::ffff:172.0.0.0"), 104));
                 options.ForwardedHeaders = ForwardedHeaders.XForwardedFor |
                                            ForwardedHeaders.XForwardedProto;
             });
