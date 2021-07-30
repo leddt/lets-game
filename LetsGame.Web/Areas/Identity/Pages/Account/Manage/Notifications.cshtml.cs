@@ -42,6 +42,16 @@ namespace LetsGame.Web.Areas.Identity.Pages.Account.Manage
         [BindProperty] 
         public bool MemberAvailablePush { get; set; }
         
+        [BindProperty] 
+        public bool SlotPicked { get; set; }
+        [BindProperty] 
+        public bool SlotPickedPush { get; set; }
+        
+        [BindProperty] 
+        public bool AllVotesIn { get; set; }
+        [BindProperty] 
+        public bool AllVotesInPush { get; set; }
+        
         [TempData]
         public string StatusMessage { get; set; }
 
@@ -63,6 +73,11 @@ namespace LetsGame.Web.Areas.Identity.Pages.Account.Manage
             EventReminderPush = !user.UnsubscribeEventReminderPush;
             VoteReminderPush = !user.UnsubscribeVoteReminderPush;
             MemberAvailablePush = !user.UnsubscribeMemberAvailablePush;
+
+            SlotPicked = !user.UnsubscribeSlotPicked;
+            SlotPickedPush = !user.UnsubscribeSlotPickedPush;
+            AllVotesIn = !user.UnsubscribeAllVotesIn;
+            AllVotesInPush = !user.UnsubscribeAllVotesInPush;
         }
 
         public async Task<IActionResult> OnPostAsync([FromServices] UserManager<AppUser> userManager, [FromServices] ApplicationDbContext db)
@@ -80,6 +95,11 @@ namespace LetsGame.Web.Areas.Identity.Pages.Account.Manage
             user.UnsubscribeEventReminderPush = !EventReminderPush;
             user.UnsubscribeVoteReminderPush = !VoteReminderPush;
             user.UnsubscribeMemberAvailablePush = !MemberAvailablePush;
+
+            user.UnsubscribeSlotPicked = !SlotPicked;
+            user.UnsubscribeSlotPickedPush = !SlotPickedPush;
+            user.UnsubscribeAllVotesIn = !AllVotesIn;
+            user.UnsubscribeAllVotesInPush = !AllVotesInPush;
 
             if (!string.IsNullOrWhiteSpace(AddPushSubscription))
             {

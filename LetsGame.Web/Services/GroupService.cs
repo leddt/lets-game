@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using LetsGame.Web.Data;
 using LetsGame.Web.Helpers;
 using LetsGame.Web.Services.Igdb;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.EntityFrameworkCore;
 
 namespace LetsGame.Web.Services
@@ -112,6 +108,33 @@ namespace LetsGame.Web.Services
                     _db.GroupEventCantPlays.Remove(cantPlay);
                 
                 await _db.SaveChangesAsync();
+
+                var groupEvent = await _db.GroupEvents.FindAsync(slot.EventId);
+                if (groupEvent.CreatorId != CurrentUserId && 
+                    groupEvent.ChosenDateAndTimeUtc == null && 
+                    groupEvent.AllVotesInNotificationSentAtUtc == null)
+                {
+                    var groupMemberCount = await _db.Groups
+                        .Where(x => x.Events.Any(e => e.Id == groupEvent.Id))
+                        .SelectMany(x => x.Memberships)
+                        .CountAsync();
+
+                    var distinctVoterCount = await _db.GroupEvents
+                        .Where(x => x.Id == groupEvent.Id)
+                        .SelectMany(x => x.Slots)
+                        .SelectMany(x => x.Votes)
+                        .Select(x => x.Voter)
+                        .Distinct()
+                        .CountAsync();
+
+                    if (groupMemberCount == distinctVoterCount)
+                    {
+                        groupEvent.AllVotesInNotificationSentAtUtc = DateTime.UtcNow;
+                        await _db.SaveChangesAsync();
+                        
+                        await _notificationService.NotifyAllVotesIn(groupEvent);
+                    }
+                }
             }
         }
 
@@ -155,6 +178,8 @@ namespace LetsGame.Web.Services
 
             slot.Event.ChosenDateAndTimeUtc = slot.ProposedDateAndTimeUtc;
             await _db.SaveChangesAsync();
+
+            await _notificationService.NotifySlotPicked(slot.Event, CurrentUserId);
         }
 
         public async Task CreateInviteAsync(long groupId, bool singleUse)

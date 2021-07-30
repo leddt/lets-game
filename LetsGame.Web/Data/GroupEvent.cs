@@ -20,6 +20,7 @@ namespace LetsGame.Web.Data
         public ICollection<GroupEventCantPlay> CantPlays { get; set; }
         
         public DateTime? ChosenDateAndTimeUtc { get; set; }
+        public DateTime? AllVotesInNotificationSentAtUtc { get; set; }
         public DateTime? StartingSoonNotificationSentAtUtc { get; set; }
         public DateTime? ReminderSentAtUtc { get; set; }
         

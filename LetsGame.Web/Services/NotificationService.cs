@@ -19,6 +19,8 @@ namespace LetsGame.Web.Services
         Task NotifyEventStartingSoon(GroupEvent ev);
         Task SendEventReminderAsync(long eventId);
         Task NotifyMemberAvailable(Group group, Membership availableMember);
+        Task NotifySlotPicked(GroupEvent ev, string pickingUserId);
+        Task NotifyAllVotesIn(GroupEvent groupEvent);
     }
 
     public class NotificationService : INotificationService
@@ -87,6 +89,99 @@ namespace LetsGame.Web.Services
                        string.Join("", slotsUtc.Select(x => $"<li>{HtmlEncode(_dateService.FormatUtcToUserFriendlyDate(x, member.User))}")) +
                        $"</ul>" +
                        $"<p><a href=\"{groupUrl}\">Go to your group's page to vote on it!</a>";
+            }
+        }
+
+        public async Task NotifySlotPicked(GroupEvent ev, string pickingUserId)
+        {
+            var allGroupMembers = await _db.Memberships
+                .Include(x => x.User).ThenInclude(x => x.PushSubscriptions)
+                .Where(x => x.GroupId == ev.GroupId)
+                .ToListAsync();
+
+            var slots = await _db.GroupEventSlots
+                .Include(x => x.Votes).ThenInclude(x => x.Voter)
+                .Where(x => x.EventId == ev.Id)
+                .ToListAsync();
+            
+            var allVoters = slots
+                .SelectMany(x => x.Votes)
+                .Select(x => x.Voter)
+                .Distinct();
+            
+            var group = await _db.Groups.FindAsync(ev.GroupId);
+            var game = await _db.GroupGames.FindAsync(ev.GameId);
+            var groupUrl = GetGroupUrl(group);
+            var slotPicker = allGroupMembers.FirstOrDefault(x => x.UserId == pickingUserId);
+            var pickedSlot = slots.FirstOrDefault(x => x.ProposedDateAndTimeUtc == ev.ChosenDateAndTimeUtc);
+
+            var membersToNotify = allGroupMembers
+                .Where(x => allVoters.Any(v => v.Id == x.UserId))
+                .Where(x => x.UserId != slotPicker?.UserId)
+                .ToList();
+
+            await EmailMembersAsync(
+                membersToNotify,
+                $"Time slot selected for {game?.Name ?? "gaming"} session",
+                GetEmailMessage,
+                x => x.UnsubscribeSlotPicked);
+
+            await PushMembersAsync(
+                membersToNotify,
+                new SimpleNotificationPayload
+                {
+                    Title = group.Name,
+                    Body = $"Time slot selected for {ev.Game?.Name ?? "gaming"} session",
+                    Image = Image.GetScreenshotMedUrl(game?.IgdbImageId),
+                    Url = groupUrl
+                },
+                x => x.UnsubscribeSlotPickedPush);
+
+            string GetEmailMessage(Membership member)
+            {
+                return $"<p>Hi {HtmlEncode(member.DisplayName)}!" +
+                       $"<p>{slotPicker?.DisplayName ?? "Someone"} selected <strong>{_dateService.FormatUtcToUserFriendlyDate(pickedSlot.ProposedDateAndTimeUtc, member.User)}</strong> for the <strong>{(game == null ? "gaming" : HtmlEncode(game.Name))}</strong> session in {group.Name}." +
+                       (pickedSlot.Votes.Any(x => x.VoterId == member.UserId)
+                           ? $"<p><a href=\"{groupUrl}\">Go to your group's page for more details</a>"
+                           : $"<p>You did not vote for this slot, but you can still <a href=\"{groupUrl}\">join it from your group's page</a>!</p>");
+            }
+        }
+
+        public async Task NotifyAllVotesIn(GroupEvent ev)
+        {
+            var creator = await _db.Memberships
+                .Include(x => x.User)
+                .Where(x => x.GroupId == ev.GroupId && x.UserId == ev.CreatorId)
+                .FirstOrDefaultAsync();
+
+            if (creator == null) return;
+            
+            var group = await _db.Groups.FindAsync(ev.GroupId);
+            var game = await _db.GroupGames.FindAsync(ev.GameId);
+            var groupUrl = GetGroupUrl(group);
+            
+            await EmailMembersAsync(
+                new[]{creator},
+                $"All votes are in for {game?.Name ?? "gaming"} session",
+                GetEmailMessage,
+                x => x.UnsubscribeAllVotesIn);
+
+            await PushMembersAsync(
+                new[]{creator},
+                new SimpleNotificationPayload
+                {
+                    Title = group.Name,
+                    Body = $"All votes in for {ev.Game?.Name ?? "gaming"} session",
+                    Image = Image.GetScreenshotMedUrl(game?.IgdbImageId),
+                    Url = groupUrl
+                },
+                x => x.UnsubscribeAllVotesInPush);
+            
+            string GetEmailMessage(Membership member)
+            {
+                return $"<p>Hi {HtmlEncode(member.DisplayName)}!" +
+                       $"<p>All votes have been received for the <strong>{(game == null ? "gaming" : HtmlEncode(game.Name))}</strong> session in <strong>{group.Name}</strong>." +
+                       $"<p><a href=\"{groupUrl}\">Go to your group's page to choose the winning slot!</a>";
             }
         }
 
