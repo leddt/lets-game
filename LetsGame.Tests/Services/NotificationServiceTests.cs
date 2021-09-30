@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Routing;
 using Moq;
+using NodaTime;
 using Xunit;
 
 namespace LetsGame.Tests.Services
@@ -27,7 +28,7 @@ namespace LetsGame.Tests.Services
             _emailSender = new Mock<IEmailSender>();
             _sut = new NotificationService(
                 _db,
-                new DateService(config),
+                new DateService(config, DateTimeZoneProviders.Bcl),
                 _emailSender.Object,
                 Mock.Of<IPushSender>(),
                 Mock.Of<LinkGenerator>(),

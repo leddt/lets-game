@@ -1,16 +1,22 @@
 using System;
 using System.Net;
 using System.Text;
+using HotChocolate;
+using HotChocolate.Types.NodaTime;
+using LetsGame.Web.Authorization;
+using LetsGame.Web.Authorization.Requirements;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using LetsGame.Web.Data;
+using LetsGame.Web.GraphQL;
 using LetsGame.Web.Hubs;
 using LetsGame.Web.Infrastructure.AspNet;
 using LetsGame.Web.RecurringTasks;
 using LetsGame.Web.Services;
 using LetsGame.Web.Services.Igdb;
 using LetsGame.Web.Services.Itad;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -22,6 +28,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using NodaTime;
 using WebPush;
 
 namespace LetsGame.Web
@@ -49,8 +56,14 @@ namespace LetsGame.Web
                 services.AddHostedService<EmbeddedPostgresHostedService>();
                 databaseUrl = EmbeddedPostgresHostedService.DatabaseUrl;
             }
-            
-            services.AddDbContext<ApplicationDbContext>(options =>
+
+            services.AddPooledDbContextFactory<ApplicationDbContext>(options =>
+            {
+                options
+                    .UseNpgsql(ConvertPostgresqlConnectionString(databaseUrl))
+                    .LogTo(Console.WriteLine, new[] {DbLoggerCategory.Database.Command.Name}, LogLevel.Information);
+            });
+            services.AddDbContextPool<ApplicationDbContext>(options =>
             {
                 options
                     .UseNpgsql(ConvertPostgresqlConnectionString(databaseUrl))
@@ -68,7 +81,8 @@ namespace LetsGame.Web
 
             var googleConfig = Configuration.GetSection("Authentication:Google");
 
-            var auth = services.AddAuthentication()
+            var auth = services
+                .AddAuthentication()
                 .AddSteam();
             
             if (!string.IsNullOrWhiteSpace(googleConfig["ClientId"]))
@@ -80,6 +94,13 @@ namespace LetsGame.Web
                         options.ClientSecret = googleConfig["ClientSecret"];
                     });
             }
+
+            services.AddAuthorization(x =>
+            {
+                x.AddPolicy(AuthPolicies.ReadGroup, policy => policy.AddRequirements(new AccessCurrentGroupRequirement(asOwner: false)));
+                x.AddPolicy(AuthPolicies.ManageGroup, policy => policy.AddRequirements(new AccessCurrentGroupRequirement(asOwner: true)));
+            });
+            services.AddTransient<IAuthorizationHandler, AccessCurrentGroupRequirementHandler>();
 
             services.Configure<ForwardedHeadersOptions>(options =>
             {
@@ -106,6 +127,8 @@ namespace LetsGame.Web
             services.AddTransient<GroupService>();
             services.AddTransient<DateService>();
             services.AddTransient<ICurrentUserAccessor, HttpContextCurrentUserAccessor>();
+
+            services.AddTransient(_ => DateTimeZoneProviders.Bcl);
             
             services.AddTransient<IEmailSender, EmailSender>();
             services.AddTransient<INotificationService, NotificationService>();
@@ -121,6 +144,13 @@ namespace LetsGame.Web
             services.AddTransient<RecurringTaskRunner>();
             services.AddTransient<IRecurringTask, SendEventStartingSoonNotifications>();
             services.AddTransient<IRecurringTask, CleanUpPastEvents>();
+            
+            // GraphQL
+            services
+                .AddGraphQLServer()
+                .AddAuthorization()
+                .AddQueryType<Query>()
+                .ConfigureSchema(x => x.AddType<LocalDateTimeType>());
         }
 
         private string ConvertPostgresqlConnectionString(string uriString)
@@ -178,6 +208,7 @@ namespace LetsGame.Web
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapGraphQL();
                 endpoints.MapRazorPages();
                 endpoints.MapControllers();
                 endpoints.MapHub<GroupHub>("/grouphub");
