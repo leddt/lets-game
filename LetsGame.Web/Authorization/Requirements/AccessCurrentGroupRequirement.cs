@@ -38,27 +38,59 @@ namespace LetsGame.Web.Authorization.Requirements
             AuthorizationHandlerContext context, 
             AccessCurrentGroupRequirement requirement)
         {
-            var idToAuthorize = GetIdToAuthorize(context);
-            var isAuthorized = await AuthorizeForGroupId(context.User, requirement.AsOwner, idToAuthorize);
-            
-            if (isAuthorized) context.Succeed(requirement);
+            bool isAuthorized;
+
+            if (TryGetIdToAuthorize(context, out var id))
+                isAuthorized = await AuthorizeForGroupId(context.User, requirement.AsOwner, id);
+            else if (TryGetSlugToAuthorize(context, out var slug))
+                isAuthorized = await AuthorizeForGroupSlug(context.User, requirement.AsOwner, slug);
+            else
+                throw new InvalidOperationException("Can't resolve ID to authorize");
+
+            if (isAuthorized) 
+                context.Succeed(requirement);
         }
 
-        private static long GetIdToAuthorize(AuthorizationHandlerContext context)
+        private static bool TryGetIdToAuthorize(AuthorizationHandlerContext context, out long result)
         {
             if (context.Resource is IResolverContext resolver)
             {
                 if (resolver.TryGetArgumentValue<string>("groupId", out var groupId))
-                    return ID.ToLong<Group>(groupId);
+                {
+                    result = ID.ToLong<Group>(groupId);
+                    return true;
+                }
 
                 if (resolver.TryGetParent<GroupGraphType>(out var groupGraphType))
-                    return ID.ToLong<Group>(groupGraphType.Id);
-                
+                {
+                    result = ID.ToLong<Group>(groupGraphType.Id);
+                    return true;
+                }
+
                 if (resolver.TryGetArgumentValue<string>("id", out var id))
-                    return ID.ToLong<Group>(id);
+                {
+                    result = ID.ToLong<Group>(id);
+                    return true;
+                }
             }
 
-            throw new InvalidOperationException("Can't resolve ID to authorize");
+            result = 0;
+            return false;
+        }
+
+        private static bool TryGetSlugToAuthorize(AuthorizationHandlerContext context, out string result)
+        {
+            if (context.Resource is IResolverContext resolver)
+            {
+                if (resolver.TryGetArgumentValue<string>("slug", out var slug))
+                {
+                    result = slug;
+                    return true;
+                }
+            }
+
+            result = null;
+            return false;
         }
 
         private async Task<bool> AuthorizeForGroupId(ClaimsPrincipal user, bool asOwner, long groupId)
@@ -69,6 +101,17 @@ namespace LetsGame.Web.Authorization.Requirements
 
             return await db.Memberships.AnyAsync(x => x.UserId == userId &&
                                                       x.GroupId == groupId &&
+                                                      (asOwner == false || x.Role == GroupRole.Owner));
+        }
+        
+        private async Task<bool> AuthorizeForGroupSlug(ClaimsPrincipal user, bool asOwner, string slug)
+        {
+            var userId = _userManager.GetUserId(user);
+
+            await using var db = _dbFactory.CreateDbContext();
+
+            return await db.Memberships.AnyAsync(x => x.UserId == userId &&
+                                                      x.Group.Slug == slug &&
                                                       (asOwner == false || x.Role == GroupRole.Owner));
         }
     }

@@ -23,6 +23,17 @@ namespace LetsGame.Web.GraphQL
 
             return loader.LoadAsync(id);
         }
+        
+        public static Task<Group> LoadGroupBySlug(this IResolverContext ctx, string slug)
+        {
+            var loader = ctx.GetBatchDbDataLoader<string, Group>((db, keys, ct) =>
+                db.Groups
+                    .Where(x => keys.Contains(x.Slug))
+                    .ToDictionaryAsync(x => x.Slug, ct)
+            );
+
+            return loader.LoadAsync(slug);
+        }
 
         public static Task<GroupGame> LoadGame(this IResolverContext ctx, long id)
         {

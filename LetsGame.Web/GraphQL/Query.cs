@@ -45,5 +45,15 @@ namespace LetsGame.Web.GraphQL
                 ? null 
                 : new GroupGraphType(group);
         }
+
+        [Authorize(Policy = AuthPolicies.ReadGroup)]
+        public async Task<GroupGraphType> GetGroupBySlug(IResolverContext context, string slug)
+        {
+            var group = await context.LoadGroupBySlug(slug);
+
+            return group == null 
+                ? null 
+                : new GroupGraphType(group);
+        }
     }
 }
