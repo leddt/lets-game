@@ -53,6 +53,7 @@
 </script>
 
 <script>
+  import throttle from "lodash/throttle";
   import Button from "$lib/components/ui/button.svelte";
   import Card from "$lib/components/ui/card.svelte";
   import CircleButton from "$lib/components/ui/circle-button.svelte";
@@ -75,6 +76,10 @@
   function isInSlot(slot) {
     return !!slot?.voters?.find((x) => x.userId === me.id);
   }
+
+  const setVote = throttle((slot, state) => (state ? vote(slot) : unvote(slot)), 400, {
+    trailing: false
+  });
 
   function vote(slot) {
     return client.mutate({
@@ -216,13 +221,20 @@
         <Panel class="flex flex-col gap-2 w-52" title={friendlyDateTime(slot.proposedTime)}>
           <AvatarList people={slot.voters}>
             {#if isInSlot(slot)}
-              <CircleButton on:click={() => unvote(slot)} tip="Remove your vote from this slot">
-                -
-              </CircleButton>
+              <div>
+                <CircleButton
+                  on:click={() => setVote(slot, false)}
+                  tip="Remove your vote from this slot"
+                >
+                  -
+                </CircleButton>
+              </div>
             {:else}
-              <CircleButton on:click={() => vote(slot)} tip="Add your vote to this slot">
-                +
-              </CircleButton>
+              <div>
+                <CircleButton on:click={() => setVote(slot, true)} tip="Add your vote to this slot">
+                  +
+                </CircleButton>
+              </div>
             {/if}
           </AvatarList>
           <FlexTrailer>
