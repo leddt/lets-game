@@ -3,19 +3,17 @@
   $: isLoggedIn = !!me;
 </script>
 
-<div
-  class="border-b p-4 flex justify-between items-center sm:sticky top-0 bg-white bg-opacity-90 backdrop-blur-xl sm:shadow-sm"
->
-  <a class="text-xl text-gray-800" href="/">Let's Game!</a>
+<div class="p-4 flex flex-wrap justify-between items-center sm:sticky shadow-lg top-0 bg-gray-800">
+  <a class="text-xl text-gray-100" href="/">Let's Game!</a>
 
   {#if isLoggedIn}
-    <div class="flex gap-2">
-      <a href="/">{me.email}</a>
-      <a href="/">Logout</a>
+    <div class="flex flex-wrap gap-2">
+      <a href="/" class="text-blue-300">{me.email}</a>
+      <a href="/" class="text-blue-300">Logout</a>
     </div>
   {:else}
     <div>
-      <a href="/">Login</a>
+      <a href="/" class="text-blue-300">Login</a>
     </div>
   {/if}
 </div>

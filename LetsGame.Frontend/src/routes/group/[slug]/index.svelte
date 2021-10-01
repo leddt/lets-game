@@ -41,11 +41,11 @@
 
 {#if $groupData.data}
   <div class="flex flex-col flex-grow min-w-0">
-    <div class="p-4 border-b">
+    <div class="p-4 bg-gray-600 text-gray-100">
       <h1>{group.name}</h1>
     </div>
 
-    <div class="flex flex-col sm:flex-row">
+    <div class="flex flex-col sm:flex-row flex-grow bg-gray-500">
       <div class="p-4 flex flex-col flex-grow gap-4 min-w-0">
         <Section title="Upcoming sessions ({group.upcomingSessions.length})">
           <CardList>
