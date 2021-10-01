@@ -97,10 +97,16 @@ namespace LetsGame.Web
 
             services.AddAuthorization(x =>
             {
-                x.AddPolicy(AuthPolicies.ReadGroup, policy => policy.AddRequirements(new AccessCurrentGroupRequirement(asOwner: false)));
-                x.AddPolicy(AuthPolicies.ManageGroup, policy => policy.AddRequirements(new AccessCurrentGroupRequirement(asOwner: true)));
+                x.AddPolicy(AuthPolicies.ReadGroup, policy => policy.AddRequirements(new AccessGroupRequirement(asOwner: false)));
+                x.AddPolicy(AuthPolicies.ManageGroup, policy => policy.AddRequirements(new AccessGroupRequirement(asOwner: true)));
+                x.AddPolicy(AuthPolicies.ReadSession, policy => policy.AddRequirements(new AccessSessionRequirement(manage: false)));
+                x.AddPolicy(AuthPolicies.ManageSession, policy => policy.AddRequirements(new AccessSessionRequirement(manage: true)));
+                x.AddPolicy(AuthPolicies.ReadSlot, policy => policy.AddRequirements(new AccessSlotRequirement(manage: false)));
+                x.AddPolicy(AuthPolicies.ManageSlot, policy => policy.AddRequirements(new AccessSlotRequirement(manage: true)));
             });
-            services.AddTransient<IAuthorizationHandler, AccessCurrentGroupRequirementHandler>();
+            services.AddTransient<IAuthorizationHandler, AccessGroupRequirementHandler>();
+            services.AddTransient<IAuthorizationHandler, AccessSessionRequirementHandler>();
+            services.AddTransient<IAuthorizationHandler, AccessSlotRequirementHandler>();
 
             services.Configure<ForwardedHeadersOptions>(options =>
             {

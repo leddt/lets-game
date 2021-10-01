@@ -19,4 +19,14 @@
 
         public ProposedSessionGraphType Session { get; }
     }
+
+    public class GroupPayload
+    {
+        public GroupPayload(GroupGraphType group)
+        {
+            Group = group;
+        }
+
+        public GroupGraphType Group { get; }
+    }
 }

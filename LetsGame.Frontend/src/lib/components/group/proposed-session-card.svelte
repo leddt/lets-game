@@ -1,5 +1,6 @@
 <script context="module">
   import gql from "graphql-tag";
+  import { upcomingSessionCardFragment } from "./upcoming-session-card.svelte";
 
   const slotVotesFragment = gql`
     fragment slotVotes on SessionSlotGraphType {
@@ -146,6 +147,51 @@
       }
     });
   }
+
+  function remind() {
+    return client.mutate({
+      mutation: gql`
+        mutation SendReminder($sessionId: ID!) {
+          sendReminder(sessionId: $sessionId) {
+            session {
+              id
+              reminderSentAtTime
+            }
+          }
+        }
+      `,
+      variables: {
+        sessionId: session.id
+      }
+    });
+  }
+
+  async function pick(slotId) {
+    await client.mutate({
+      mutation: gql`
+        ${proposedSessionCardFragment}
+        ${upcomingSessionCardFragment}
+        mutation PickSlot($slotId: ID!) {
+          selectWinningSlot(slotId: $slotId) {
+            group {
+              id
+              proposedSessions {
+                ...proposedSessionCard
+              }
+              upcomingSessions {
+                ...upcomingSessionCard
+              }
+            }
+          }
+        }
+      `,
+      variables: {
+        slotId
+      }
+    });
+
+    window.scrollTo(0, 0);
+  }
 </script>
 
 <Card image={gameImage} width="w-164" imageHeight="h-48">
@@ -158,7 +204,7 @@
       <div>
         Missing votes:
         <AvatarList people={session.missingVotes}>
-          <Button>Send reminder</Button>
+          <Button on:click={remind}>Send reminder</Button>
         </AvatarList>
         {#if session.reminderSentAtTime}
           <p class="text-xs">Reminder sent {friendlyDateTime(session.reminderSentAtTime, false)}</p>
@@ -180,7 +226,7 @@
             {/if}
           </AvatarList>
           <FlexTrailer>
-            <Button>Select as winning slot</Button>
+            <Button on:click={() => pick(slot.id)}>Select as winning slot</Button>
           </FlexTrailer>
         </Panel>
       {/each}

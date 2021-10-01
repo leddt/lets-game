@@ -11,22 +11,22 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LetsGame.Web.Authorization.Requirements
 {
-    public class AccessCurrentGroupRequirement : IAuthorizationRequirement
+    public class AccessGroupRequirement : IAuthorizationRequirement
     {
         public bool AsOwner { get; }
 
-        public AccessCurrentGroupRequirement(bool asOwner)
+        public AccessGroupRequirement(bool asOwner)
         {
             AsOwner = asOwner;
         }
     }
     
-    public class AccessCurrentGroupRequirementHandler : AuthorizationHandler<AccessCurrentGroupRequirement>
+    public class AccessGroupRequirementHandler : AuthorizationHandler<AccessGroupRequirement>
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly IDbContextFactory<ApplicationDbContext> _dbFactory;
 
-        public AccessCurrentGroupRequirementHandler(
+        public AccessGroupRequirementHandler(
             UserManager<AppUser> userManager,
             IDbContextFactory<ApplicationDbContext> dbFactory)
         {
@@ -36,7 +36,7 @@ namespace LetsGame.Web.Authorization.Requirements
 
         protected override async Task HandleRequirementAsync(
             AuthorizationHandlerContext context, 
-            AccessCurrentGroupRequirement requirement)
+            AccessGroupRequirement requirement)
         {
             bool isAuthorized;
 
@@ -45,7 +45,7 @@ namespace LetsGame.Web.Authorization.Requirements
             else if (TryGetSlugToAuthorize(context, out var slug))
                 isAuthorized = await AuthorizeForGroupSlug(context.User, requirement.AsOwner, slug);
             else
-                throw new InvalidOperationException("Can't resolve ID to authorize");
+                throw new InvalidOperationException("Can't resolve group to authorize");
 
             if (isAuthorized) 
                 context.Succeed(requirement);

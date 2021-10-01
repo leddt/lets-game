@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using HotChocolate;
@@ -15,18 +16,15 @@ namespace LetsGame.Web.GraphQL
 {
     public class Mutation
     {
+        [Authorize(Policy = AuthPolicies.ReadSlot)]
         public async Task<SessionSlotPayload> VoteSlot(
             [GraphQLType(typeof(IdType))] string slotId, 
             [Service] GroupService groupService,
-            [Service] ApplicationDbContext db,
-            [Service] IAuthorizationService authorizationService,
-            ClaimsPrincipal user)
+            [Service] ApplicationDbContext db)
         {
             var id = ID.ToLong<GroupEventSlot>(slotId);
+            
             var slot = await db.GroupEventSlots.Include(x=> x.Event).FirstAsync(x => x.Id == id);
-
-            await authorizationService.EnsureAuthorized(user, slot.Event.GroupId, AuthPolicies.ReadGroup);
-
             if (slot.Event.ChosenDateAndTimeUtc.HasValue)
                 throw new Exception("Can't vote on confirmed event");
 
@@ -34,18 +32,15 @@ namespace LetsGame.Web.GraphQL
             return new SessionSlotPayload(new SessionSlotGraphType(slot));
         }
 
+        [Authorize(Policy = AuthPolicies.ReadSlot)]
         public async Task<SessionSlotPayload> UnvoteSlot(
             [GraphQLType(typeof(IdType))] string slotId, 
             [Service] GroupService groupService,
-            [Service] ApplicationDbContext db,
-            [Service] IAuthorizationService authorizationService,
-            ClaimsPrincipal user)
+            [Service] ApplicationDbContext db)
         {
             var id = ID.ToLong<GroupEventSlot>(slotId);
+            
             var slot = await db.GroupEventSlots.Include(x => x.Event).FirstAsync(x => x.Id == id);
-
-            await authorizationService.EnsureAuthorized(user, slot.Event.GroupId, AuthPolicies.ReadGroup);
-
             if (slot.Event.ChosenDateAndTimeUtc.HasValue)
                 throw new Exception("Can't vote on confirmed event");
             
@@ -53,18 +48,15 @@ namespace LetsGame.Web.GraphQL
             return new SessionSlotPayload(new SessionSlotGraphType(slot));
         }
 
+        [Authorize(Policy = AuthPolicies.ReadSession)]
         public async Task<ProposedSessionPayload> CantPlay(
             [GraphQLType(typeof(IdType))] string sessionId, 
             [Service] GroupService groupService,
-            [Service] ApplicationDbContext db,
-            [Service] IAuthorizationService authorizationService,
-            ClaimsPrincipal user)
+            [Service] ApplicationDbContext db)
         {
             var id = ID.ToLong<GroupEvent>(sessionId);
+
             var groupEvent = await db.GroupEvents.FindAsync(id);
-
-            await authorizationService.EnsureAuthorized(user, groupEvent.GroupId, AuthPolicies.ReadGroup);
-
             if (groupEvent.ChosenDateAndTimeUtc.HasValue)
                 throw new Exception("Can't vote on confirmed event");
             
@@ -72,5 +64,41 @@ namespace LetsGame.Web.GraphQL
             return new ProposedSessionPayload(new ProposedSessionGraphType(groupEvent));
         }
 
+        [Authorize(Policy = AuthPolicies.ManageSession)]
+        public async Task<ProposedSessionPayload> SendReminder(
+            [GraphQLType(typeof(IdType))] string sessionId,
+            [Service] INotificationService notificationService,
+            [Service] ApplicationDbContext db)
+        {
+            var id = ID.ToLong<GroupEvent>(sessionId);
+
+            var groupEvent = await db.GroupEvents.FindAsync(id);
+            if (groupEvent.ChosenDateAndTimeUtc.HasValue)
+                throw new Exception("Can't send reminder on confirmed event");
+            
+            await notificationService.SendEventReminderAsync(id);
+            return new ProposedSessionPayload(new ProposedSessionGraphType(groupEvent));
+        }
+
+        [Authorize(Policy = AuthPolicies.ManageSlot)]
+        public async Task<GroupPayload> SelectWinningSlot(
+            [GraphQLType(typeof(IdType))] string slotId,
+            [Service] GroupService groupService,
+            [Service] ApplicationDbContext db)
+        {
+            var id = ID.ToLong<GroupEventSlot>(slotId);
+
+            var groupEvent = await db.GroupEvents
+                .Include(x => x.Group)
+                .Where(x => x.Slots.Any(s => s.Id == id))
+                .FirstOrDefaultAsync();
+            
+            if (groupEvent.ChosenDateAndTimeUtc.HasValue)
+                throw new Exception("Can't pick slot on confirmed event");
+            
+            await groupService.PickSlotAsync(ID.ToLong<GroupEventSlot>(slotId));
+            
+            return new GroupPayload(new GroupGraphType(groupEvent.Group));
+        }
     }
 }
