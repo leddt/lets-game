@@ -1,0 +1,22 @@
+﻿namespace LetsGame.Web.GraphQL.Types
+{
+    public class SessionSlotPayload
+    {
+        public SessionSlotPayload(SessionSlotGraphType slot)
+        {
+            Slot = slot;
+        }
+
+        public SessionSlotGraphType Slot { get; }
+    }
+
+    public class ProposedSessionPayload
+    {
+        public ProposedSessionPayload(ProposedSessionGraphType session)
+        {
+            Session = session;
+        }
+
+        public ProposedSessionGraphType Session { get; }
+    }
+}

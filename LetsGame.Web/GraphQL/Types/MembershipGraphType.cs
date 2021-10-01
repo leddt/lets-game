@@ -20,6 +20,7 @@ namespace LetsGame.Web.GraphQL.Types
         [GraphQLType(typeof(IdType))]
         public string Id => ID.Typed<Membership>($"{_membership.GroupId}/{_membership.UserId}");
         public string DisplayName => _membership.DisplayName;
+        public string UserId => _membership.UserId;
         public GroupRole Role => _membership.Role;
 
         public LocalDateTime? GetAvailableUntil([Service] DateService dateService)

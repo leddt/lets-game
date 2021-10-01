@@ -34,7 +34,7 @@ namespace LetsGame.Web.GraphQL.Types
             return games.Select(x => new GameGraphType(x));
         }
 
-        public async Task<IEnumerable<ProposedSessionGraphType>> GetProposedEvents(IResolverContext context)
+        public async Task<IEnumerable<ProposedSessionGraphType>> GetProposedSessions(IResolverContext context)
         {
             var events = await context.LoadEventsWithSlotsByGroupId(_group.Id);
             
@@ -43,7 +43,7 @@ namespace LetsGame.Web.GraphQL.Types
                 .Select(x => new ProposedSessionGraphType(x));
         }
 
-        public async Task<IEnumerable<UpcomingSessionGraphType>> GetUpcomingEvents(IResolverContext context)
+        public async Task<IEnumerable<UpcomingSessionGraphType>> GetUpcomingSessions(IResolverContext context)
         {
             var events = await context.LoadEventsWithSlotsByGroupId(_group.Id);
             

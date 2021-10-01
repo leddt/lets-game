@@ -57,6 +57,17 @@ namespace LetsGame.Web.GraphQL
             return loader.LoadAsync($"{groupId}/{userId}");
         }
 
+        public static Task<GroupEvent> LoadEvent(this IResolverContext ctx, long id)
+        {
+            var loader = ctx.GetBatchDbDataLoader<long, GroupEvent>((db, keys, ct) =>
+                db.GroupEvents
+                    .Where(x => keys.Contains(x.Id))
+                    .ToDictionaryAsync(x => x.Id, ct)
+            );
+
+            return loader.LoadAsync(id);
+        }
+
         public static Task<GroupEvent[]> LoadEventsWithSlotsByGroupId(this IResolverContext ctx, long id)
         {
             var loader = ctx.GetGroupedDbDataLoader<long, GroupEvent>(async (db, keys, ct) =>

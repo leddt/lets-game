@@ -150,7 +150,14 @@ namespace LetsGame.Web
                 .AddGraphQLServer()
                 .AddAuthorization()
                 .AddQueryType<Query>()
+                .AddMutationType<Mutation>()
                 .ConfigureSchema(x => x.AddType<LocalDateTimeType>());
+            
+            // SPA Services
+            services.AddSpaStaticFiles(options =>
+            {
+                options.RootPath = "ClientApp";
+            });
         }
 
         private string ConvertPostgresqlConnectionString(string uriString)
@@ -209,9 +216,18 @@ namespace LetsGame.Web
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapGraphQL();
-                endpoints.MapRazorPages();
-                endpoints.MapControllers();
-                endpoints.MapHub<GroupHub>("/grouphub");
+                // endpoints.MapRazorPages();
+                // endpoints.MapControllers();
+                // endpoints.MapHub<GroupHub>("/grouphub");
+            });
+
+            app.UseSpaStaticFiles();
+            app.UseSpa(spa =>
+            {
+                if (env.IsDevelopment())
+                {
+                    spa.UseProxyToSpaDevelopmentServer(Configuration["FrontendDevServer"]);
+                }
             });
         }
     }

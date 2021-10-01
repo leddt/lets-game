@@ -17,6 +17,11 @@ namespace LetsGame.Web.GraphQL
 {
     public class Query
     {
+        public UserGraphType GetMe(ClaimsPrincipal user)
+        {
+            return new UserGraphType(user);
+        }
+        
         [Authorize, UseDbContext(typeof(ApplicationDbContext))]
         public async Task<IEnumerable<GroupGraphType>> GetGroups(
             ClaimsPrincipal user,

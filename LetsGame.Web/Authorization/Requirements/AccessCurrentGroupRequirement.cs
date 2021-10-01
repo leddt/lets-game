@@ -53,6 +53,12 @@ namespace LetsGame.Web.Authorization.Requirements
 
         private static bool TryGetIdToAuthorize(AuthorizationHandlerContext context, out long result)
         {
+            if (context.Resource is long longId)
+            {
+                result = longId;
+                return true;
+            }
+            
             if (context.Resource is IResolverContext resolver)
             {
                 if (resolver.TryGetArgumentValue<string>("groupId", out var groupId))

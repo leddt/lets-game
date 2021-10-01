@@ -30,5 +30,11 @@ namespace LetsGame.Web.GraphQL.Types
             var result = await context.LoadMembershipsBySlotId(_slot.Id);
             return result.Select(x => new MembershipGraphType(x));
         }
+
+        public async Task<ProposedSessionGraphType> GetSession(IResolverContext context)
+        {
+            var result = await context.LoadEvent(_slot.EventId);
+            return new ProposedSessionGraphType(result);
+        }
     }
 }
