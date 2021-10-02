@@ -13,7 +13,7 @@
 
 <style>
   button {
-    @apply rounded-full w-7 h-7 shadow-sm 
+    @apply rounded-full w-7 h-7 shadow-sm  font-bold
            flex items-center justify-center
            bg-gradient-to-br active:bg-gradient-to-tl 
            from-gray-200 to-gray-300 

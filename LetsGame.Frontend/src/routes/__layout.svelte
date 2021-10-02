@@ -5,8 +5,8 @@
   import client from "$lib/apollo";
   import AppHeader from "$lib/components/app/app-header.svelte";
   import AppSidebar from "$lib/components/app/app-sidebar.svelte";
+  import "../styles/tailwind.css";
 
-  import "../styles/tailwind-output.css";
   setClient(client);
 
   const layoutData = query(gql`
@@ -30,12 +30,11 @@
 </script>
 
 {#if $layoutData.data}
-  <div class="flex flex-col min-h-screen">
+  <div class="flex flex-col h-screen">
     <AppHeader {me} />
 
-    <div class="flex flex-col sm:flex-row flex-grow">
+    <div class="flex flex-col sm:flex-row flex-grow flex-shrink overflow-y-hidden">
       <AppSidebar {groups} />
-
       <slot />
     </div>
   </div>

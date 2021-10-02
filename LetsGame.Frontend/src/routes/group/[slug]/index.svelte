@@ -11,11 +11,13 @@
 
   import { upcomingSessionCardFragment } from "$lib/components/group/upcoming-session-card.svelte";
   import { proposedSessionCardFragment } from "$lib/components/group/proposed-session-card.svelte";
+  import { sidebarFragment } from "$lib/components/group/group-sidebar.svelte";
 
   $: groupData = query(
     gql`
       ${upcomingSessionCardFragment}
       ${proposedSessionCardFragment}
+      ${sidebarFragment}
       query GroupData($slug: String) {
         groupBySlug(slug: $slug) {
           id
@@ -26,6 +28,7 @@
           proposedSessions {
             ...proposedSessionCard
           }
+          ...sidebar
         }
       }
     `,
@@ -36,11 +39,13 @@
     }
   );
 
+  $: groupData.refetch();
+
   $: group = $groupData.data?.groupBySlug;
 </script>
 
-{#if $groupData.data}
-  <div class="flex flex-col flex-grow min-w-0">
+<div class="flex flex-col flex-grow min-w-0 overflow-y-scroll">
+  {#if group}
     <div class="p-4 bg-gray-600 text-gray-100">
       <h1>{group.name}</h1>
     </div>
@@ -49,7 +54,7 @@
       <div class="p-4 flex flex-col flex-grow gap-4 min-w-0">
         <Section title="Upcoming sessions ({group.upcomingSessions.length})">
           <CardList>
-            {#each group.upcomingSessions as s}
+            {#each group.upcomingSessions as s (s.id)}
               <UpcomingSessionCard session={s} />
             {/each}
           </CardList>
@@ -57,14 +62,14 @@
 
         <Section title="Proposed sessions ({group.proposedSessions.length})">
           <CardList>
-            {#each group.proposedSessions as s}
+            {#each group.proposedSessions as s (s.id)}
               <ProposedSessionCard session={s} />
             {/each}
           </CardList>
         </Section>
       </div>
 
-      <GroupSidebar />
+      <GroupSidebar {group} />
     </div>
-  </div>
-{/if}
+  {/if}
+</div>

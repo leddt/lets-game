@@ -48,7 +48,9 @@
     <strong>{friendlyDateTime(session.sessionTime)}</strong>
     <AvatarList people={session.participants}>
       {#if isPartOfSession}
-        <CircleButton on:click={() => alert("leave")} tip="Leave this session">-</CircleButton>
+        <CircleButton on:click={() => alert("leave")} tip="Leave this session">
+          &ndash;
+        </CircleButton>
       {:else}
         <CircleButton on:click={() => alert("join")} tip="Join this session">+</CircleButton>
       {/if}

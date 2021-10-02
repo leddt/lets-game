@@ -30,6 +30,10 @@
            border-2 border-gray-100;
   }
 
+  a:hover {
+    @apply no-underline;
+  }
+
   a > div:not(.active) {
     @apply cursor-pointer hover:border-blue-500;
   }

@@ -4,7 +4,9 @@
   export let groups;
 </script>
 
-<div class="p-4 flex flex-row sm:flex-col gap-2 bg-gray-700">
+<div
+  class="p-4 bg-gray-700 flex flex-wrap flex-row gap-2 sm:writing-mode-vertical sm:text-orientation-upright"
+>
   {#each groups as group}
     <Avatar name={group.name} link="/group/{group.slug}" />
   {/each}

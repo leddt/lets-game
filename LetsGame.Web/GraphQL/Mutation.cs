@@ -100,5 +100,41 @@ namespace LetsGame.Web.GraphQL
             
             return new GroupPayload(new GroupGraphType(groupEvent.Group));
         }
+
+        [Authorize(Policy = AuthPolicies.ManageGroup)]
+        public async Task<GroupPayload> CreateInvite(
+            [GraphQLType(typeof(IdType))] string groupId,
+            bool singleUse,
+            [Service] GroupService groupService,
+            [Service] ApplicationDbContext db)
+        {
+            var id = ID.ToLong<Group>(groupId);
+            
+            await groupService.CreateInviteAsync(id, singleUse);
+
+            var group = await db.Groups.FindAsync(id);
+            return new GroupPayload(new GroupGraphType(group));
+        }
+
+        [Authorize(Policy = AuthPolicies.ManageGroup)]
+        public async Task<GroupPayload> DeleteInvite(
+            [GraphQLType(typeof(IdType))] string groupId,
+            string inviteCode,
+            [Service] GroupService groupService,
+            [Service] ApplicationDbContext db)
+        {
+            var id = ID.ToLong<Group>(groupId);
+            
+            var invite = await db.GroupInvites
+                .Include(x => x.Group)
+                .Where(x => x.Id == inviteCode)
+                .Where(x => x.GroupId == id)
+                .FirstOrDefaultAsync();
+            if (invite == null) throw new Exception("Invalid invite");
+
+            await groupService.DeleteInviteAsync(inviteCode);
+
+            return new GroupPayload(new GroupGraphType(invite.Group));
+        }
     }
 }

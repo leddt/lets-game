@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply text-gray-800;
+    @apply text-gray-800 overflow-hidden;
   }
   h1 {
     @apply font-medium text-4xl;
@@ -15,7 +15,15 @@
   h3 {
     @apply font-medium text-2xl;
   }
-  a {
-    @apply text-primary hover:underline;
+}
+
+@layer utilities {
+  @variants responsive {
+    .writing-mode-vertical {
+      writing-mode: vertical-lr;
+    }
+    .text-orientation-upright {
+      text-orientation: upright;
+    }
   }
 }

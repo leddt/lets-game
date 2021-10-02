@@ -1,25 +1,38 @@
+<script context="module">
+  import gql from "graphql-tag";
+  import { sidebarMembersFragment } from "./sidebar-members.svelte";
+  import { sidebarInvitesFragment } from "./sidebar-invites.svelte";
+  import { sidebarGamesFragment } from "./sidebar-games.svelte";
+
+  export const sidebarFragment = gql`
+    ${sidebarMembersFragment}
+    ${sidebarInvitesFragment}
+    ${sidebarGamesFragment}
+    fragment sidebar on GroupGraphType {
+      ...sidebarMembers
+      ...sidebarInvites
+      ...sidebarGames
+    }
+  `;
+</script>
+
+<script>
+  import Section from "$lib/components/ui/section.svelte";
+  import SidebarMembers from "./sidebar-members.svelte";
+  import SidebarInvites from "./sidebar-invites.svelte";
+  import SidebarGames from "./sidebar-games.svelte";
+
+  export let group;
+  export let isOwner = true; //TODO
+</script>
+
 <div>
-  <div class="sm:w-60 bg-gray-500">
-    <div class="p-4 mb-4">
-      <h2>Members</h2>
-    </div>
-
-    <div class="p-4 mb-4">
-      <h2>Available?</h2>
-    </div>
-
-    <div class="p-4 mb-4">
-      <h2>Invites</h2>
-    </div>
-
-    <div class="p-4 mb-4">
-      <h2>Games</h2>
-    </div>
+  <div class="sm:w-72 bg-gray-500 pb-4 sm:pt-4 px-4 sm:pl-0 flex flex-col gap-4">
+    <Section title="Members"><SidebarMembers {group} /></Section>
+    <Section title="Available?" />
+    {#if isOwner}
+      <Section title="Invites"><SidebarInvites {group} /></Section>
+    {/if}
+    <Section title="Games"><SidebarGames {group} /></Section>
   </div>
 </div>
-
-<style>
-  h2 {
-    @apply text-gray-100;
-  }
-</style>

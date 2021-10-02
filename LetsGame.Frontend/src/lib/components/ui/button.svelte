@@ -1,9 +1,13 @@
 <script>
   import { createEventDispatcher } from "svelte";
+  import tooltip from "$actions/tooltip";
+
+  export let color = null;
+  export let tip = null;
   const dispatch = createEventDispatcher();
 </script>
 
-<button on:click={() => dispatch("click")}>
+<button class={color} on:click={() => dispatch("click")} use:tooltip={tip}>
   <slot />
 </button>
 
@@ -13,5 +17,10 @@
            bg-gradient-to-b active:bg-gradient-to-t 
            from-gray-200 to-gray-300 
            hover:from-gray-600 hover:to-gray-900 hover:text-gray-200;
+  }
+
+  button.red {
+    @apply from-red-200 to-red-300 
+           hover:from-red-600 hover:to-red-900 hover:text-red-200;
   }
 </style>

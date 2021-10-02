@@ -63,6 +63,7 @@
   import { friendlyDateTime } from "$lib/date-helpers";
   import { getContext } from "svelte";
   import client from "$lib/apollo";
+  import { fade } from "svelte/transition";
 
   const me = getContext("me");
   export let session;
@@ -226,7 +227,7 @@
                   on:click={() => setVote(slot, false)}
                   tip="Remove your vote from this slot"
                 >
-                  -
+                  &ndash;
                 </CircleButton>
               </div>
             {:else}
@@ -245,11 +246,15 @@
 
       <Panel color="bg-red-50" class="flex flex-col gap-2 w-52" title="Not available">
         {#if session.cantPlays.length > 0}
-          <AvatarList people={session.cantPlays} />
+          <div in:fade|local>
+            <AvatarList people={session.cantPlays} />
+          </div>
         {/if}
         {#if !isInCantPlayList}
           <FlexTrailer>
-            <Button on:click={cantPlay}>I'm not available</Button>
+            <div in:fade|local class="flex flex-col">
+              <Button on:click={cantPlay}>I'm not available</Button>
+            </div>
           </FlexTrailer>
         {/if}
       </Panel>

@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using HotChocolate;
 using HotChocolate.Resolvers;
 using HotChocolate.Types;
@@ -25,9 +26,9 @@ namespace LetsGame.Web.GraphQL.Types
 
         public LocalDateTime? GetAvailableUntil([Service] DateService dateService)
         {
-            return _membership.AvailableUntilUtc.HasValue
-                ? dateService.ConvertFromUtcToUserLocalTime(_membership.AvailableUntilUtc.Value)
-                : null;
+            if (_membership.AvailableUntilUtc == null || _membership.AvailableUntilUtc < DateTime.UtcNow) return null;
+            
+            return dateService.ConvertFromUtcToUserLocalTime(_membership.AvailableUntilUtc.Value);
         }
 
         public bool IsAvailableNow => _membership.IsAvailableNow();

@@ -3,7 +3,7 @@
   $: isLoggedIn = !!me;
 </script>
 
-<div class="p-4 flex flex-wrap justify-between items-center sm:sticky shadow-lg top-0 bg-gray-800">
+<div class="p-4 flex flex-wrap justify-between items-center shadow-lg top-0 bg-gray-800">
   <a class="text-xl text-gray-100" href="/">Let's Game!</a>
 
   {#if isLoggedIn}
