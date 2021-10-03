@@ -30,7 +30,7 @@
 </script>
 
 <div use:links>
-  <Router>
+  <Router primary={false}>
     {#if $layoutData.data}
       <div class="flex flex-col h-screen">
         <AppHeader me={$me} />
@@ -40,10 +40,11 @@
         >
           <AppSidebar {groups} />
 
-          <Route path="group/:slug" let:params>
+          <Route path="/">Home</Route>
+
+          <Route path="group/:slug/*" let:params>
             <GroupIndex slug={params.slug} />
           </Route>
-          <!-- <slot /> -->
         </div>
       </div>
     {/if}

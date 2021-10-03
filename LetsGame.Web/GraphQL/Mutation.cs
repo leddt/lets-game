@@ -9,6 +9,7 @@ using LetsGame.Web.Data;
 using LetsGame.Web.Extensions;
 using LetsGame.Web.GraphQL.Types;
 using LetsGame.Web.Services;
+using LetsGame.Web.Services.Igdb.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 
@@ -199,6 +200,19 @@ namespace LetsGame.Web.GraphQL
             await groupService.SetAvailableFor(id, -1);
 
             var group = await db.Groups.FindAsync(id);
+            return new GroupPayload(new GroupGraphType(group));
+        }
+
+        [HotChocolate.AspNetCore.Authorization.Authorize(Policy = AuthPolicies.ManageGroup)]
+        public async Task<GroupPayload> AddGame(
+            [GraphQLType(typeof(IdType))] string groupId,
+            [GraphQLType(typeof(IdType))] string gameId,
+            [Service] GroupService groupService,
+            [Service] ApplicationDbContext db)
+        {
+            await groupService.AddGameToGroupAsync(ID.ToLong<Group>(groupId), ID.ToLong<Game>(gameId));
+
+            var group = await db.Groups.FindAsync(ID.ToLong<Group>(groupId));
             return new GroupPayload(new GroupGraphType(group));
         }
     }

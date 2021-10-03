@@ -8,14 +8,10 @@
 
   const location = useLocation();
 
-  $: if (link) {
-    console.log($location.pathname, link, $location.pathname === link);
-  }
-
   $: initials = getInitials(name);
   $: backgroundColor = getBackgroundColor(name);
 
-  $: highlighted = active || (link && $location.pathname === link);
+  $: highlighted = active || (link && $location.pathname.startsWith(link));
 
   function getInitials(text) {
     return (text || "")

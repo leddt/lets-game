@@ -11,6 +11,10 @@
     ${sidebarInvitesFragment}
     ${sidebarGamesFragment}
     fragment sidebar on GroupGraphType {
+      self {
+        id
+        role
+      }
       ...sidebarMembers
       ...sidebarAvailability
       ...sidebarInvites
@@ -20,13 +24,20 @@
 </script>
 
 <script>
+  import { useNavigate } from "svelte-navigator";
+  import Button from "@/components/ui/button.svelte";
   import Section from "@/components/ui/section.svelte";
+
   import SidebarMembers from "./sidebar-members.svelte";
   import SidebarAvailability from "./sidebar-availability.svelte";
   import SidebarInvites from "./sidebar-invites.svelte";
   import SidebarGames from "./sidebar-games.svelte";
 
   export let group;
+
+  const navigate = useNavigate();
+
+  $: isOwner = group?.self.role === "OWNER";
 </script>
 
 <div>
@@ -38,6 +49,15 @@
     {#if group?.invites}
       <Section title="Invites"><SidebarInvites {group} /></Section>
     {/if}
-    <Section title="Games"><SidebarGames {group} /></Section>
+    <Section title="Games">
+      <div slot="right">
+        {#if isOwner}
+          <Button slot="right" on:click={() => navigate("add-game")}>
+            Add
+          </Button>
+        {/if}
+      </div>
+      <SidebarGames {group} />
+    </Section>
   </div>
 </div>

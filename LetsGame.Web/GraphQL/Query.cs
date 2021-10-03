@@ -10,6 +10,7 @@ using HotChocolate.Types;
 using LetsGame.Web.Authorization;
 using LetsGame.Web.Data;
 using LetsGame.Web.GraphQL.Types;
+using LetsGame.Web.Services.Igdb;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -59,6 +60,13 @@ namespace LetsGame.Web.GraphQL
             return group == null 
                 ? null 
                 : new GroupGraphType(group);
+        }
+
+        public async Task<IEnumerable<GameSearchResult>> SearchGames(string term, [Service] IGameSearcher searcher)
+        {
+            var results = await searcher.SearchGamesAsync(term);
+
+            return results.Select(x => new GameSearchResult(x));
         }
     }
 }

@@ -38,7 +38,7 @@
             {/if}
           </div>
           {#if member.availableUntil}
-            <div class="text-xs" transition:fade>
+            <div class="text-xs" transition:fade|local>
               Available until
               {time(member.availableUntil)}!
             </div>

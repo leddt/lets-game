@@ -15,7 +15,7 @@
 <script>
   import { fade } from "svelte/transition";
   import { flip } from "svelte/animate";
-  
+
   import client from "@/lib/apollo";
   import Button from "@/components/ui/button.svelte";
 
@@ -36,8 +36,8 @@
       `,
       variables: {
         groupId: group.id,
-        singleUse
-      }
+        singleUse,
+      },
     });
   }
 
@@ -56,8 +56,8 @@
       `,
       variables: {
         groupId: group.id,
-        inviteCode: invite.inviteCode
-      }
+        inviteCode: invite.inviteCode,
+      },
     });
   }
 </script>
@@ -68,7 +68,11 @@
   {/if}
   {#each group.invites as invite (invite.id)}
     <div class="flex gap-2" animate:flip in:fade|local>
-      <Button color="red" tip="Revoke this invite" on:click={() => deleteInvite(invite)}>
+      <Button
+        color="red"
+        tip="Revoke this invite"
+        on:click={() => deleteInvite(invite)}
+      >
         &times;
       </Button>
       <div class="flex-grow flex flex-col">

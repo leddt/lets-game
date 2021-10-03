@@ -14,7 +14,7 @@
 
 <script>
   import { fade } from "svelte/transition";
-  
+
   import Button from "@/components/ui/button.svelte";
   import client from "@/lib/apollo";
   import { time } from "@/lib/date-helpers";
@@ -37,8 +37,8 @@
       `,
       variables: {
         groupId: group.id,
-        seconds
-      }
+        seconds,
+      },
     });
   }
 
@@ -55,22 +55,33 @@
         }
       `,
       variables: {
-        groupId: group.id
-      }
+        groupId: group.id,
+      },
     });
   }
 </script>
 
 <div class="grid grid-cols-1">
   {#if isAvailable}
-    <div style="grid-area: 1/1/1/1;" out:fade in:fade|local={{ delay: 400 }}>
-      <p class="mb-2">You are available until {time(group.self.availableUntil)}</p>
+    <div
+      style="grid-area: 1/1/1/1;"
+      out:fade|local
+      in:fade|local={{ delay: 400 }}
+    >
+      <p class="mb-2">
+        You are available until {time(group.self.availableUntil)}
+      </p>
       <Button on:click={setUnavailable}>I'm no longer available</Button>
     </div>
   {:else}
-    <div style="grid-area: 1/1/1/1" out:fade in:fade|local={{ delay: 400 }}>
+    <div
+      style="grid-area: 1/1/1/1"
+      out:fade|local
+      in:fade|local={{ delay: 400 }}
+    >
       <p class="mb-2">
-        Use these buttons to tell other members you are available to game right now.
+        Use these buttons to tell other members you are available to game right
+        now.
       </p>
       <p class="font-bold">I'm available for...</p>
       <div class="grid grid-cols-3 gap-1">
