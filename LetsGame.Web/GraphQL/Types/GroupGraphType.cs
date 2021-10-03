@@ -1,10 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using HotChocolate;
 using HotChocolate.AspNetCore.Authorization;
 using HotChocolate.Resolvers;
 using LetsGame.Web.Authorization;
 using LetsGame.Web.Data;
+using Microsoft.AspNetCore.Identity;
 
 namespace LetsGame.Web.GraphQL.Types
 {
@@ -26,6 +29,17 @@ namespace LetsGame.Web.GraphQL.Types
         {
             var members = await context.LoadMembershipsByGroupId(_group.Id);
             return members.Select(x => new MembershipGraphType(x));
+        }
+        
+        public async Task<MembershipGraphType> GetSelf(
+            IResolverContext context, 
+            ClaimsPrincipal user, 
+            [Service] UserManager<AppUser> userManager)
+        {
+            var userId = userManager.GetUserId(user);
+            var members = await context.LoadMembershipsByGroupId(_group.Id);
+            var self = members.FirstOrDefault(x => x.UserId == userId);
+            return self == null ? null : new MembershipGraphType(self);
         }
 
         public async Task<IEnumerable<GameGraphType>> GetGames(IResolverContext context)

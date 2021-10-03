@@ -20,6 +20,16 @@
         public ProposedSessionGraphType Session { get; }
     }
 
+    public class UpcomingSessionPayload
+    {
+        public UpcomingSessionPayload(UpcomingSessionGraphType session)
+        {
+            Session = session;
+        }
+
+        public UpcomingSessionGraphType Session { get; }
+    }
+
     public class GroupPayload
     {
         public GroupPayload(GroupGraphType group)

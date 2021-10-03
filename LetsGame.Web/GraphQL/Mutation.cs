@@ -48,6 +48,44 @@ namespace LetsGame.Web.GraphQL
             return new SessionSlotPayload(new SessionSlotGraphType(slot));
         }
 
+        public async Task<UpcomingSessionPayload> JoinSession(
+            [GraphQLType(typeof(IdType))] string sessionId, 
+            [Service] GroupService groupService,
+            [Service] ApplicationDbContext db)
+        {
+            var id = ID.ToLong<GroupEvent>(sessionId);
+
+            var slot = await db.GroupEventSlots
+                .Include(x => x.Event)
+                .Where(x => x.EventId == id)
+                .Where(x => x.ProposedDateAndTimeUtc == x.Event.ChosenDateAndTimeUtc)
+                .FirstOrDefaultAsync();
+
+            if (slot == null) throw new Exception("Can't find chosen slot");
+
+            await groupService.AddSlotVoteAsync(slot.Id);
+            return new UpcomingSessionPayload(new UpcomingSessionGraphType(slot.Event));
+        }
+
+        public async Task<UpcomingSessionPayload> LeaveSession(
+            [GraphQLType(typeof(IdType))] string sessionId, 
+            [Service] GroupService groupService,
+            [Service] ApplicationDbContext db)
+        {
+            var id = ID.ToLong<GroupEvent>(sessionId);
+
+            var slot = await db.GroupEventSlots
+                .Include(x => x.Event)
+                .Where(x => x.EventId == id)
+                .Where(x => x.ProposedDateAndTimeUtc == x.Event.ChosenDateAndTimeUtc)
+                .FirstOrDefaultAsync();
+
+            if (slot == null) throw new Exception("Can't find chosen slot");
+
+            await groupService.RemoveSlotVoteAsync(slot.Id);
+            return new UpcomingSessionPayload(new UpcomingSessionGraphType(slot.Event));
+        }
+
         [Authorize(Policy = AuthPolicies.ReadSession)]
         public async Task<ProposedSessionPayload> CantPlay(
             [GraphQLType(typeof(IdType))] string sessionId, 
@@ -135,6 +173,33 @@ namespace LetsGame.Web.GraphQL
             await groupService.DeleteInviteAsync(inviteCode);
 
             return new GroupPayload(new GroupGraphType(invite.Group));
+        }
+
+        [Authorize(Policy = AuthPolicies.ReadGroup)]
+        public async Task<GroupPayload> SetAvailable(
+            [GraphQLType(typeof(IdType))] string groupId,
+            int lengthInSeconds,
+            [Service] GroupService groupService,
+            [Service] ApplicationDbContext db)
+        {
+            var id = ID.ToLong<Group>(groupId);
+            await groupService.SetAvailableFor(id, lengthInSeconds);
+
+            var group = await db.Groups.FindAsync(id);
+            return new GroupPayload(new GroupGraphType(group));
+        }
+        
+        [Authorize(Policy = AuthPolicies.ReadGroup)]
+        public async Task<GroupPayload> SetUnavailable(
+            [GraphQLType(typeof(IdType))] string groupId,
+            [Service] GroupService groupService,
+            [Service] ApplicationDbContext db)
+        {
+            var id = ID.ToLong<Group>(groupId);
+            await groupService.SetAvailableFor(id, -1);
+
+            var group = await db.Groups.FindAsync(id);
+            return new GroupPayload(new GroupGraphType(group));
         }
     }
 }

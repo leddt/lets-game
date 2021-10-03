@@ -316,6 +316,35 @@ namespace LetsGame.Web.Services
             await _notificationService.NotifyEventAdded(groupEvent);
         }
 
+        public async Task SetAvailableFor(long groupId, int lengthInSeconds)
+        {
+            var member = await _db.Memberships
+                .Include(x => x.Group)
+                .Where(x => x.GroupId == groupId)
+                .Where(x => x.UserId == CurrentUserId)
+                .FirstOrDefaultAsync();
+            
+            if (member != null)
+            {
+                var wasAvailable = member.IsAvailableNow();
+
+                var utcNow = DateTime.UtcNow;
+                member.AvailableUntilUtc = utcNow + TimeSpan.FromSeconds(lengthInSeconds);
+                await _db.SaveChangesAsync();
+
+                if (member.IsAvailableNow() &&
+                    !wasAvailable &&
+                    (member.AvailabilityNotificationSentAtUtc == null ||
+                     member.AvailabilityNotificationSentAtUtc < utcNow - TimeSpan.FromHours(1)))
+                {
+                    member.AvailabilityNotificationSentAtUtc = utcNow;
+                    await _db.SaveChangesAsync();
+
+                    await _notificationService.NotifyMemberAvailable(member.Group, member);
+                }
+            }
+        }
+
         private string CurrentUserId => _userManager.GetUserId(_currentUserAccessor.CurrentUser);
 
         private Task<string> CreateSlugFromGroupNameAsync(string name)
