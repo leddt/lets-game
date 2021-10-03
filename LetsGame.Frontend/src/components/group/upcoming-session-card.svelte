@@ -32,13 +32,13 @@
   </script>
   
   <script>
-    import client from "../../lib/apollo";
-    import Card from "../ui/card.svelte";
-    import CircleButton from "../ui/circle-button.svelte";
-    import FlexTrailer from "../ui/flex-trailer.svelte";
-    import AvatarList from "../ui/avatar-list.svelte";
-    import { friendlyDateTime } from "../../lib/date-helpers";
-    import { me } from "../../lib/store"
+    import client from "@/lib/apollo";
+    import { friendlyDateTime } from "@/lib/date-helpers";
+    import { me } from "@/lib/store"
+    import Card from "@/components/ui/card.svelte";
+    import CircleButton from "@/components/ui/circle-button.svelte";
+    import FlexTrailer from "@/components/ui/flex-trailer.svelte";
+    import AvatarList from "@/components/ui/avatar-list.svelte";
       
     export let session;
   

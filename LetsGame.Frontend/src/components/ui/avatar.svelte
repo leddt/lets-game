@@ -1,31 +1,35 @@
 <script>
-  import { Link, Router } from "svelte-routing"
-  import tooltip from "../../lib/actions/tooltip";
-  // import { page } from "$app/stores";
+  import tooltip from "@/lib/actions/tooltip";
+  import { useLocation } from "svelte-navigator";
 
   export let name;
   export let link = null;
   export let active = false;
 
+  const location = useLocation();
+
+  $: if (link) {
+    console.log($location.pathname, link, $location.pathname === link);
+  }
+
   $: initials = !name ? "" : name[0].toUpperCase();
+  $: highlighted = active || (link && $location.pathname === link);
 </script>
 
-<div class="avatar">
-  {#if link}
-    <Link to={link}>
-      <div use:tooltip={name} class:active>
-        {initials}
-      </div>
-    </Link>
-  {:else}
-    <div use:tooltip={name} class:active>
+{#if link}
+  <a href={link}>
+    <div use:tooltip={name} class:highlighted>
       {initials}
     </div>
-  {/if}
-</div>
+  </a>
+{:else}
+  <div use:tooltip={name} class:highlighted>
+    {initials}
+  </div>
+{/if}
 
 <style>
-  .avatar div {
+  div {
     @apply rounded-full w-10 h-10 
            flex items-center justify-center 
            cursor-default 
@@ -33,15 +37,15 @@
            border-2 border-gray-100;
   }
 
-  .avatar :global(a:hover) {
+  a:hover {
     @apply no-underline;
   }
 
-  .avatar :global(a > div:not(.active)) {
+  a > div:not(.highlighted) {
     @apply cursor-pointer hover:border-blue-500;
   }
 
-  .active {
+  .highlighted {
     @apply border-green-500;
   }
 </style>

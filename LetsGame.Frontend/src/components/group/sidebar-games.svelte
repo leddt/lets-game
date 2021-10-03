@@ -13,13 +13,13 @@
 </script>
 
 <script>
-  import tooltip from "../../lib/actions/tooltip";
+  import tooltip from "@/lib/actions/tooltip";
 
   export let group;
 </script>
 
 <div class="grid grid-cols-2 gap-2">
-  {#each group?.games as game (game.id)}
+  {#each group?.games || [] as game (game.id)}
     {#if game.igdbImageId}
       <div
         class="bg-cover bg-center w-full pb-[50%] rounded"

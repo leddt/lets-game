@@ -15,8 +15,9 @@
 <script>
   import { fade } from "svelte/transition";
   import { flip } from "svelte/animate";
-  import client from "../../lib/apollo";
-  import Button from "../ui/button.svelte";
+  
+  import client from "@/lib/apollo";
+  import Button from "@/components/ui/button.svelte";
 
   export let group;
 

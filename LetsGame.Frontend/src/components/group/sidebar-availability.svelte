@@ -14,9 +14,10 @@
 
 <script>
   import { fade } from "svelte/transition";
-  import Button from "../ui/button.svelte";
-  import client from "../../lib/apollo";
-  import { time } from "../../lib/date-helpers";
+  
+  import Button from "@/components/ui/button.svelte";
+  import client from "@/lib/apollo";
+  import { time } from "@/lib/date-helpers";
 
   export let group;
 

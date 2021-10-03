@@ -1,6 +1,6 @@
 <script>
     import { createEventDispatcher } from "svelte";
-    import tooltip from "../../lib/actions/tooltip";
+    import tooltip from "@/lib/actions/tooltip";
   
     let classNames = null;
     export { classNames as class };
