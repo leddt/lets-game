@@ -12,6 +12,7 @@ using LetsGame.Web.Services;
 using LetsGame.Web.Services.Igdb.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using NodaTime;
 
 namespace LetsGame.Web.GraphQL
 {
@@ -229,6 +230,30 @@ namespace LetsGame.Web.GraphQL
             var group = await db.Groups.FindAsync(ID.ToLong<Group>(groupId));
             return new GroupPayload(new GroupGraphType(group));
         }
-        
+
+
+        [Authorize(Policy = AuthPolicies.ReadGroup)]
+        public async Task<GroupPayload> ProposeSession(
+            [GraphQLType(typeof(IdType))] string groupId,
+            [GraphQLType(typeof(IdType))] string gameId,
+            LocalDateTime[] dateTimes,
+            string details,
+            [Service] GroupService groupService,
+            [Service] DateService dateService,
+            [Service] ApplicationDbContext db)
+        {
+            var utcDateTimes = dateTimes
+                .Select(x => dateService.ConvertFromUserLocalTimeToUtc(x))
+                .ToArray();
+            
+            await groupService.ProposeEventAsync(
+                ID.ToLong<Group>(groupId),
+                ID.ToLong<GroupGame>(gameId),
+                details,
+                utcDateTimes);
+            
+            var group = await db.Groups.FindAsync(ID.ToLong<Group>(groupId));
+            return new GroupPayload(new GroupGraphType(group));
+        }
     }
 }

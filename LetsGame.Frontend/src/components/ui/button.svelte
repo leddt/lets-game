@@ -26,7 +26,7 @@
     @apply border rounded px-2 py-1 font-semibold
            bg-gradient-to-b active:bg-gradient-to-t 
            
-           from-gray-200 to-gray-300 border-gray-300
+           from-gray-200 to-gray-300 border-gray-300 text-gray-800
            hover:from-gray-600 hover:to-gray-900 hover:text-gray-200 hover:border-gray-900;
   }
 

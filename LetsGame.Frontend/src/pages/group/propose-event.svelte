@@ -1,82 +1,85 @@
 <script>
+  import { format, startOfDay } from "date-fns";
+  import gql from "graphql-tag";
+  import { useNavigate } from "svelte-navigator";
+
   import Button from "@/components/ui/button.svelte";
   import CalendarPicker from "@/components/ui/calendar-picker.svelte";
   import Section from "@/components/ui/section.svelte";
-  import TimePicker from "@/components/ui/time-picker.svelte";
+  import Textarea from "@/components/ui/textarea.svelte";
+  import TimeslotsPicker from "@/components/ui/timeslots-picker.svelte";
   import GameTile from "@/components/group/game-tile.svelte";
-  import { format } from "date-fns";
-  import isSameDay from "date-fns/isSameDay";
+  import { proposedSessionCardFragment } from "@/components/group/proposed-session-card.svelte";
+
+  import { friendlyDateTime } from "@/lib/date-helpers";
+  import client from "@/lib/apollo";
+
+  const navigate = useNavigate();
+  const today = startOfDay(new Date());
 
   let selectedGame = null;
   let pickedDates = [];
-  let times = new Map();
-  let allSame = true;
+  let dateTimes = [];
+  let details = "";
 
   export let group;
 
-  $: syncTimesMap(pickedDates);
-  $: if (!allSame) replicateTimes();
-
-  // times params is there for reactivity reasons
-  function getTimes(times, date) {
-    if (!date) return [];
-    const key = date.toISOString();
-    return times.get(key);
+  function toLocalTimeString(date) {
+    return format(date, "yyyy-MM-dd'T'HH:mm:ss");
   }
 
-  function setTimes(date, newTimes) {
-    const key = date.toISOString();
-    times.set(key, newTimes);
-    times = times; // Reactivity
-  }
+  async function createSession() {
+    await client.mutate({
+      mutation: gql`
+        ${proposedSessionCardFragment}
+        mutation ProposeSession(
+          $groupId: ID!
+          $gameId: ID
+          $details: String
+          $dateTimes: [LocalDateTime!]!
+        ) {
+          proposeSession(
+            groupId: $groupId
+            gameId: $gameId
+            details: $details
+            dateTimes: $dateTimes
+          ) {
+            group {
+              id
+              proposedSessions {
+                ...proposedSessionCard
+              }
+            }
+          }
+        }
+      `,
+      variables: {
+        groupId: group.id,
+        gameId: selectedGame?.id,
+        details,
+        dateTimes: dateTimes.map(toLocalTimeString),
+      },
+    });
 
-  function getDefaultTimes(forDate) {
-    if (pickedDates.length <= 1) return [null];
-
-    return [
-      ...getTimes(times, pickedDates.filter((x) => !isSameDay(x, forDate))[0]),
-    ];
-  }
-
-  function addTime(date) {
-    setTimes(date, [...getTimes(times, date), null]);
-  }
-  function removeTime(date) {
-    setTimes(date, [...getTimes(times, date).slice(0, -1)]);
-  }
-
-  function syncTimesMap(dates) {
-    const newMap = new Map();
-
-    for (const date of dates) {
-      const key = date.toISOString();
-      newMap.set(key, times.get(key) || getDefaultTimes(date));
-    }
-
-    times = newMap;
-  }
-
-  function replicateTimes() {
-    const firstTimes = getTimes(times, pickedDates[0]);
-    for (const date of pickedDates) {
-      setTimes(date, [...firstTimes]);
-    }
+    navigate("../");
   }
 </script>
 
 <div class="p-4 flex-grow">
   <Section title="Propose a session">
-    <h3>Pick game</h3>
-    <div class="pt-4 flex flex-wrap gap-4">
-      {#each group.games as game (game.id)}
-        <div class="w-80">
-          <GameTile
-            {game}
-            class="item {game === selectedGame ? 'selected' : ''}"
-            on:click={() => (selectedGame = game)}
-          />
-        </div>
-      {/each}
+    <div>
+      <h3>Pick game</h3>
+      <div class="flex flex-wrap gap-4">
+        {#each group.games as game (game.id)}
+          <div class="w-80">
+            <GameTile
+              {game}
+              class="item {game === selectedGame ? 'selected' : ''}"
+              on:click={() => (selectedGame = game)}
+            />
+          </div>
+        {/each}
+      </div>
     </div>
 
     {#if selectedGame}
@@ -86,69 +89,45 @@
         <div class="flex flex-col lg:flex-row gap-4">
           <div>
             <div class="w-80">
-              Pick dates
-              <CalendarPicker bind:pickedDates />
+              <h4>Pick dates</h4>
+              <CalendarPicker min={today} bind:pickedDates />
             </div>
           </div>
           {#if pickedDates.length > 0}
             <div>
-              Pick times
-              <table class="w-full">
-                {#each pickedDates as date, index}
-                  {#if index === 1}
-                    <tr>
-                      <td colspan="2">
-                        <label>
-                          <input type="checkbox" bind:checked={allSame} />
-                          Use same time slots for all dates
-                        </label>
-                      </td>
-                    </tr>
-                  {/if}
-                  <tr>
-                    <td class="whitespace-nowrap align-top pt-1 w-32">
-                      {format(date, "MMMM do")}
-                    </td>
-                    <td>
-                      <div
-                        class="flex flex-wrap gap-1"
-                        class:invisible={allSame && index > 0}
-                      >
-                        {#each getTimes(times, date) as time}
-                          <TimePicker bind:value={time} />
-                        {/each}
-                        <div class="whitespace-nowrap">
-                          <Button
-                            tip="Add another time slot for {format(
-                              date,
-                              'MMMM do'
-                            )}"
-                            on:click={() => addTime(date)}>+</Button
-                          >
-                          {#if getTimes(times, date).length > 1}
-                            <Button
-                              tip="Remove time slot from {format(
-                                date,
-                                'MMMM do'
-                              )}"
-                              on:click={() => removeTime(date)}>-</Button
-                            >
-                          {/if}
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                {/each}
-              </table>
+              <h4>Pick times</h4>
+              <TimeslotsPicker dates={pickedDates} bind:dateTimes />
             </div>
           {/if}
         </div>
+      </div>
+
+      <div class="pt-4">
+        <h3>Anything to add?</h3>
+        <Textarea bind:value={details} class="w-full max-w-3xl" />
+      </div>
+    {/if}
+
+    {#if dateTimes.length > 0}
+      <div class="pt-4">
+        <h3>Summary</h3>
+        Your {selectedGame.name} session will have {dateTimes.length}
+        {dateTimes.length > 1 ? "slots" : "slot"}:
+        <ul class="list-disc mb-4">
+          {#each dateTimes as dateTime}
+            <li class="ml-6">{friendlyDateTime(dateTime)}</li>
+          {/each}
+        </ul>
+        <Button on:click={createSession}>Looks good, create the session</Button>
       </div>
     {/if}
   </Section>
 </div>
 
-<style>
+<style lang="postcss">
+  h3 {
+    @apply mb-2;
+  }
   :global(.item) {
     @apply cursor-pointer hover:shadow-xl hover:ring ring-opacity-100 ring-blue-300;
   }

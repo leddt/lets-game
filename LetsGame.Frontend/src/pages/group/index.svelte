@@ -1,7 +1,7 @@
 <script>
   import gql from "graphql-tag";
   import { query } from "svelte-apollo";
-  import { Route, useNavigate } from "svelte-navigator";
+  import { Route, useLocation, useNavigate } from "svelte-navigator";
 
   import CardList from "@/components/ui/card-list.svelte";
   import Section from "@/components/ui/section.svelte";
@@ -20,6 +20,7 @@
   export let slug;
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   $: groupData = query(
     gql`
@@ -49,12 +50,21 @@
 
   $: groupData.refetch();
   $: group = $groupData.data?.groupBySlug;
+  $: mainGroupPage = `/group/${slug}`;
+  $: isMainGroupPage = $location.pathname === mainGroupPage;
 </script>
 
 <div class="flex flex-col flex-grow min-w-0 overflow-y-scroll">
   {#if $groupData.data}
-    <div class="p-4 bg-gray-600 text-gray-100">
+    <div class="p-4 bg-gray-600 text-gray-100 flex justify-between">
       <h1>{group?.name}</h1>
+      <div>
+        {#if !isMainGroupPage}
+          <Button on:click={() => navigate(mainGroupPage)}>
+            Back to group page
+          </Button>
+        {/if}
+      </div>
     </div>
 
     <div class="flex flex-col sm:flex-row flex-grow">

@@ -2,6 +2,7 @@
 using LetsGame.Web.Data;
 using Microsoft.Extensions.Configuration;
 using NodaTime;
+using NodaTime.TimeZones;
 
 namespace LetsGame.Web.Services
 {
@@ -35,6 +36,13 @@ namespace LetsGame.Web.Services
             return Instant.FromDateTimeUtc(dt)
                 .InZone(GetUserDateTimeZone(userOverride))
                 .LocalDateTime;
+        }
+
+        public DateTime ConvertFromUserLocalTimeToUtc(LocalDateTime localTime, AppUser userOverride = null)
+        {
+            return localTime
+                .InZone(GetUserDateTimeZone(userOverride), Resolvers.LenientResolver)
+                .ToDateTimeUtc();
         }
 
         public DateTime RemoveSeconds(DateTime dt)
