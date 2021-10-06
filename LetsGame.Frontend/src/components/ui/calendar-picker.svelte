@@ -52,11 +52,19 @@
   }
 
   function toggleDate(date) {
-    if (pickedDates.find((x) => isSameDay(x, date))) {
-      pickedDates = pickedDates.filter((x) => !isSameDay(x, date));
-    } else {
-      pickedDates = sortBy([...pickedDates, date]);
-    }
+    isPicked(date) ? addPickedDate(date) : removePickedDate(date);
+  }
+
+  function addPickedDate(date) {
+    pickedDates = pickedDates.filter((x) => !isSameDay(x, date));
+  }
+
+  function removePickedDate(date) {
+    pickedDates = sortBy([...pickedDates, date]);
+  }
+
+  function isPicked(date) {
+    return !!pickedDates.find((x) => isSameDay(x, date));
   }
 </script>
 
@@ -87,8 +95,10 @@
               class:other-month={day.isOtherMonth}
               class:selected={day.selected}
               class:today={day.today}
-              on:click={() => toggleDate(day.date)}>{day.dayNumber}</td
+              on:click={() => toggleDate(day.date)}
             >
+              {day.dayNumber}
+            </td>
           {/each}
         </tr>
       {/each}
