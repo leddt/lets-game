@@ -11,36 +11,39 @@ const client = new ApolloClient({
       GroupGraphType: {
         fields: {
           invites: {
-            merge: replaceWithIncoming
-          }
-        }
+            merge: replaceWithIncoming,
+          },
+          games: {
+            merge: replaceWithIncoming,
+          },
+        },
       },
       ProposedSessionGraphType: {
         fields: {
           missingVotes: {
-            merge: replaceWithIncoming
+            merge: replaceWithIncoming,
           },
           cantPlays: {
-            merge: replaceWithIncoming
-          }
-        }
+            merge: replaceWithIncoming,
+          },
+        },
       },
       UpcomingSessionGraphType: {
         fields: {
           participants: {
-            merge: replaceWithIncoming
-          }
-        }
+            merge: replaceWithIncoming,
+          },
+        },
       },
       SessionSlotGraphType: {
         fields: {
           voters: {
-            merge: replaceWithIncoming
-          }
-        }
-      }
-    }
-  })
+            merge: replaceWithIncoming,
+          },
+        },
+      },
+    },
+  }),
 });
 
 export default client;

@@ -32,22 +32,59 @@
   import SidebarAvailability from "./sidebar-availability.svelte";
   import SidebarInvites from "./sidebar-invites.svelte";
   import SidebarGames from "./sidebar-games.svelte";
+  import client from "@/lib/apollo";
 
   export let group;
 
   const navigate = useNavigate();
 
   $: isOwner = group?.self.role === "OWNER";
+
+  function createInvite(singleUse) {
+    return client.mutate({
+      mutation: gql`
+        ${sidebarInvitesFragment}
+        mutation CreateInvite($groupId: ID!, $singleUse: Boolean!) {
+          createInvite(groupId: $groupId, singleUse: $singleUse) {
+            group {
+              id
+              ...sidebarInvites
+            }
+          }
+        }
+      `,
+      variables: {
+        groupId: group.id,
+        singleUse,
+      },
+    });
+  }
 </script>
 
 <div>
-  <div
-    class="sm:w-72 bg-gray-500 pb-4 sm:pt-4 px-4 sm:pl-0 flex flex-col gap-4"
-  >
+  <div class="sm:w-72 pb-4 sm:pt-4 px-4 sm:pl-0 flex flex-col gap-4">
     <Section title="Members"><SidebarMembers {group} /></Section>
     <Section title="Available?"><SidebarAvailability {group} /></Section>
     {#if group?.invites}
-      <Section title="Invites"><SidebarInvites {group} /></Section>
+      <Section title="Invites">
+        <div slot="right">
+          {#if isOwner}
+            <Button
+              tip="Create new single-use invite"
+              on:click={() => createInvite(true)}
+            >
+              + &#9312;
+            </Button>
+            <Button
+              tip="Create new unlimited invite"
+              on:click={() => createInvite(false)}
+            >
+              + &infin;
+            </Button>
+          {/if}
+        </div>
+        <SidebarInvites {group} />
+      </Section>
     {/if}
     <Section title="Games">
       <div slot="right">

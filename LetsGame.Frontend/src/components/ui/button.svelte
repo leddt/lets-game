@@ -21,9 +21,9 @@
   <slot />
 </button>
 
-<style>
+<style lang="postcss">
   button {
-    @apply border rounded px-2 py-1 font-bold
+    @apply border rounded px-2 py-1 font-semibold
            bg-gradient-to-b active:bg-gradient-to-t 
            
            from-gray-200 to-gray-300 border-gray-300

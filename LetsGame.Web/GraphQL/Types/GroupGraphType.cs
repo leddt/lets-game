@@ -3,10 +3,10 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using HotChocolate;
-using HotChocolate.AspNetCore.Authorization;
 using HotChocolate.Resolvers;
 using LetsGame.Web.Authorization;
 using LetsGame.Web.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 
 namespace LetsGame.Web.GraphQL.Types
@@ -66,9 +66,14 @@ namespace LetsGame.Web.GraphQL.Types
                 .Select(x => new UpcomingSessionGraphType(x));
         }
 
-        [Authorize(Policy = AuthPolicies.ManageGroup)]
-        public async Task<IEnumerable<InviteGraphType>> GetInvites(IResolverContext context)
+        public async Task<IEnumerable<InviteGraphType>> GetInvites(
+            IResolverContext context, 
+            ClaimsPrincipal user,
+            [Service] IAuthorizationService authorizationService)
         {
+            var auth = await authorizationService.AuthorizeAsync(user, _group.Id, AuthPolicies.ManageGroup);
+            if (!auth.Succeeded) return null;
+            
             var invites = await context.LoadInvitesByGroupId(_group.Id);
             return invites.Select(x => new InviteGraphType(x));
         }

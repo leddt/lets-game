@@ -87,6 +87,20 @@ namespace LetsGame.Web.Services
             await _db.SaveChangesAsync();
         }
 
+        public async Task RemoveGameFromGroupAsync(long groupId, long groupGameId)
+        {
+            await EnsureIsGroupOwnerAsync(groupId);
+            
+            var groupGame = await _db.GroupGames
+                .FirstOrDefaultAsync(x => x.GroupId == groupId &&
+                                          x.Id == groupGameId);
+            
+            if (groupGame == null) return;
+
+            _db.GroupGames.Remove(groupGame);
+            await _db.SaveChangesAsync();
+        }
+
         public async Task AddSlotVoteAsync(long slotId)
         {
             var slot = await _db.GroupEventSlots

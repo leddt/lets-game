@@ -5,7 +5,7 @@
   export { className as class };
 </script>
 
-<input type="text" {id} class={className} bind:value />
+<input type="time" {id} class={className} bind:value />
 
 <style lang="postcss">
   input {
@@ -14,6 +14,6 @@
            hover:bg-white
            focus:bg-white focus:ring-2 focus:ring-blue-500 focus:ring-opacity-25
            rounded shadow-inner outline-none 
-           px-2 py-1;
+           p-1;
   }
 </style>

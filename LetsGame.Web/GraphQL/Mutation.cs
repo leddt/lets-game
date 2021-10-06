@@ -203,7 +203,7 @@ namespace LetsGame.Web.GraphQL
             return new GroupPayload(new GroupGraphType(group));
         }
 
-        [HotChocolate.AspNetCore.Authorization.Authorize(Policy = AuthPolicies.ManageGroup)]
+        [Authorize(Policy = AuthPolicies.ManageGroup)]
         public async Task<GroupPayload> AddGame(
             [GraphQLType(typeof(IdType))] string groupId,
             [GraphQLType(typeof(IdType))] string gameId,
@@ -215,5 +215,20 @@ namespace LetsGame.Web.GraphQL
             var group = await db.Groups.FindAsync(ID.ToLong<Group>(groupId));
             return new GroupPayload(new GroupGraphType(group));
         }
+        
+
+        [Authorize(Policy = AuthPolicies.ManageGroup)]
+        public async Task<GroupPayload> RemoveGame(
+            [GraphQLType(typeof(IdType))] string groupId,
+            [GraphQLType(typeof(IdType))] string gameId,
+            [Service] GroupService groupService,
+            [Service] ApplicationDbContext db)
+        {
+            await groupService.RemoveGameFromGroupAsync(ID.ToLong<Group>(groupId), ID.ToLong<GroupGame>(gameId));
+
+            var group = await db.Groups.FindAsync(ID.ToLong<Group>(groupId));
+            return new GroupPayload(new GroupGraphType(group));
+        }
+        
     }
 }

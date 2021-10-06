@@ -21,7 +21,7 @@
   </div>
 </div>
 
-<style>
+<style lang="postcss">
   .card {
     @apply rounded shadow flex flex-col bg-white;
   }

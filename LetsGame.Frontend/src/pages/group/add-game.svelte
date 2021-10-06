@@ -79,17 +79,21 @@
 
     {#if searchResults}
       <div class="pt-4">
-        <CardList>
-          {#each searchResults as game (game.id)}
-            <Card
-              image={getImage(game)}
-              clickable
-              on:click={() => addGame(game.id)}
-            >
-              <strong>{game.name}</strong>
-            </Card>
-          {/each}
-        </CardList>
+        {#if searchResults.length > 0}
+          <CardList>
+            {#each searchResults as game (game.id)}
+              <Card
+                image={getImage(game)}
+                clickable
+                on:click={() => addGame(game.id)}
+              >
+                <strong>{game.name}</strong>
+              </Card>
+            {/each}
+          </CardList>
+        {:else}
+          <p>No game found</p>
+        {/if}
       </div>
     {/if}
   </Section>

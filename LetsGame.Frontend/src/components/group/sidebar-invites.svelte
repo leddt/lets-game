@@ -21,26 +21,6 @@
 
   export let group;
 
-  function create(singleUse) {
-    return client.mutate({
-      mutation: gql`
-        ${sidebarInvitesFragment}
-        mutation CreateInvite($groupId: ID!, $singleUse: Boolean!) {
-          createInvite(groupId: $groupId, singleUse: $singleUse) {
-            group {
-              id
-              ...sidebarInvites
-            }
-          }
-        }
-      `,
-      variables: {
-        groupId: group.id,
-        singleUse,
-      },
-    });
-  }
-
   function deleteInvite(invite) {
     return client.mutate({
       mutation: gql`
@@ -92,11 +72,4 @@
       </div>
     </div>
   {/each}
-  <div>
-    <p class="font-bold">Create new invite:</p>
-    <div class="flex gap-2">
-      <Button on:click={() => create(false)}>Unlimited</Button>
-      <Button on:click={() => create(true)}>Single use</Button>
-    </div>
-  </div>
 </div>

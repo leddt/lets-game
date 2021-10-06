@@ -52,12 +52,12 @@
   </div>
 {/if}
 
-<style>
+<style lang="postcss">
   div {
     @apply rounded-full w-10 h-10 
            flex items-center justify-center 
            cursor-default 
-           text-sm
+           text-sm font-semibold
            bg-gray-500 text-gray-100 
            border-2 border-gray-300;
   }

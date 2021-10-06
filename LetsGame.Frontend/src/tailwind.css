@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply text-gray-800 overflow-hidden;
+    @apply text-gray-800 bg-gray-500 overflow-hidden;
   }
   h1 {
     @apply font-medium text-4xl;
@@ -24,6 +24,9 @@
   @variants responsive {
     .writing-mode-vertical {
       writing-mode: vertical-lr;
+    }
+    .writing-mode-horizontal {
+      writing-mode: horizontal-tb;
     }
     .text-orientation-upright {
       text-orientation: upright;
