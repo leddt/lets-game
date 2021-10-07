@@ -58,6 +58,7 @@
            flex items-center justify-center 
            cursor-default 
            text-sm font-semibold
+           select-none
            bg-gray-500 text-gray-100 
            border-2 border-gray-300;
   }

@@ -16,6 +16,7 @@ using LetsGame.Web.RecurringTasks;
 using LetsGame.Web.Services;
 using LetsGame.Web.Services.Igdb;
 using LetsGame.Web.Services.Itad;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
@@ -29,6 +30,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NodaTime;
+using Polly;
 using WebPush;
 
 namespace LetsGame.Web
@@ -222,11 +224,20 @@ namespace LetsGame.Web
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapGraphQL();
-                // endpoints.MapRazorPages();
-                // endpoints.MapControllers();
+                endpoints.MapRazorPages();
+                endpoints.MapControllers();
                 // endpoints.MapHub<GroupHub>("/grouphub");
             });
 
+            // Force login before going to SPA
+            app.Use(async (context, next) =>
+            {
+                if (context.User.Identity?.IsAuthenticated != true)
+                    await context.ChallengeAsync();
+                else
+                    await next();
+            });
+            
             app.UseSpaStaticFiles();
             app.UseSpa(spa =>
             {

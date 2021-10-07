@@ -255,5 +255,40 @@ namespace LetsGame.Web.GraphQL
             var group = await db.Groups.FindAsync(ID.ToLong<Group>(groupId));
             return new GroupPayload(new GroupGraphType(group));
         }
+
+        [Authorize(Policy = AuthPolicies.ManageGroup)]
+        public async Task<GroupPayload> RemoveGroupMember(
+            [GraphQLType(typeof(IdType))] string groupId,
+            [GraphQLType(typeof(IdType))] string memberId,
+            [Service] GroupService groupService,
+            [Service] ApplicationDbContext db)
+        {
+            var (_, userId) = MembershipGraphType.ParseMembershipId(memberId);
+
+            await groupService.RemoveGroupMember(ID.ToLong<Group>(groupId), userId);
+            
+            var group = await db.Groups.FindAsync(ID.ToLong<Group>(groupId));
+            return new GroupPayload(new GroupGraphType(group));
+        }
+
+        [Authorize(Policy = AuthPolicies.ManageGroup)]
+        public async Task<bool> DeleteGroup(
+            [GraphQLType(typeof(IdType))] string groupId,
+            [Service] GroupService groupService)
+        {
+            await groupService.DeleteGroup(ID.ToLong<Group>(groupId));
+
+            return true;
+        }
+
+        [Authorize(Policy = AuthPolicies.ReadGroup)]
+        public async Task<bool> LeaveGroup(
+            [GraphQLType(typeof(IdType))] string groupId,
+            [Service] GroupService groupService)
+        {
+            await groupService.LeaveGroup(ID.ToLong<Group>(groupId));
+
+            return true;
+        }
     }
 }

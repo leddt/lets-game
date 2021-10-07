@@ -24,6 +24,7 @@ namespace LetsGame.Web.GraphQL.Types
 
         public string Name => _group.Name;
         public string Slug => _group.Slug;
+        public string SharingKey => _group.SharingKey;
 
         public async Task<IEnumerable<MembershipGraphType>> GetMembers(IResolverContext context)
         {

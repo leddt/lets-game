@@ -22,12 +22,35 @@
   import { fade } from "svelte/transition";
   import { time } from "@/lib/date-helpers";
   import { me } from "@/lib/store";
+  import client from "@/lib/apollo";
   import Avatar from "@/components/ui/avatar.svelte";
   import Button from "@/components/ui/button.svelte";
 
   export let group;
 
   $: isOwner = group?.self.role === "OWNER";
+
+  function removeMember(member) {
+    if (!confirm(`Remove ${member.displayName} from the group?`)) return;
+
+    client.mutate({
+      mutation: gql`
+        ${sidebarMembersFragment}
+        mutation RemoveMember($groupId: ID!, $memberId: ID!) {
+          removeGroupMember(groupId: $groupId, memberId: $memberId) {
+            group {
+              id
+              ...sidebarMembers
+            }
+          }
+        }
+      `,
+      variables: {
+        groupId: group.id,
+        memberId: member.id,
+      },
+    });
+  }
 </script>
 
 {#if group?.members}
@@ -51,8 +74,10 @@
             </div>
           {/if}
         </div>
-        {#if member.id !== group.self.id}
-          <Button color="red">&times;</Button>
+        {#if isOwner && member.id !== group.self.id}
+          <Button color="red" on:click={() => removeMember(member)}>
+            &times;
+          </Button>
         {/if}
       </div>
     {/each}

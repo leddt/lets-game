@@ -1,4 +1,5 @@
 <script>
+  let logoutForm;
   export let me;
   $: isLoggedIn = !!me;
 </script>
@@ -10,8 +11,12 @@
 
   {#if isLoggedIn}
     <div class="flex flex-wrap gap-2">
-      <a href="/" class="text-blue-300">{me.email}</a>
-      <a href="/" class="text-blue-300">Logout</a>
+      <a noroute href="/Identity/Account/Manage" class="text-blue-300">
+        {me.email}
+      </a>
+      <a noroute href="/Identity/Account/Logout" class="text-blue-300">
+        Logout
+      </a>
     </div>
   {:else}
     <div>

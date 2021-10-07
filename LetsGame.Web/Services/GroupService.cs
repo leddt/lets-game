@@ -359,6 +359,39 @@ namespace LetsGame.Web.Services
             }
         }
 
+        public async Task DeleteEvent(long eventId)
+        {
+            var ev = await _db.GroupEvents
+                .Where(x => x.CreatorId == CurrentUserId ||
+                            x.Group.Memberships.Any(m => m.Role == GroupRole.Owner && m.UserId == CurrentUserId))
+                .FirstOrDefaultAsync(x => x.Id == eventId);
+
+            if (ev != null)
+            {
+                _db.GroupEvents.Remove(ev);
+                await _db.SaveChangesAsync();
+            }
+        }
+
+        public async Task DeleteGroup(long groupId)
+        {
+            var group = await _db.Groups
+                .Include(x => x.Events)
+                .FirstOrDefaultAsync(x =>
+                    x.Id == groupId &&
+                    x.Memberships.Any(m => m.Role == GroupRole.Owner &&
+                                           m.User.Id == CurrentUserId));
+
+            if (group != null)
+            {
+                if (group.Events.Any()) 
+                    _db.GroupEvents.RemoveRange(group.Events);
+                
+                _db.Groups.Remove(group);
+                await _db.SaveChangesAsync();
+            }
+        }
+
         private string CurrentUserId => _userManager.GetUserId(_currentUserAccessor.CurrentUser);
 
         private Task<string> CreateSlugFromGroupNameAsync(string name)

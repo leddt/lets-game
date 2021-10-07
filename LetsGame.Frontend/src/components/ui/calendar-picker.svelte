@@ -128,7 +128,7 @@
     @apply w-full;
   }
   td {
-    @apply border border-gray-700 p-1 w-[calc(100%/7)];
+    @apply border border-gray-700 p-1 w-[calc(100%/7)] select-none;
   }
   td.day {
     @apply bg-white text-right;

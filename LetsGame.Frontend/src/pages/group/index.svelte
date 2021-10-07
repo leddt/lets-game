@@ -1,4 +1,17 @@
 <script>
+  /*
+  TODO:
+  - Delete event
+  - Use GameTile in SidebarGames
+  - Live updates
+  - Filter past events
+  - Home page
+  - Create group page + test empty states
+  - Backend code cleanup
+  - Test full flow with two members
+  - Presence indicators? (nice to have)
+  */
+
   import gql from "graphql-tag";
   import { query } from "svelte-apollo";
   import { Route, useLocation, useNavigate } from "svelte-navigator";
@@ -13,9 +26,12 @@
   import GroupAddGame from "./add-game.svelte";
   import GroupProposeEvent from "./propose-event.svelte";
 
+  import { copyToClipboard } from "@/lib/clipboard";
+
   import { upcomingSessionCardFragment } from "@/components/group/upcoming-session-card.svelte";
   import { proposedSessionCardFragment } from "@/components/group/proposed-session-card.svelte";
   import { sidebarFragment } from "@/components/group/group-sidebar.svelte";
+  import client from "@/lib/apollo";
 
   export let slug;
 
@@ -31,6 +47,11 @@
         groupBySlug(slug: $slug) {
           id
           name
+          sharingKey
+          self {
+            id
+            role
+          }
           upcomingSessions {
             ...upcomingSessionCard
           }
@@ -52,14 +73,66 @@
   $: group = $groupData.data?.groupBySlug;
   $: mainGroupPage = `/group/${slug}`;
   $: isMainGroupPage = $location.pathname === mainGroupPage;
+  $: icalLink = `${window.location.origin}/group/${slug}.ics?k=${group?.sharingKey}`;
+  $: isOwner = group?.self.role === "OWNER";
+
+  async function deleteGroup() {
+    if (!confirm(`Delete ${group.name} forever?`)) return;
+
+    await client.mutate({
+      mutation: gql`
+        mutation DeleteGroup($groupId: ID!) {
+          deleteGroup(groupId: $groupId)
+        }
+      `,
+      variables: {
+        groupId: group.id,
+      },
+    });
+
+    navigate("/");
+  }
+
+  async function leaveGroup() {
+    if (
+      !confirm(`Leave ${group.name}? You'll need an invite link to join again.`)
+    ) {
+      return;
+    }
+
+    await client.mutate({
+      mutation: gql`
+        mutation LeaveGroup($groupId: ID!) {
+          leaveGroup(groupId: $groupId)
+        }
+      `,
+      variables: {
+        groupId: group.id,
+      },
+    });
+
+    navigate("/");
+  }
 </script>
 
 <div class="flex flex-col flex-grow min-w-0 overflow-y-scroll">
   {#if $groupData.data}
-    <div class="p-4 bg-gray-600 text-gray-100 flex justify-between">
+    <div
+      class="p-4 bg-gray-600 text-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between"
+    >
       <h1>{group?.name}</h1>
-      <div>
-        {#if !isMainGroupPage}
+      <div class="flex gap-2">
+        {#if isMainGroupPage}
+          <Button on:click={() => copyToClipboard(icalLink)}>
+            Copy iCal URL
+          </Button>
+
+          {#if isOwner}
+            <Button color="red" on:click={deleteGroup}>Delete group</Button>
+          {:else}
+            <Button color="red" on:click={leaveGroup}>Leave group</Button>
+          {/if}
+        {:else}
           <Button on:click={() => navigate(mainGroupPage)}>
             Back to group page
           </Button>
@@ -86,15 +159,19 @@
             <Section
               title="Proposed sessions ({group.proposedSessions.length})"
             >
-              <Button slot="right" on:click={() => navigate("propose-event")}
-                >Propose new session</Button
-              >
+              <Button slot="right" on:click={() => navigate("propose-event")}>
+                Propose new session
+              </Button>
 
-              <CardList>
-                {#each group.proposedSessions as s (s.id)}
-                  <ProposedSessionCard session={s} />
-                {/each}
-              </CardList>
+              {#if group.proposedSessions.length > 0}
+                <CardList>
+                  {#each group.proposedSessions as s (s.id)}
+                    <ProposedSessionCard session={s} />
+                  {/each}
+                </CardList>
+              {:else}
+                <p>No session is being planned right now.</p>
+              {/if}
             </Section>
           {/if}
         </div>

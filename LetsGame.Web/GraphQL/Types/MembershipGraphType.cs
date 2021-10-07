@@ -18,6 +18,7 @@ namespace LetsGame.Web.GraphQL.Types
             _membership = membership;
         }
 
+        
         [GraphQLType(typeof(IdType))]
         public string Id => ID.Typed<Membership>($"{_membership.GroupId}/{_membership.UserId}");
         public string DisplayName => _membership.DisplayName;
@@ -40,6 +41,18 @@ namespace LetsGame.Web.GraphQL.Types
             return group == null 
                 ? null 
                 : new GroupGraphType(group);
+        }
+
+        public static (long groupId, string userId) ParseMembershipId(string id)
+        {
+            var rawId = ID.ToString<Membership>(id);
+            var parts = rawId.Split("/");
+            if (parts.Length != 2) throw new Exception("Invalid membership ID format");
+
+            var groupId = long.Parse(parts[0]);
+            var userId = parts[1];
+
+            return (groupId, userId);
         }
     }
 }

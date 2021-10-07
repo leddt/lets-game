@@ -7,7 +7,7 @@ namespace LetsGame.Web.GraphQL
     {
         public static string Typed<T>(object id) => Encode($"{typeof(T).Name}:{id}");
 
-        public static long ToLong<T>(string id)
+        public static string ToString<T>(string id)
         {
             var parts = Decode(id).Split(':');
             if (parts.Length != 2) throw new InvalidIdFormatException();
@@ -15,7 +15,14 @@ namespace LetsGame.Web.GraphQL
             var expectedType = typeof(T).Name;
             if (expectedType != parts[0]) throw new UnexpectedIdTypeException(expectedType, parts[0]);
 
-            if (!long.TryParse(parts[1], out var longId))
+            return parts[1];
+        }
+        
+        public static long ToLong<T>(string id)
+        {
+            var rawId = ToString<T>(id);
+
+            if (!long.TryParse(rawId, out var longId))
                 throw new InvalidIdFormatException();
 
             return longId;

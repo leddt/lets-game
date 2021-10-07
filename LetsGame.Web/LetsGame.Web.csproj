@@ -40,4 +40,14 @@
       <None Remove="ScaffoldingReadMe.txt" />
     </ItemGroup>
 
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Pages\Groups\AddGame.cshtml" />
+      <_ContentIncludedByDefault Remove="Pages\Groups\Create.cshtml" />
+      <_ContentIncludedByDefault Remove="Pages\Groups\Group.cshtml" />
+      <_ContentIncludedByDefault Remove="Pages\Groups\ProposeEvent.cshtml" />
+      <_ContentIncludedByDefault Remove="Pages\Groups\_GroupProposedEvents.cshtml" />
+      <_ContentIncludedByDefault Remove="Pages\Groups\_GroupSidebar.cshtml" />
+      <_ContentIncludedByDefault Remove="Pages\Groups\_GroupUpcomingEvents.cshtml" />
+    </ItemGroup>
+
 </Project>

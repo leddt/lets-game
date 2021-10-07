@@ -42,6 +42,8 @@
 
           <Route path="/">Home</Route>
 
+          <Route path="/create-group">Create group</Route>
+
           <Route path="group/:slug/*" let:params>
             <GroupIndex slug={params.slug} />
           </Route>

@@ -38,6 +38,9 @@
   `);
 
   function removeGame(game) {
+    if (!confirm(`Remove ${game.name} and all it's events from the group?`))
+      return;
+
     removeGameMutation({
       variables: {
         groupId: group.id,
