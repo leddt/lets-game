@@ -46,6 +46,7 @@
       }
       creator {
         id
+        userId
         displayName
       }
     }
@@ -72,6 +73,7 @@
     : null;
 
   $: isInCantPlayList = session.cantPlays.find((x) => x.userId == $me?.id);
+  $: isSessionCreator = session.creator.userId === $me?.id;
 
   function isInSlot(slot) {
     return !!slot?.voters?.find((x) => x.userId === $me.id);
@@ -201,11 +203,42 @@
 
     window.scrollTo(0, 0);
   }
+
+  async function deleteSession() {
+    if (!confirm(`Cancel this ${session.game?.name || "gaming"} session?`))
+      return;
+
+    await client.mutate({
+      mutation: gql`
+        ${proposedSessionCardFragment}
+        mutation DeleteProposedSession($sessionId: ID!) {
+          deleteSession(sessionId: $sessionId) {
+            group {
+              id
+              proposedSessions {
+                ...proposedSessionCard
+              }
+            }
+          }
+        }
+      `,
+      variables: {
+        sessionId: session.id,
+      },
+    });
+  }
 </script>
 
 <Card image={gameImage} width="w-164" imageHeight="h-48">
   <div class="flex flex-col gap-2 h-full">
-    <h3>{session.game?.name || "Any game"}</h3>
+    <div class="flex justify-between items-center">
+      <h3>{session.game?.name || "Any game"}</h3>
+      {#if isSessionCreator}
+        <Button color="red" tip="Cancel this session" on:click={deleteSession}>
+          &times;
+        </Button>
+      {/if}
+    </div>
     {#if session.details}
       <p class="text-gray-500 font-light">{session.details}</p>
     {/if}

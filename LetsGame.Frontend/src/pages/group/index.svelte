@@ -1,7 +1,6 @@
 <script>
   /*
   TODO:
-  - Delete event
   - Use GameTile in SidebarGames
   - Live updates
   - Filter past events

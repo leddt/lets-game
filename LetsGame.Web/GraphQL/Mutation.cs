@@ -290,5 +290,22 @@ namespace LetsGame.Web.GraphQL
 
             return true;
         }
+        
+        [Authorize(Policy = AuthPolicies.ManageSession)]
+        public async Task<GroupPayload> DeleteSession(
+            [GraphQLType(typeof(IdType))] string sessionId,
+            [Service] GroupService groupService,
+            [Service] ApplicationDbContext db)
+        {
+            var id = ID.ToLong<GroupEvent>(sessionId);
+            
+            var group = await db.GroupEvents
+                .Where(x => x.Id == id)
+                .Select(x => x.Group)
+                .FirstOrDefaultAsync();
+            
+            await groupService.DeleteEvent(id);
+            return new GroupPayload(new GroupGraphType(group));
+        }
     }
 }
