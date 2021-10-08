@@ -2,7 +2,6 @@
   /*
   TODO:
   - Live updates
-  - Filter past events
   - Home page
   - Create group page + test empty states
   - Backend code cleanup
@@ -155,9 +154,16 @@
 
           {#if group?.proposedSessions}
             <Section
-              title="Proposed sessions ({group.proposedSessions.length})"
+              title={"Proposed sessions" +
+                (group.proposedSessions.length > 0
+                  ? ` (${group.proposedSessions.length})`
+                  : "")}
             >
-              <Button slot="right" on:click={() => navigate("propose-event")}>
+              <Button
+                color="green"
+                slot="right"
+                on:click={() => navigate("propose-event")}
+              >
                 Propose new session
               </Button>
 

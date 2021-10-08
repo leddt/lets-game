@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using HotChocolate;
@@ -18,7 +19,9 @@ namespace LetsGame.Web.GraphQL.Types
         public async Task<IEnumerable<SessionSlotGraphType>> GetSlots(IResolverContext context)
         {
             var result = await context.LoadSlotsByEventId(GroupEvent.Id);
-            return result.Select(x => new SessionSlotGraphType(x));
+            return result
+                .Where(x => x.ProposedDateAndTimeUtc > DateTime.UtcNow)
+                .Select(x => new SessionSlotGraphType(x));
         }
 
         public async Task<IEnumerable<MembershipGraphType>> GetCantPlays(IResolverContext context)

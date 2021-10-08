@@ -2,7 +2,7 @@
   import tooltip from "@/lib/actions/tooltip";
   import { createEventDispatcher } from "svelte";
 
-  let classNames;
+  let classNames = "";
   export { classNames as class };
   export let tip;
 

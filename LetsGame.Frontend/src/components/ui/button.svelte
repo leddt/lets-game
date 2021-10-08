@@ -35,4 +35,9 @@
     @apply from-red-200 to-red-300 border-red-300
              hover:from-red-600 hover:to-red-900 hover:text-red-200 hover:border-red-900;
   }
+
+  button.green {
+    @apply from-green-200 to-green-300 border-green-300
+           hover:from-green-600 hover:to-green-900 hover:text-green-200 hover:border-green-900;
+  }
 </style>

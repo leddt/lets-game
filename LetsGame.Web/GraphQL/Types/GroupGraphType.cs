@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -55,6 +56,7 @@ namespace LetsGame.Web.GraphQL.Types
             
             return events
                 .Where(x => x.ChosenDateAndTimeUtc == null)
+                .Where(x => x.Slots.Any(s => s.ProposedDateAndTimeUtc > DateTime.UtcNow))
                 .Select(x => new ProposedSessionGraphType(x));
         }
 
@@ -64,6 +66,7 @@ namespace LetsGame.Web.GraphQL.Types
             
             return events
                 .Where(x => x.ChosenDateAndTimeUtc != null)
+                .Where(x => x.ChosenDateAndTimeUtc > DateTime.UtcNow.AddHours(-6))
                 .Select(x => new UpcomingSessionGraphType(x));
         }
 
