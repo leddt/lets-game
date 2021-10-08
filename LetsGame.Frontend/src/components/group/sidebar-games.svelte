@@ -19,6 +19,7 @@
 <script>
   import tooltip from "@/lib/actions/tooltip";
   import Button from "@/components/ui/button.svelte";
+  import GameTile from "./game-tile.svelte";
   import { mutation } from "svelte-apollo";
 
   export let group;
@@ -52,47 +53,14 @@
 
 <div class="grid grid-cols-2 gap-2">
   {#each group?.games || [] as game (game.id)}
-    {#if game.igdbImageId}
-      <div
-        class="game"
-        style="background-image: url(https://images.igdb.com/igdb/image/upload/t_screenshot_med/{game.igdbImageId}.jpg)"
-        use:tooltip={game.name}
-      >
-        {#if isOwner}
-          <Button color="red" on:click={() => removeGame(game)}>&times;</Button>
-        {/if}
-      </div>
-    {:else}
-      <div class="game no-image">
-        <span>{game.name}</span>
-        {#if isOwner}
-          <Button color="red" on:click={() => removeGame(game)}>&times;</Button>
-        {/if}
-      </div>
-    {/if}
+    <GameTile {game}>
+      {#if isOwner}
+        <Button
+          class="absolute bottom-1 right-1"
+          color="red"
+          on:click={() => removeGame(game)}>&times;</Button
+        >
+      {/if}
+    </GameTile>
   {/each}
 </div>
-
-<style lang="postcss">
-  .game {
-    @apply border bg-cover bg-center w-full pb-[50%] rounded relative;
-  }
-
-  .game.no-image {
-    @apply border-gray-600;
-  }
-
-  .game.no-image span {
-    @apply absolute overflow-hidden px-1
-           w-full h-full flex items-center justify-center
-           text-sm text-center leading-tight;
-  }
-
-  .game :global(button) {
-    @apply hidden absolute bottom-1 right-1;
-  }
-
-  .game:hover :global(button) {
-    @apply block;
-  }
-</style>

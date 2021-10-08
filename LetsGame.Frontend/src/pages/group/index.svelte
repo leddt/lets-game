@@ -1,7 +1,6 @@
 <script>
   /*
   TODO:
-  - Use GameTile in SidebarGames
   - Live updates
   - Filter past events
   - Home page
