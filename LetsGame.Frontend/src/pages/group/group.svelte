@@ -6,9 +6,13 @@
   */
 
   import gql from "graphql-tag";
-  import { createEventDispatcher } from "svelte";
-  import { query } from "svelte-apollo";
+  import { createEventDispatcher, onDestroy } from "svelte";
+  import { query, subscribe } from "svelte-apollo";
   import { Route, useLocation, useNavigate } from "svelte-navigator";
+
+  import { upcomingSessionCardFragment } from "@/components/group/upcoming-session-card.svelte";
+  import { proposedSessionCardFragment } from "@/components/group/proposed-session-card.svelte";
+  import { sidebarFragment } from "@/components/group/group-sidebar.svelte";
 
   import CardList from "@/components/ui/card-list.svelte";
   import Section from "@/components/ui/section.svelte";
@@ -21,10 +25,6 @@
   import GroupProposeEvent from "./propose-event.svelte";
 
   import { copyToClipboard } from "@/lib/clipboard";
-
-  import { upcomingSessionCardFragment } from "@/components/group/upcoming-session-card.svelte";
-  import { proposedSessionCardFragment } from "@/components/group/proposed-session-card.svelte";
-  import { sidebarFragment } from "@/components/group/group-sidebar.svelte";
   import client from "@/lib/apollo";
 
   export let slug;
@@ -76,29 +76,31 @@
   $: isOwner = group?.self.role === "OWNER";
 
   $: if (group) {
-    client
-      .subscribe({
-        query: gql`
-          ${upcomingSessionCardFragment}
-          ${proposedSessionCardFragment}
-          ${sidebarFragment}
-          subscription WatchGroup($groupId: ID!) {
-            groupUpdated(groupId: $groupId) {
-              upcomingSessions {
-                ...upcomingSessionCard
-              }
-              proposedSessions {
-                ...proposedSessionCard
-              }
-              ...sidebar
+    const unsubscribe = subscribe(
+      gql`
+        ${upcomingSessionCardFragment}
+        ${proposedSessionCardFragment}
+        ${sidebarFragment}
+        subscription WatchGroup($groupId: ID!) {
+          groupUpdated(groupId: $groupId) {
+            upcomingSessions {
+              ...upcomingSessionCard
             }
+            proposedSessions {
+              ...proposedSessionCard
+            }
+            ...sidebar
           }
-        `,
+        }
+      `,
+      {
         variables: {
           groupId: group.id,
         },
-      })
-      .subscribe(() => {});
+      }
+    ).subscribe(() => {});
+
+    onDestroy(unsubscribe);
   }
 
   async function deleteGroup() {

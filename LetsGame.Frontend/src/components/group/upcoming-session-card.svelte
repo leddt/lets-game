@@ -33,9 +33,13 @@
 </script>
 
 <script>
+  import { onDestroy } from "svelte";
+  import { subscribe } from "svelte-apollo";
+
   import client from "@/lib/apollo";
   import { friendlyDateTime } from "@/lib/date-helpers";
   import { me } from "@/lib/store";
+
   import Card from "@/components/ui/card.svelte";
   import Button from "@/components/ui/button.svelte";
   import CircleButton from "@/components/ui/circle-button.svelte";
@@ -54,21 +58,23 @@
   $: isSessionCreator = session.creator.userId === $me?.id;
 
   $: if (session) {
-    client
-      .subscribe({
-        query: gql`
-          ${upcomingSessionCardFragment}
-          subscription WatchUpcomingSession($sessionId: ID!) {
-            upcomingSessionUpdated(sessionId: $sessionId) {
-              ...upcomingSessionCard
-            }
+    const unsubscribe = subscribe(
+      gql`
+        ${upcomingSessionCardFragment}
+        subscription WatchUpcomingSession($sessionId: ID!) {
+          upcomingSessionUpdated(sessionId: $sessionId) {
+            ...upcomingSessionCard
           }
-        `,
+        }
+      `,
+      {
         variables: {
           sessionId: session.id,
         },
-      })
-      .subscribe(() => {});
+      }
+    ).subscribe(() => {});
+
+    onDestroy(unsubscribe);
   }
 
   function join() {

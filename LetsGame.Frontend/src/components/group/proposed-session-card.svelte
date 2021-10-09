@@ -61,14 +61,18 @@
 </script>
 
 <script>
+  import { onDestroy } from "svelte";
   import { fade } from "svelte/transition";
+  import { subscribe } from "svelte-apollo";
   import throttle from "lodash/throttle.js";
+
   import Button from "@/components/ui/button.svelte";
   import Card from "@/components/ui/card.svelte";
   import CircleButton from "@/components/ui/circle-button.svelte";
   import Panel from "@/components/ui/panel.svelte";
   import FlexTrailer from "@/components/ui/flex-trailer.svelte";
   import AvatarList from "@/components/ui/avatar-list.svelte";
+
   import { friendlyDateTime } from "@/lib/date-helpers";
   import client from "@/lib/apollo";
   import { me } from "@/lib/store";
@@ -85,21 +89,23 @@
   $: canManageSession = isSessionCreator || isGroupOwner;
 
   $: if (session) {
-    client
-      .subscribe({
-        query: gql`
-          ${proposedSessionCardFragment}
-          subscription WatchProposedSession($sessionId: ID!) {
-            proposedSessionUpdated(sessionId: $sessionId) {
-              ...proposedSessionCard
-            }
+    const unsubscribe = subscribe(
+      gql`
+        ${proposedSessionCardFragment}
+        subscription WatchProposedSession($sessionId: ID!) {
+          proposedSessionUpdated(sessionId: $sessionId) {
+            ...proposedSessionCard
           }
-        `,
+        }
+      `,
+      {
         variables: {
           sessionId: session.id,
         },
-      })
-      .subscribe(() => {});
+      }
+    ).subscribe(() => {});
+
+    onDestroy(unsubscribe);
   }
 
   function isInSlot(slot) {
