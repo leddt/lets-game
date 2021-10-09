@@ -116,7 +116,6 @@ namespace LetsGame.Web
             });
             
             services.AddRazorPages();
-            services.AddSignalR();
 
             services.Configure<ItadOptions>(Configuration.GetSection("itad"));
             services.Configure<IgdbOptions>(Configuration.GetSection("igdb"));
@@ -228,7 +227,6 @@ namespace LetsGame.Web
                 endpoints.MapGraphQL();
                 endpoints.MapRazorPages();
                 endpoints.MapControllers();
-                // endpoints.MapHub<GroupHub>("/grouphub");
             });
 
             // Force login before going to SPA

@@ -47,7 +47,7 @@
           <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
         </PropertyGroup>
         
-        <Exec Command="npm ci"      Condition="$(RestorePackagesWithLockFile) == 'true'" WorkingDirectory="../LetsGame.Frontend" />
+        <Exec Command="npm ci" Condition="$(RestorePackagesWithLockFile) == 'true'" WorkingDirectory="../LetsGame.Frontend" />
         <Exec Command="npm install" Condition="$(RestorePackagesWithLockFile) != 'true'" WorkingDirectory="../LetsGame.Frontend" />
 
         <!-- Write the stamp file, so incremental builds work -->

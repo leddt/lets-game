@@ -1,10 +1,4 @@
 <script>
-  /*
-  TODO:
-  - Backend code cleanup
-  - Presence indicators? (nice to have)
-  */
-
   import gql from "graphql-tag";
   import { createEventDispatcher, onDestroy } from "svelte";
   import { query, subscribe } from "svelte-apollo";
