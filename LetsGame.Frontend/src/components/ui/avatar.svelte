@@ -18,7 +18,7 @@
       .split(" ")
       .map((x) => x[0].toUpperCase())
       .slice(0, 3)
-      .join();
+      .join("");
   }
 
   function getBackgroundColor(text) {
@@ -37,6 +37,8 @@
     <div
       use:tooltip={name}
       class:highlighted
+      class:text-sm={initials.length === 2}
+      class:text-xs={initials.length === 3}
       style="background-color: {backgroundColor};"
     >
       {initials}
@@ -46,6 +48,8 @@
   <div
     use:tooltip={name}
     class:highlighted
+    class:text-sm={initials.length === 2}
+    class:text-xs={initials.length === 3}
     style="background-color: {backgroundColor};"
   >
     {initials}
@@ -57,7 +61,7 @@
     @apply rounded-full w-10 h-10 
            flex items-center justify-center 
            cursor-default 
-           text-sm font-semibold
+           font-semibold
            select-none
            bg-gray-500 text-gray-100 
            border-2 border-gray-300;

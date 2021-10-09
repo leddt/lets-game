@@ -150,7 +150,7 @@ namespace LetsGame.Web.Services
         public async Task NotifyAllVotesIn(GroupEvent ev)
         {
             var creator = await _db.Memberships
-                .Include(x => x.User)
+                .Include(x => x.User).ThenInclude(x => x.PushSubscriptions)
                 .Where(x => x.GroupId == ev.GroupId && x.UserId == ev.CreatorId)
                 .FirstOrDefaultAsync();
 

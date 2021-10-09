@@ -1,13 +1,12 @@
 <script>
   /*
   TODO:
-  - Create group page + test empty states
   - Backend code cleanup
-  - Test full flow with two members
   - Presence indicators? (nice to have)
   */
 
   import gql from "graphql-tag";
+  import { createEventDispatcher } from "svelte";
   import { query } from "svelte-apollo";
   import { Route, useLocation, useNavigate } from "svelte-navigator";
 
@@ -32,6 +31,7 @@
 
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = createEventDispatcher();
 
   $: groupData = query(
     gql`
@@ -43,6 +43,10 @@
           id
           name
           sharingKey
+          slug
+          games {
+            id
+          }
           self {
             id
             role
@@ -111,6 +115,7 @@
       },
     });
 
+    dispatch("deleted");
     navigate("/");
   }
 
@@ -164,43 +169,53 @@
     <div class="flex flex-col sm:flex-row flex-grow">
       <Route path="/">
         <div class="p-4 flex flex-col flex-grow gap-4 min-w-0">
-          {#if group?.upcomingSessions?.length > 0}
-            <Section
-              title="Upcoming sessions ({group.upcomingSessions.length})"
-            >
-              <CardList>
-                {#each group.upcomingSessions as s (s.id)}
-                  <UpcomingSessionCard session={s} />
-                {/each}
-              </CardList>
-            </Section>
-          {/if}
-
-          {#if group?.proposedSessions}
-            <Section
-              title={"Proposed sessions" +
-                (group.proposedSessions.length > 0
-                  ? ` (${group.proposedSessions.length})`
-                  : "")}
-            >
-              <Button
-                color="green"
-                slot="right"
-                on:click={() => navigate("propose-event")}
+          {#if group?.games.length === 0}
+            <div class="text-xl text-gray-100">
+              Welcome to your new group!
+              <a href="/group/{group.slug}/add-game" class="text-blue-300">
+                Add a game
+              </a>
+              to get started.
+            </div>
+          {:else}
+            {#if group?.upcomingSessions?.length > 0}
+              <Section
+                title="Upcoming sessions ({group.upcomingSessions.length})"
               >
-                Propose new session
-              </Button>
-
-              {#if group.proposedSessions.length > 0}
                 <CardList>
-                  {#each group.proposedSessions as s (s.id)}
-                    <ProposedSessionCard session={s} />
+                  {#each group.upcomingSessions as s (s.id)}
+                    <UpcomingSessionCard session={s} />
                   {/each}
                 </CardList>
-              {:else}
-                <p>No session is being planned right now.</p>
-              {/if}
-            </Section>
+              </Section>
+            {/if}
+
+            {#if group?.proposedSessions}
+              <Section
+                title={"Proposed sessions" +
+                  (group.proposedSessions.length > 0
+                    ? ` (${group.proposedSessions.length})`
+                    : "")}
+              >
+                <Button
+                  color="green"
+                  slot="right"
+                  on:click={() => navigate("propose-event")}
+                >
+                  Propose new session
+                </Button>
+
+                {#if group.proposedSessions.length > 0}
+                  <CardList>
+                    {#each group.proposedSessions as s (s.id)}
+                      <ProposedSessionCard session={s} />
+                    {/each}
+                  </CardList>
+                {:else}
+                  <p>No session is being planned right now.</p>
+                {/if}
+              </Section>
+            {/if}
           {/if}
         </div>
 

@@ -81,5 +81,9 @@
         {/if}
       </div>
     {/each}
+
+    {#if group.members.length < 2}
+      <p>It's lonely in here... You should invite your friends to join you!</p>
+    {/if}
   </div>
 {/if}

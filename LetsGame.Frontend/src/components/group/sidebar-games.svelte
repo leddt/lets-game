@@ -17,7 +17,6 @@
 </script>
 
 <script>
-  import tooltip from "@/lib/actions/tooltip";
   import Button from "@/components/ui/button.svelte";
   import GameTile from "./game-tile.svelte";
   import { mutation } from "svelte-apollo";
@@ -51,16 +50,20 @@
   }
 </script>
 
-<div class="grid grid-cols-2 gap-2">
-  {#each group?.games || [] as game (game.id)}
-    <GameTile {game}>
-      {#if isOwner}
-        <Button
-          class="absolute bottom-1 right-1"
-          color="red"
-          on:click={() => removeGame(game)}>&times;</Button
-        >
-      {/if}
-    </GameTile>
-  {/each}
-</div>
+{#if group?.games.length === 0}
+  There are no games... yet!
+{:else}
+  <div class="grid grid-cols-2 gap-2">
+    {#each group?.games || [] as game (game.id)}
+      <GameTile {game}>
+        {#if isOwner}
+          <Button
+            class="absolute bottom-1 right-1"
+            color="red"
+            on:click={() => removeGame(game)}>&times;</Button
+          >
+        {/if}
+      </GameTile>
+    {/each}
+  </div>
+{/if}

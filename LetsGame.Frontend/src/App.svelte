@@ -9,6 +9,7 @@
 
   import HomePage from "./pages/home.svelte";
   import GroupPage from "./pages/group/group.svelte";
+  import CreateGroupPage from "./pages/create-group.svelte";
 
   setClient(client);
 
@@ -45,10 +46,15 @@
             <HomePage {groups} />
           </Route>
 
-          <Route path="/create-group">Create group</Route>
+          <Route path="/create-group">
+            <CreateGroupPage on:added={() => layoutData.refetch()} />
+          </Route>
 
           <Route path="group/:slug/*" let:params>
-            <GroupPage slug={params.slug} />
+            <GroupPage
+              on:deleted={() => layoutData.refetch()}
+              slug={params.slug}
+            />
           </Route>
         </div>
       </div>

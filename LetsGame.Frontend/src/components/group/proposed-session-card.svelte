@@ -36,6 +36,13 @@
         name
         igdbImageId
       }
+      group {
+        id
+        self {
+          id
+          role
+        }
+      }
       details
       ...sessionVotes
       reminderSentAtTime
@@ -74,6 +81,8 @@
 
   $: isInCantPlayList = session.cantPlays.find((x) => x.userId == $me?.id);
   $: isSessionCreator = session.creator.userId === $me?.id;
+  $: isGroupOwner = session.group.self.role === "OWNER";
+  $: canManageSession = isSessionCreator || isGroupOwner;
 
   $: if (session) {
     client
@@ -251,20 +260,24 @@
   <div class="flex flex-col gap-2 h-full">
     <div class="flex justify-between items-center">
       <h3>{session.game?.name || "Any game"}</h3>
-      {#if isSessionCreator}
+      {#if canManageSession}
         <Button color="red" tip="Cancel this session" on:click={deleteSession}>
           &times;
         </Button>
       {/if}
     </div>
     {#if session.details}
-      <p class="text-gray-500 font-light">{session.details}</p>
+      <p class="text-gray-500 font-light whitespace-pre-wrap">
+        {session.details}
+      </p>
     {/if}
     {#if session.missingVotes.length > 0}
       <div>
         Missing votes:
         <AvatarList people={session.missingVotes}>
-          <Button on:click={remind}>Send reminder</Button>
+          {#if canManageSession}
+            <Button on:click={remind}>Send reminder</Button>
+          {/if}
         </AvatarList>
         {#if session.reminderSentAtTime}
           <p class="text-xs">
@@ -300,11 +313,13 @@
               </div>
             {/if}
           </AvatarList>
-          <FlexTrailer>
-            <Button on:click={() => pick(slot.id)}
-              >Select as winning slot</Button
-            >
-          </FlexTrailer>
+          {#if canManageSession}
+            <FlexTrailer>
+              <Button on:click={() => pick(slot.id)}>
+                Select as winning slot
+              </Button>
+            </FlexTrailer>
+          {/if}
         </Panel>
       {/each}
 

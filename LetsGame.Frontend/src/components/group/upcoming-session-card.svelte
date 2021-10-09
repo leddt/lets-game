@@ -155,7 +155,9 @@
       {/if}
     </AvatarList>
     {#if session.details}
-      <p class="text-gray-500 font-light">{session.details}</p>
+      <p class="text-gray-500 font-light whitespace-pre-wrap">
+        {session.details}
+      </p>
     {/if}
     <FlexTrailer>
       <p class="text-xs">Session created by {session.creator.displayName}</p>

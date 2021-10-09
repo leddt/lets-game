@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using HotChocolate;
+using HotChocolate.AspNetCore.Authorization;
 using HotChocolate.Subscriptions;
 using HotChocolate.Types;
 using LetsGame.Web.Authorization;
@@ -10,7 +11,6 @@ using LetsGame.Web.Extensions;
 using LetsGame.Web.GraphQL.Types;
 using LetsGame.Web.Services;
 using LetsGame.Web.Services.Igdb.Models;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 
@@ -375,6 +375,16 @@ namespace LetsGame.Web.GraphQL
             var result = new GroupGraphType(group);
             await sender.Send(result);
             return new GroupPayload(result);
+        }
+
+        [Authorize]
+        public async Task<GroupPayload> CreateGroup(
+            string groupName, 
+            string displayName,
+            [Service] GroupService groupService)
+        {
+            var group = await groupService.CreateGroupAsync(groupName, displayName);
+            return new GroupPayload(new GroupGraphType(group));
         }
     }
 }

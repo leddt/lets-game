@@ -15,6 +15,9 @@
         id
         role
       }
+      members {
+        id
+      }
       ...sidebarMembers
       ...sidebarAvailability
       ...sidebarInvites
@@ -64,7 +67,9 @@
 <div>
   <div class="sm:w-72 pb-4 sm:pt-4 px-4 sm:pl-0 flex flex-col gap-4">
     <Section title="Members"><SidebarMembers {group} /></Section>
-    <Section title="Available?"><SidebarAvailability {group} /></Section>
+    {#if group?.members.length > 1}
+      <Section title="Available?"><SidebarAvailability {group} /></Section>
+    {/if}
     {#if group?.invites}
       <Section title="Invites">
         <div slot="right">
