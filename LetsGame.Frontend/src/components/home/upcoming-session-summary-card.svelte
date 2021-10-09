@@ -59,7 +59,7 @@
   on:click={() => navigate(`/group/${session.group.slug}`)}
 >
   <p>
-    <strong>{session.game.name}</strong> with
+    <strong>{session.game?.name || "Any game"}</strong> with
     <span class="text-blue-500">{session.group.name}</span>
   </p>
   <p class="text-gray-500">

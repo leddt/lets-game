@@ -26,7 +26,12 @@
     class="game-tile no-image {classNames}"
     on:click={() => dispatch("click")}
   >
-    <span>{game.name}</span>
+    <div>
+      <p>{game.name}</p>
+      {#if game.description}
+        <p class="italic">{game.description}</p>
+      {/if}
+    </div>
     <div class="slot">
       <slot />
     </div>
@@ -42,9 +47,9 @@
     @apply border-gray-600;
   }
 
-  .game-tile.no-image span {
+  .game-tile.no-image div {
     @apply absolute overflow-hidden px-1
-           w-full h-full flex items-center justify-center
+           w-full h-full flex flex-col items-center justify-evenly
            text-sm text-center leading-tight;
   }
 

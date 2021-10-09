@@ -24,6 +24,13 @@
 
   export let group;
 
+  const anyGame = {
+    id: null,
+    name: "Any game",
+    description: "I don't care what we play, let's game!",
+  };
+  $: selectableGames = [...group.games, anyGame];
+
   function toLocalTimeString(date) {
     return format(date, "yyyy-MM-dd'T'HH:mm:ss");
   }
@@ -70,7 +77,7 @@
     <div>
       <h3>Pick game</h3>
       <div class="flex flex-wrap gap-4">
-        {#each group.games as game (game.id)}
+        {#each selectableGames as game (game.id)}
           <div class="w-80">
             <GameTile
               {game}
@@ -111,7 +118,8 @@
     {#if dateTimes.length > 0}
       <div class="pt-4">
         <h3>Summary</h3>
-        Your {selectedGame.name} session will have {dateTimes.length}
+        Your {selectedGame === anyGame ? "gaming" : selectedGame.name} session will
+        have {dateTimes.length}
         {dateTimes.length > 1 ? "slots" : "slot"}:
         <ul class="list-disc mb-4">
           {#each dateTimes as dateTime}

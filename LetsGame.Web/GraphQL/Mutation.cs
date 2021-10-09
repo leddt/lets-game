@@ -301,7 +301,7 @@ namespace LetsGame.Web.GraphQL
             
             await groupService.ProposeEventAsync(
                 ID.ToLong<Group>(groupId),
-                ID.ToLong<GroupGame>(gameId),
+                gameId == null ? null : ID.ToLong<GroupGame>(gameId),
                 details,
                 utcDateTimes);
             
