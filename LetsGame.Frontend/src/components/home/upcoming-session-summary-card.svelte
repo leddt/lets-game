@@ -22,13 +22,35 @@
 </script>
 
 <script>
-  import Card from "@/components/ui/card.svelte";
+  import { onDestroy } from "svelte";
+  import { subscribe } from "svelte-apollo";
   import { useNavigate } from "svelte-navigator";
+  import Card from "@/components/ui/card.svelte";
   import { friendlyDateTime } from "@/lib/date-helpers";
 
   export let session;
 
   const navigate = useNavigate();
+
+  $: if (session) {
+    const unsubscribe = subscribe(
+      gql`
+        ${upcomingSessionSummaryCardFragment}
+        subscription WatchUpcomingSessionSummary($sessionId: ID!) {
+          upcomingSessionUpdated(sessionId: $sessionId) {
+            ...upcomingSessionSummaryCard
+          }
+        }
+      `,
+      {
+        variables: {
+          sessionId: session.id,
+        },
+      }
+    ).subscribe(() => {});
+
+    onDestroy(unsubscribe);
+  }
 </script>
 
 <Card

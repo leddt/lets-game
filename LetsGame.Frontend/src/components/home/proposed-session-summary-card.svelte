@@ -28,8 +28,10 @@
 </script>
 
 <script>
-  import Card from "@/components/ui/card.svelte";
+  import { onDestroy } from "svelte";
+  import { subscribe } from "svelte-apollo";
   import { useNavigate } from "svelte-navigator";
+  import Card from "@/components/ui/card.svelte";
   import { me } from "@/lib/store";
 
   export let session;
@@ -40,6 +42,26 @@
   $: didVote = !session.missingVotes.find((x) => x.userId === $me.id);
 
   const navigate = useNavigate();
+
+  $: if (session) {
+    const unsubscribe = subscribe(
+      gql`
+        ${proposedSessionSummaryCardFragment}
+        subscription WatchProposedSessionSummary($sessionId: ID!) {
+          proposedSessionUpdated(sessionId: $sessionId) {
+            ...proposedSessionSummaryCard
+          }
+        }
+      `,
+      {
+        variables: {
+          sessionId: session.id,
+        },
+      }
+    ).subscribe(() => {});
+
+    onDestroy(unsubscribe);
+  }
 </script>
 
 <Card
