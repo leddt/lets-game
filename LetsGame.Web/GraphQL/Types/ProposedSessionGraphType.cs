@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using HotChocolate;
 using HotChocolate.Resolvers;
 using LetsGame.Web.Data;
+using LetsGame.Web.Extensions;
 using LetsGame.Web.Services;
 using NodaTime;
 

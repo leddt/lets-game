@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using HotChocolate.Subscriptions;
 using LetsGame.Web.Data;
 using LetsGame.Web.Helpers;
 using LetsGame.Web.Services.Igdb;

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using HotChocolate;
+using HotChocolate.Subscriptions;
 using HotChocolate.Types;
 using LetsGame.Web.Authorization;
 using LetsGame.Web.Data;
@@ -22,7 +22,8 @@ namespace LetsGame.Web.GraphQL
         public async Task<SessionSlotPayload> VoteSlot(
             [GraphQLType(typeof(IdType))] string slotId, 
             [Service] GroupService groupService,
-            [Service] ApplicationDbContext db)
+            [Service] ApplicationDbContext db,
+            [Service] ITopicEventSender sender)
         {
             var id = ID.ToLong<GroupEventSlot>(slotId);
             
@@ -31,6 +32,9 @@ namespace LetsGame.Web.GraphQL
                 throw new Exception("Can't vote on confirmed event");
 
             await groupService.AddSlotVoteAsync(id);
+            
+            var session = new ProposedSessionGraphType(slot.Event);
+            await sender.Send(session);
             return new SessionSlotPayload(new SessionSlotGraphType(slot));
         }
 
@@ -38,7 +42,8 @@ namespace LetsGame.Web.GraphQL
         public async Task<SessionSlotPayload> UnvoteSlot(
             [GraphQLType(typeof(IdType))] string slotId, 
             [Service] GroupService groupService,
-            [Service] ApplicationDbContext db)
+            [Service] ApplicationDbContext db,
+            [Service] ITopicEventSender sender)
         {
             var id = ID.ToLong<GroupEventSlot>(slotId);
             
@@ -47,13 +52,18 @@ namespace LetsGame.Web.GraphQL
                 throw new Exception("Can't vote on confirmed event");
             
             await groupService.RemoveSlotVoteAsync(ID.ToLong<GroupEventSlot>(slotId));
+            
+            var session = new ProposedSessionGraphType(slot.Event);
+            await sender.Send(session);
             return new SessionSlotPayload(new SessionSlotGraphType(slot));
         }
 
+        [Authorize(Policy = AuthPolicies.ReadSession)]
         public async Task<UpcomingSessionPayload> JoinSession(
             [GraphQLType(typeof(IdType))] string sessionId, 
             [Service] GroupService groupService,
-            [Service] ApplicationDbContext db)
+            [Service] ApplicationDbContext db,
+            [Service] ITopicEventSender sender)
         {
             var id = ID.ToLong<GroupEvent>(sessionId);
 
@@ -66,13 +76,18 @@ namespace LetsGame.Web.GraphQL
             if (slot == null) throw new Exception("Can't find chosen slot");
 
             await groupService.AddSlotVoteAsync(slot.Id);
-            return new UpcomingSessionPayload(new UpcomingSessionGraphType(slot.Event));
+            
+            var result = new UpcomingSessionGraphType(slot.Event);
+            await sender.Send(result);
+            return new UpcomingSessionPayload(result);
         }
 
+        [Authorize(Policy = AuthPolicies.ReadSession)]
         public async Task<UpcomingSessionPayload> LeaveSession(
             [GraphQLType(typeof(IdType))] string sessionId, 
             [Service] GroupService groupService,
-            [Service] ApplicationDbContext db)
+            [Service] ApplicationDbContext db,
+            [Service] ITopicEventSender sender)
         {
             var id = ID.ToLong<GroupEvent>(sessionId);
 
@@ -85,14 +100,18 @@ namespace LetsGame.Web.GraphQL
             if (slot == null) throw new Exception("Can't find chosen slot");
 
             await groupService.RemoveSlotVoteAsync(slot.Id);
-            return new UpcomingSessionPayload(new UpcomingSessionGraphType(slot.Event));
+            
+            var result = new UpcomingSessionGraphType(slot.Event);
+            await sender.Send(result);
+            return new UpcomingSessionPayload(result);
         }
 
         [Authorize(Policy = AuthPolicies.ReadSession)]
         public async Task<ProposedSessionPayload> CantPlay(
             [GraphQLType(typeof(IdType))] string sessionId, 
             [Service] GroupService groupService,
-            [Service] ApplicationDbContext db)
+            [Service] ApplicationDbContext db,
+            [Service] ITopicEventSender sender)
         {
             var id = ID.ToLong<GroupEvent>(sessionId);
 
@@ -101,14 +120,18 @@ namespace LetsGame.Web.GraphQL
                 throw new Exception("Can't vote on confirmed event");
             
             await groupService.SetCantPlayAsync(id);
-            return new ProposedSessionPayload(new ProposedSessionGraphType(groupEvent));
+            
+            var result = new ProposedSessionGraphType(groupEvent);
+            await sender.Send(result);
+            return new ProposedSessionPayload(result);
         }
 
         [Authorize(Policy = AuthPolicies.ManageSession)]
         public async Task<ProposedSessionPayload> SendReminder(
             [GraphQLType(typeof(IdType))] string sessionId,
             [Service] INotificationService notificationService,
-            [Service] ApplicationDbContext db)
+            [Service] ApplicationDbContext db,
+            [Service] ITopicEventSender sender)
         {
             var id = ID.ToLong<GroupEvent>(sessionId);
 
@@ -117,14 +140,18 @@ namespace LetsGame.Web.GraphQL
                 throw new Exception("Can't send reminder on confirmed event");
             
             await notificationService.SendEventReminderAsync(id);
-            return new ProposedSessionPayload(new ProposedSessionGraphType(groupEvent));
+            
+            var result = new ProposedSessionGraphType(groupEvent);
+            await sender.Send(result);
+            return new ProposedSessionPayload(result);
         }
 
         [Authorize(Policy = AuthPolicies.ManageSlot)]
         public async Task<GroupPayload> SelectWinningSlot(
             [GraphQLType(typeof(IdType))] string slotId,
             [Service] GroupService groupService,
-            [Service] ApplicationDbContext db)
+            [Service] ApplicationDbContext db,
+            [Service] ITopicEventSender sender)
         {
             var id = ID.ToLong<GroupEventSlot>(slotId);
 
@@ -138,7 +165,9 @@ namespace LetsGame.Web.GraphQL
             
             await groupService.PickSlotAsync(ID.ToLong<GroupEventSlot>(slotId));
             
-            return new GroupPayload(new GroupGraphType(groupEvent.Group));
+            var result = new GroupGraphType(groupEvent.Group);
+            await sender.Send(result);
+            return new GroupPayload(result);
         }
 
         [Authorize(Policy = AuthPolicies.ManageGroup)]
@@ -146,14 +175,18 @@ namespace LetsGame.Web.GraphQL
             [GraphQLType(typeof(IdType))] string groupId,
             bool singleUse,
             [Service] GroupService groupService,
-            [Service] ApplicationDbContext db)
+            [Service] ApplicationDbContext db,
+            [Service] ITopicEventSender sender)
         {
             var id = ID.ToLong<Group>(groupId);
             
             await groupService.CreateInviteAsync(id, singleUse);
 
             var group = await db.Groups.FindAsync(id);
-            return new GroupPayload(new GroupGraphType(group));
+            
+            var result = new GroupGraphType(group);
+            await sender.Send(result);
+            return new GroupPayload(result);
         }
 
         [Authorize(Policy = AuthPolicies.ManageGroup)]
@@ -161,7 +194,8 @@ namespace LetsGame.Web.GraphQL
             [GraphQLType(typeof(IdType))] string groupId,
             string inviteCode,
             [Service] GroupService groupService,
-            [Service] ApplicationDbContext db)
+            [Service] ApplicationDbContext db,
+            [Service] ITopicEventSender sender)
         {
             var id = ID.ToLong<Group>(groupId);
             
@@ -173,8 +207,10 @@ namespace LetsGame.Web.GraphQL
             if (invite == null) throw new Exception("Invalid invite");
 
             await groupService.DeleteInviteAsync(inviteCode);
-
-            return new GroupPayload(new GroupGraphType(invite.Group));
+            
+            var result = new GroupGraphType(invite.Group);
+            await sender.Send(result);
+            return new GroupPayload(result);
         }
 
         [Authorize(Policy = AuthPolicies.ReadGroup)]
@@ -182,26 +218,34 @@ namespace LetsGame.Web.GraphQL
             [GraphQLType(typeof(IdType))] string groupId,
             int lengthInSeconds,
             [Service] GroupService groupService,
-            [Service] ApplicationDbContext db)
+            [Service] ApplicationDbContext db,
+            [Service] ITopicEventSender sender)
         {
             var id = ID.ToLong<Group>(groupId);
             await groupService.SetAvailableFor(id, lengthInSeconds);
 
             var group = await db.Groups.FindAsync(id);
-            return new GroupPayload(new GroupGraphType(group));
+            
+            var result = new GroupGraphType(group);
+            await sender.Send(result);
+            return new GroupPayload(result);
         }
         
         [Authorize(Policy = AuthPolicies.ReadGroup)]
         public async Task<GroupPayload> SetUnavailable(
             [GraphQLType(typeof(IdType))] string groupId,
             [Service] GroupService groupService,
-            [Service] ApplicationDbContext db)
+            [Service] ApplicationDbContext db,
+            [Service] ITopicEventSender sender)
         {
             var id = ID.ToLong<Group>(groupId);
             await groupService.SetAvailableFor(id, -1);
 
             var group = await db.Groups.FindAsync(id);
-            return new GroupPayload(new GroupGraphType(group));
+            
+            var result = new GroupGraphType(group);
+            await sender.Send(result);
+            return new GroupPayload(result);
         }
 
         [Authorize(Policy = AuthPolicies.ManageGroup)]
@@ -209,12 +253,16 @@ namespace LetsGame.Web.GraphQL
             [GraphQLType(typeof(IdType))] string groupId,
             [GraphQLType(typeof(IdType))] string gameId,
             [Service] GroupService groupService,
-            [Service] ApplicationDbContext db)
+            [Service] ApplicationDbContext db,
+            [Service] ITopicEventSender sender)
         {
             await groupService.AddGameToGroupAsync(ID.ToLong<Group>(groupId), ID.ToLong<Game>(gameId));
 
             var group = await db.Groups.FindAsync(ID.ToLong<Group>(groupId));
-            return new GroupPayload(new GroupGraphType(group));
+            
+            var result = new GroupGraphType(group);
+            await sender.Send(result);
+            return new GroupPayload(result);
         }
         
 
@@ -223,12 +271,16 @@ namespace LetsGame.Web.GraphQL
             [GraphQLType(typeof(IdType))] string groupId,
             [GraphQLType(typeof(IdType))] string gameId,
             [Service] GroupService groupService,
-            [Service] ApplicationDbContext db)
+            [Service] ApplicationDbContext db,
+            [Service] ITopicEventSender sender)
         {
             await groupService.RemoveGameFromGroupAsync(ID.ToLong<Group>(groupId), ID.ToLong<GroupGame>(gameId));
 
             var group = await db.Groups.FindAsync(ID.ToLong<Group>(groupId));
-            return new GroupPayload(new GroupGraphType(group));
+            
+            var result = new GroupGraphType(group);
+            await sender.Send(result);
+            return new GroupPayload(result);
         }
 
 
@@ -240,7 +292,8 @@ namespace LetsGame.Web.GraphQL
             string details,
             [Service] GroupService groupService,
             [Service] DateService dateService,
-            [Service] ApplicationDbContext db)
+            [Service] ApplicationDbContext db,
+            [Service] ITopicEventSender sender)
         {
             var utcDateTimes = dateTimes
                 .Select(x => dateService.ConvertFromUserLocalTimeToUtc(x))
@@ -253,7 +306,10 @@ namespace LetsGame.Web.GraphQL
                 utcDateTimes);
             
             var group = await db.Groups.FindAsync(ID.ToLong<Group>(groupId));
-            return new GroupPayload(new GroupGraphType(group));
+
+            var result = new GroupGraphType(group);
+            await sender.Send(result);
+            return new GroupPayload(result);
         }
 
         [Authorize(Policy = AuthPolicies.ManageGroup)]
@@ -261,14 +317,18 @@ namespace LetsGame.Web.GraphQL
             [GraphQLType(typeof(IdType))] string groupId,
             [GraphQLType(typeof(IdType))] string memberId,
             [Service] GroupService groupService,
-            [Service] ApplicationDbContext db)
+            [Service] ApplicationDbContext db,
+            [Service] ITopicEventSender sender)
         {
             var (_, userId) = MembershipGraphType.ParseMembershipId(memberId);
 
             await groupService.RemoveGroupMember(ID.ToLong<Group>(groupId), userId);
             
             var group = await db.Groups.FindAsync(ID.ToLong<Group>(groupId));
-            return new GroupPayload(new GroupGraphType(group));
+
+            var result = new GroupGraphType(group);
+            await sender.Send(result);
+            return new GroupPayload(result);
         }
 
         [Authorize(Policy = AuthPolicies.ManageGroup)]
@@ -284,10 +344,15 @@ namespace LetsGame.Web.GraphQL
         [Authorize(Policy = AuthPolicies.ReadGroup)]
         public async Task<bool> LeaveGroup(
             [GraphQLType(typeof(IdType))] string groupId,
-            [Service] GroupService groupService)
+            [Service] GroupService groupService,
+            [Service] ApplicationDbContext db,
+            [Service] ITopicEventSender sender)
         {
             await groupService.LeaveGroup(ID.ToLong<Group>(groupId));
 
+            var group = await db.Groups.FindAsync(groupId);
+            await sender.Send(new GroupGraphType(group));
+            
             return true;
         }
         
@@ -295,7 +360,8 @@ namespace LetsGame.Web.GraphQL
         public async Task<GroupPayload> DeleteSession(
             [GraphQLType(typeof(IdType))] string sessionId,
             [Service] GroupService groupService,
-            [Service] ApplicationDbContext db)
+            [Service] ApplicationDbContext db,
+            [Service] ITopicEventSender sender)
         {
             var id = ID.ToLong<GroupEvent>(sessionId);
             
@@ -305,7 +371,10 @@ namespace LetsGame.Web.GraphQL
                 .FirstOrDefaultAsync();
             
             await groupService.DeleteEvent(id);
-            return new GroupPayload(new GroupGraphType(group));
+            
+            var result = new GroupGraphType(group);
+            await sender.Send(result);
+            return new GroupPayload(result);
         }
     }
 }

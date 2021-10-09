@@ -9,6 +9,7 @@ using HotChocolate.Resolvers;
 using HotChocolate.Types;
 using LetsGame.Web.Authorization;
 using LetsGame.Web.Data;
+using LetsGame.Web.Extensions;
 using LetsGame.Web.GraphQL.Types;
 using LetsGame.Web.Services.Igdb;
 using Microsoft.AspNetCore.Identity;

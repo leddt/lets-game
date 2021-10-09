@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using LetsGame.Web.Data;
 using LetsGame.Web.GraphQL;
-using LetsGame.Web.Hubs;
 using LetsGame.Web.Infrastructure.AspNet;
 using LetsGame.Web.RecurringTasks;
 using LetsGame.Web.Services;
@@ -30,7 +29,6 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NodaTime;
-using Polly;
 using WebPush;
 
 namespace LetsGame.Web
@@ -159,6 +157,8 @@ namespace LetsGame.Web
                 .AddAuthorization()
                 .AddQueryType<Query>()
                 .AddMutationType<Mutation>()
+                .AddSubscriptionType<Subscription>()
+                .AddInMemorySubscriptions()
                 .ConfigureSchema(x => x.AddType<LocalDateTimeType>());
             
             // SPA Services
@@ -220,6 +220,8 @@ namespace LetsGame.Web
 
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.UseWebSockets();
 
             app.UseEndpoints(endpoints =>
             {

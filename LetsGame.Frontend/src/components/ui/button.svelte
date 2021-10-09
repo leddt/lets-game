@@ -33,7 +33,7 @@
 
   button.red {
     @apply from-red-200 to-red-300 border-red-300
-             hover:from-red-600 hover:to-red-900 hover:text-red-200 hover:border-red-900;
+           hover:from-red-600 hover:to-red-900 hover:text-red-200 hover:border-red-900;
   }
 
   button.green {

@@ -7,6 +7,7 @@ using HotChocolate;
 using HotChocolate.Resolvers;
 using LetsGame.Web.Authorization;
 using LetsGame.Web.Data;
+using LetsGame.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 

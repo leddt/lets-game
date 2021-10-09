@@ -53,6 +53,24 @@
   );
   $: isSessionCreator = session.creator.userId === $me?.id;
 
+  $: if (session) {
+    client
+      .subscribe({
+        query: gql`
+          ${upcomingSessionCardFragment}
+          subscription WatchUpcomingSession($sessionId: ID!) {
+            upcomingSessionUpdated(sessionId: $sessionId) {
+              ...upcomingSessionCard
+            }
+          }
+        `,
+        variables: {
+          sessionId: session.id,
+        },
+      })
+      .subscribe(() => {});
+  }
+
   function join() {
     return client.mutate({
       mutation: gql`

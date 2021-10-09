@@ -4,6 +4,7 @@ using HotChocolate;
 using HotChocolate.Resolvers;
 using HotChocolate.Types;
 using LetsGame.Web.Data;
+using LetsGame.Web.Extensions;
 using LetsGame.Web.Services;
 using NodaTime;
 

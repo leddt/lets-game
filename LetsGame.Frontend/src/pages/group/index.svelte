@@ -1,7 +1,6 @@
 <script>
   /*
   TODO:
-  - Live updates
   - Home page
   - Create group page + test empty states
   - Backend code cleanup
@@ -72,6 +71,32 @@
   $: isMainGroupPage = $location.pathname === mainGroupPage;
   $: icalLink = `${window.location.origin}/group/${slug}.ics?k=${group?.sharingKey}`;
   $: isOwner = group?.self.role === "OWNER";
+
+  $: if (group) {
+    client
+      .subscribe({
+        query: gql`
+          ${upcomingSessionCardFragment}
+          ${proposedSessionCardFragment}
+          ${sidebarFragment}
+          subscription WatchGroup($groupId: ID!) {
+            groupUpdated(groupId: $groupId) {
+              upcomingSessions {
+                ...upcomingSessionCard
+              }
+              proposedSessions {
+                ...proposedSessionCard
+              }
+              ...sidebar
+            }
+          }
+        `,
+        variables: {
+          groupId: group.id,
+        },
+      })
+      .subscribe(() => {});
+  }
 
   async function deleteGroup() {
     if (!confirm(`Delete ${group.name} forever?`)) return;

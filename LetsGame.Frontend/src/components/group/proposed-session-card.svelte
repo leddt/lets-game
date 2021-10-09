@@ -75,6 +75,24 @@
   $: isInCantPlayList = session.cantPlays.find((x) => x.userId == $me?.id);
   $: isSessionCreator = session.creator.userId === $me?.id;
 
+  $: if (session) {
+    client
+      .subscribe({
+        query: gql`
+          ${proposedSessionCardFragment}
+          subscription WatchProposedSession($sessionId: ID!) {
+            proposedSessionUpdated(sessionId: $sessionId) {
+              ...proposedSessionCard
+            }
+          }
+        `,
+        variables: {
+          sessionId: session.id,
+        },
+      })
+      .subscribe(() => {});
+  }
+
   function isInSlot(slot) {
     return !!slot?.voters?.find((x) => x.userId === $me.id);
   }

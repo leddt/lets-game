@@ -2,6 +2,7 @@
 using HotChocolate.Resolvers;
 using HotChocolate.Types;
 using LetsGame.Web.Data;
+using LetsGame.Web.Extensions;
 
 namespace LetsGame.Web.GraphQL.Types
 {

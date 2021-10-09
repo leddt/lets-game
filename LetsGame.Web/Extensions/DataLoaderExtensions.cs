@@ -9,7 +9,7 @@ using HotChocolate.Types;
 using LetsGame.Web.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace LetsGame.Web.GraphQL
+namespace LetsGame.Web.Extensions
 {
     public static class DataLoaderExtensions
     {
