@@ -4,4 +4,6 @@ bin
 obj
 pg_embed
 
+LetsGame.Web/ClientApp
+
 *.user
