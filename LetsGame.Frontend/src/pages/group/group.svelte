@@ -1,7 +1,6 @@
 <script>
   /*
   TODO:
-  - Home page
   - Create group page + test empty states
   - Backend code cleanup
   - Test full flow with two members

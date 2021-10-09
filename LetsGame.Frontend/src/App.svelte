@@ -7,7 +7,8 @@
   import AppHeader from "./components/app/app-header.svelte";
   import AppSidebar from "./components/app/app-sidebar.svelte";
 
-  import GroupIndex from "./pages/group/index.svelte";
+  import HomePage from "./pages/home.svelte";
+  import GroupPage from "./pages/group/group.svelte";
 
   setClient(client);
 
@@ -40,12 +41,14 @@
         >
           <AppSidebar {groups} />
 
-          <Route path="/">Home</Route>
+          <Route path="/">
+            <HomePage {groups} />
+          </Route>
 
           <Route path="/create-group">Create group</Route>
 
           <Route path="group/:slug/*" let:params>
-            <GroupIndex slug={params.slug} />
+            <GroupPage slug={params.slug} />
           </Route>
         </div>
       </div>

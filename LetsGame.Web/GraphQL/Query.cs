@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -14,6 +15,7 @@ using LetsGame.Web.GraphQL.Types;
 using LetsGame.Web.Services.Igdb;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace LetsGame.Web.GraphQL
 {
@@ -63,6 +65,43 @@ namespace LetsGame.Web.GraphQL
                 : new GroupGraphType(group);
         }
 
+        [Authorize, UseDbContext(typeof(ApplicationDbContext))]
+        public async Task<IEnumerable<UpcomingSessionGraphType>> GetUpcomingSessions(
+            ClaimsPrincipal user,
+            [Service] UserManager<AppUser> userManager,
+            [ScopedService] ApplicationDbContext db)
+        {
+            var userId = userManager.GetUserId(user);
+            var threshold = DateTime.UtcNow.AddHours(-3);
+
+            var sessions = await db.GroupEvents
+                .Include(x => x.Slots)
+                .Where(x => x.Group.Memberships.Any(m => m.UserId == userId))
+                .Where(x => x.ChosenDateAndTimeUtc > threshold)
+                .ToListAsync();
+
+            return sessions.Select(x => new UpcomingSessionGraphType(x));
+        }
+
+        [Authorize, UseDbContext(typeof(ApplicationDbContext))]
+        public async Task<IEnumerable<ProposedSessionGraphType>> GetProposedSessions(
+            ClaimsPrincipal user,
+            [Service] UserManager<AppUser> userManager,
+            [ScopedService] ApplicationDbContext db)
+        {
+            var userId = userManager.GetUserId(user);
+
+            var sessions = await db.GroupEvents
+                .Include(x => x.Slots)
+                .Where(x => x.Group.Memberships.Any(m => m.UserId == userId))
+                .Where(x => x.ChosenDateAndTimeUtc == null)
+                .Where(x => x.Slots.Any(s => s.ProposedDateAndTimeUtc > DateTime.UtcNow))
+                .ToListAsync();
+
+            return sessions.Select(x => new ProposedSessionGraphType(x));
+        }
+
+        [Authorize]
         public async Task<IEnumerable<GameSearchResult>> SearchGames(string term, [Service] IGameSearcher searcher)
         {
             var results = await searcher.SearchGamesAsync(term);
