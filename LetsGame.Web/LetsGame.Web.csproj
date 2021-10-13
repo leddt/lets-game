@@ -7,30 +7,61 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Content Include="./ClientApp/**/*">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+    
+    <ItemGroup>
         <PackageReference Include="AspNet.Security.OpenId.Steam" Version="5.0.0" />
+        <PackageReference Include="HotChocolate.AspNetCore" Version="12.0.0" />
+        <PackageReference Include="HotChocolate.AspNetCore.Authorization" Version="12.0.0" />
+        <PackageReference Include="HotChocolate.Data.EntityFramework" Version="12.0.0" />
+        <PackageReference Include="HotChocolate.Types.NodaTime" Version="12.0.0" />
         <PackageReference Include="Ical.Net" Version="4.1.11" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="5.0.2" />
         <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="5.0.2" />
         <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="5.0.1" />
         <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="5.0.1" />
         <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="5.0.1" />
+        <PackageReference Include="Microsoft.AspNetCore.SpaServices" Version="3.1.19" />
+        <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="5.0.10" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="5.0.1" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="5.0.1" />
         <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.9" />
         <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="5.0.1" />
         <PackageReference Include="MysticMind.PostgresEmbed" Version="1.5.0" />
+        <PackageReference Include="NodaTime" Version="3.0.6" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="5.0.1" />
         <PackageReference Include="SendGrid" Version="9.22.0" />
         <PackageReference Include="System.Text.Encoding.CodePages" Version="5.0.0" />
         <PackageReference Include="WebPush" Version="1.0.11" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="wwwroot\lib\qrcodejs" />
-    </ItemGroup>
+    <!--
+        1. Install npm packages
+        "Inputs" and "Outputs" are used for incremental builds. If all output items are up-to-date, MSBuild skips the target.
+        The first time the task is executed. Then, it only runs when you change the package.json file.
+        Documentation: https://docs.microsoft.com/en-us/visualstudio/msbuild/incremental-builds?WT.mc_id=DT-MVP-5003978
+     -->
+    <Target Name="NpmInstall" Inputs="package.json" Outputs="node_modules/.install-stamp">
+        <PropertyGroup>
+          <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+        </PropertyGroup>
+        
+        <Exec Command="npm ci" Condition="$(RestorePackagesWithLockFile) == 'true'" WorkingDirectory="../LetsGame.Frontend" />
+        <Exec Command="npm install" Condition="$(RestorePackagesWithLockFile) != 'true'" WorkingDirectory="../LetsGame.Frontend" />
 
-    <ItemGroup>
-      <None Remove="ScaffoldingReadMe.txt" />
-    </ItemGroup>
+        <!-- Write the stamp file, so incremental builds work -->
+        <Touch Files="../LetsGame.Frontend/node_modules/.install-stamp" AlwaysCreate="true" />
+    </Target>
 
+    <!--
+        2. Run npm run build before building the .NET project.
+        MSBuild runs NpmInstall before this task because of the DependsOnTargets attribute.
+     -->
+    <Target Name="NpmRunBuild" DependsOnTargets="NpmInstall" BeforeTargets="BeforeBuild" Condition="'$(Configuration)' == 'Release' And '$(PublishProtocol)'==''">
+        <Exec Command="npm run build" WorkingDirectory="../LetsGame.Frontend" />
+    </Target>
+    
 </Project>

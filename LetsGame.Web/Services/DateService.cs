@@ -1,26 +1,48 @@
 ﻿using System;
 using LetsGame.Web.Data;
 using Microsoft.Extensions.Configuration;
+using NodaTime;
+using NodaTime.TimeZones;
 
 namespace LetsGame.Web.Services
 {
     public class DateService
     {
-        private readonly string _localTimezone;
+        private readonly IDateTimeZoneProvider _dateTimeZoneProvider;
         
-        public DateService(IConfiguration config)
+        private readonly string _localTimezone;
+
+        public DateService(IConfiguration config, IDateTimeZoneProvider dateTimeZoneProvider)
         {
+            _dateTimeZoneProvider = dateTimeZoneProvider;
+            
             _localTimezone = config["LocalTimezone"];
         }
 
         public DateTime ConvertFromUserTimezoneToUtc(DateTime dt, AppUser userOverride = null)
         {
-            return dt - GetUserTimeZone(userOverride).GetUtcOffset(dt);
+            return dt - GetUserTimeZoneInfo(userOverride).GetUtcOffset(dt);
         }
 
         public DateTime ConvertFromUtcToUserTimezone(DateTime dt, AppUser userOverride = null)
         {
-            return dt + GetUserTimeZone(userOverride).GetUtcOffset(dt);
+            return dt + GetUserTimeZoneInfo(userOverride).GetUtcOffset(dt);
+        }
+
+        public LocalDateTime ConvertFromUtcToUserLocalTime(DateTime dt, AppUser userOverride = null)
+        {
+            dt = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+            
+            return Instant.FromDateTimeUtc(dt)
+                .InZone(GetUserDateTimeZone(userOverride))
+                .LocalDateTime;
+        }
+
+        public DateTime ConvertFromUserLocalTimeToUtc(LocalDateTime localTime, AppUser userOverride = null)
+        {
+            return localTime
+                .InZone(GetUserDateTimeZone(userOverride), Resolvers.LenientResolver)
+                .ToDateTimeUtc();
         }
 
         public DateTime RemoveSeconds(DateTime dt)
@@ -28,10 +50,16 @@ namespace LetsGame.Web.Services
             return dt.AddSeconds(-dt.Second);
         }
 
-        private TimeZoneInfo GetUserTimeZone(AppUser userOverride = null)
+        private TimeZoneInfo GetUserTimeZoneInfo(AppUser userOverride = null)
         {
             // TODO: Implement user timezone preference
             return TimeZoneInfo.FindSystemTimeZoneById(_localTimezone);
+        }
+
+        private DateTimeZone GetUserDateTimeZone(AppUser userOverride = null)
+        {
+            // TODO: Implement user timezone preference
+            return _dateTimeZoneProvider.GetZoneOrNull(_localTimezone);
         }
 
         public string FormatUtcToUserFriendlyDate(DateTime dt, AppUser userOverride = null)

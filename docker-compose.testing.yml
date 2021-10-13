@@ -1,0 +1,24 @@
+services:
+  web:
+    build: .
+    ports: 
+      - "8080:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    links:
+      - postgres
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/lets_game_pg
+      LocalTimezone: America/Toronto
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: lets_game_pg
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5

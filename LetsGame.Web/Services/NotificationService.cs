@@ -150,7 +150,7 @@ namespace LetsGame.Web.Services
         public async Task NotifyAllVotesIn(GroupEvent ev)
         {
             var creator = await _db.Memberships
-                .Include(x => x.User)
+                .Include(x => x.User).ThenInclude(x => x.PushSubscriptions)
                 .Where(x => x.GroupId == ev.GroupId && x.UserId == ev.CreatorId)
                 .FirstOrDefaultAsync();
 
@@ -372,29 +372,10 @@ namespace LetsGame.Web.Services
         private string GetGroupUrl(Group group)
         {
             if (_httpContextAccessor.HttpContext == null)
-            {
-                return _linkGenerator.GetPathByPage(
-                    "/Groups/Group",
-                    null,
-                    new {slug = group.Slug});
-            }
-            else
-            {
-                return _linkGenerator.GetUriByPage(
-                    _httpContextAccessor.HttpContext,
-                    "/Groups/Group",
-                    null,
-                    new {slug = group.Slug});
-                
-                // var urlHelper = _urlHelperFactory.GetUrlHelper(_actionContextAccessor.ActionContext);
-                //
-                // return urlHelper.Page(
-                //     pageName: "/Groups/Group",
-                //     pageHandler: null,
-                //     values: new {slug = group.Slug},
-                //     protocol: _httpContextAccessor.HttpContext?.Request.Scheme ?? "http"
-                // );
-            }
+                return $"/group/{group.Slug}";
+
+            var request = _httpContextAccessor.HttpContext.Request;
+            return $"{request.Scheme}://{request.Host}/group/{@group.Slug}";
         }
         
         private string GetOtherMemberNames(IEnumerable<Membership> members, Membership except)

@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Moq;
+using NodaTime;
 using Xunit;
 
 namespace LetsGame.Tests.Services
@@ -46,7 +47,7 @@ namespace LetsGame.Tests.Services
             _autoMocker.SetInstance(new UserManager<AppUser>(
                 new UserStore<AppUser>(_db),
                 null, null, null, null, null, null, null, null));
-            _autoMocker.SetInstance(new DateService(config));
+            _autoMocker.SetInstance(new DateService(config, DateTimeZoneProviders.Bcl));
 
             _autoMocker.GetMock<ICurrentUserAccessor>()
                 .Setup(x => x.CurrentUser)

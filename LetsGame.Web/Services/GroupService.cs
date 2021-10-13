@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using HotChocolate.Subscriptions;
 using LetsGame.Web.Data;
 using LetsGame.Web.Helpers;
 using LetsGame.Web.Services.Igdb;
@@ -84,6 +85,20 @@ namespace LetsGame.Web.Services
             };
 
             _db.GroupGames.Add(groupGame);
+            await _db.SaveChangesAsync();
+        }
+
+        public async Task RemoveGameFromGroupAsync(long groupId, long groupGameId)
+        {
+            await EnsureIsGroupOwnerAsync(groupId);
+            
+            var groupGame = await _db.GroupGames
+                .FirstOrDefaultAsync(x => x.GroupId == groupId &&
+                                          x.Id == groupGameId);
+            
+            if (groupGame == null) return;
+
+            _db.GroupGames.Remove(groupGame);
             await _db.SaveChangesAsync();
         }
 
@@ -314,6 +329,68 @@ namespace LetsGame.Web.Services
             await _db.SaveChangesAsync();
 
             await _notificationService.NotifyEventAdded(groupEvent);
+        }
+
+        public async Task SetAvailableFor(long groupId, int lengthInSeconds)
+        {
+            var member = await _db.Memberships
+                .Include(x => x.Group)
+                .Where(x => x.GroupId == groupId)
+                .Where(x => x.UserId == CurrentUserId)
+                .FirstOrDefaultAsync();
+            
+            if (member != null)
+            {
+                var wasAvailable = member.IsAvailableNow();
+
+                var utcNow = DateTime.UtcNow;
+                member.AvailableUntilUtc = utcNow + TimeSpan.FromSeconds(lengthInSeconds);
+                await _db.SaveChangesAsync();
+
+                if (member.IsAvailableNow() &&
+                    !wasAvailable &&
+                    (member.AvailabilityNotificationSentAtUtc == null ||
+                     member.AvailabilityNotificationSentAtUtc < utcNow - TimeSpan.FromHours(1)))
+                {
+                    member.AvailabilityNotificationSentAtUtc = utcNow;
+                    await _db.SaveChangesAsync();
+
+                    await _notificationService.NotifyMemberAvailable(member.Group, member);
+                }
+            }
+        }
+
+        public async Task DeleteEvent(long eventId)
+        {
+            var ev = await _db.GroupEvents
+                .Where(x => x.CreatorId == CurrentUserId ||
+                            x.Group.Memberships.Any(m => m.Role == GroupRole.Owner && m.UserId == CurrentUserId))
+                .FirstOrDefaultAsync(x => x.Id == eventId);
+
+            if (ev != null)
+            {
+                _db.GroupEvents.Remove(ev);
+                await _db.SaveChangesAsync();
+            }
+        }
+
+        public async Task DeleteGroup(long groupId)
+        {
+            var group = await _db.Groups
+                .Include(x => x.Events)
+                .FirstOrDefaultAsync(x =>
+                    x.Id == groupId &&
+                    x.Memberships.Any(m => m.Role == GroupRole.Owner &&
+                                           m.User.Id == CurrentUserId));
+
+            if (group != null)
+            {
+                if (group.Events.Any()) 
+                    _db.GroupEvents.RemoveRange(group.Events);
+                
+                _db.Groups.Remove(group);
+                await _db.SaveChangesAsync();
+            }
         }
 
         private string CurrentUserId => _userManager.GetUserId(_currentUserAccessor.CurrentUser);

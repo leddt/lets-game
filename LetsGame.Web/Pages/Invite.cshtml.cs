@@ -36,7 +36,7 @@ namespace LetsGame.Web.Pages
                 var membership = await db.Memberships.FirstOrDefaultAsync(x => x.UserId == userId && x.GroupId == Invite.GroupId);
 
                 if (membership != null)
-                    return RedirectToPage("/Groups/Group", new {slug = Invite.Group.Slug});
+                    return Redirect($"/group/{Invite.Group.Slug}");
             }
 
             return Page();
@@ -58,7 +58,7 @@ namespace LetsGame.Web.Pages
             
             var group = await groupService.AcceptInviteAsync(DisplayName, id);
             
-            return RedirectToPage("/Groups/Group", new {slug = group.Slug});
+            return Redirect($"/group/{group.Slug}");
         }
 
         private async Task LoadInvite(ApplicationDbContext db, string id)
