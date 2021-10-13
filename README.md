@@ -8,16 +8,21 @@ Live version at http://gaming.leddt.com
 - ASP.NET Core Razor Pages
 - Entity Framework Core
 - PostgreSQL
-- Bootstrap 4
+- Svelte
+- Tailwind
 
 ## Developer setup
 
 - [Install .Net 5 SDK](https://dotnet.microsoft.com/download/dotnet/5.0)
+- [Install Node v14+](https://nodejs.org/en/download/)
 - Clone the repo and cd into it
 - Run `dotnet restore`
 - Run `dotnet build`
 - Run `dotnet run -p LetsGame.Web`
-- Access the app at `https://localhost:5001`
+- In another terminal, cd into `LetsGame.Frontend`
+- Run `npm ci`
+- Run `npm run dev`
+- Access the app at `http://localhost:5000`
 - Press `Ctrl-C` in your terminal to stop the app
 
 ### Database
