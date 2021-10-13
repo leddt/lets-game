@@ -60,7 +60,7 @@
         2. Run npm run build before building the .NET project.
         MSBuild runs NpmInstall before this task because of the DependsOnTargets attribute.
      -->
-    <Target Name="NpmRunBuild" DependsOnTargets="NpmInstall" BeforeTargets="BeforeBuild" Condition="'$(Configuration)' == 'Release' And '$(PublishProtocol)'==''">
+    <Target Name="NpmRunBuild" DependsOnTargets="NpmInstall" BeforeTargets="BeforeBuild" Condition="'$(Configuration)' == 'Release'">
         <Exec Command="npm run build" WorkingDirectory="../LetsGame.Frontend" />
     </Target>
     

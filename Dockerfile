@@ -20,7 +20,7 @@ WORKDIR "/src/LetsGame.Web"
 RUN dotnet build "LetsGame.Web.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "LetsGame.Web.csproj" -c Release -o /app/publish
+RUN dotnet publish "LetsGame.Web.csproj" --no-build -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
