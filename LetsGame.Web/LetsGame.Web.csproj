@@ -7,7 +7,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Content Include="./ClientApp/**/*" />
+        <Content Include="./ClientApp/**/*">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
     </ItemGroup>
     
     <ItemGroup>
@@ -58,7 +60,7 @@
         2. Run npm run build before building the .NET project.
         MSBuild runs NpmInstall before this task because of the DependsOnTargets attribute.
      -->
-    <Target Name="NpmRunBuild" DependsOnTargets="NpmInstall" BeforeTargets="BeforeBuild" Condition="'$(Configuration)' == 'Release' ">
+    <Target Name="NpmRunBuild" DependsOnTargets="NpmInstall" BeforeTargets="BeforeBuild" Condition="'$(Configuration)' == 'Release' And '$(PublishProtocol)'==''">
         <Exec Command="npm run build" WorkingDirectory="../LetsGame.Frontend" />
     </Target>
     
