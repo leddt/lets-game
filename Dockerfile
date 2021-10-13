@@ -6,7 +6,7 @@ EXPOSE 80
 EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:5.0-buster-slim AS build
-
+ 
 RUN apt-get update -yq \
     && apt-get install curl gnupg -yq \
     && curl -sL https://deb.nodesource.com/setup_14.x | bash \
@@ -15,12 +15,22 @@ RUN apt-get update -yq \
 WORKDIR /src
 COPY ["LetsGame.Web/LetsGame.Web.csproj", "LetsGame.Web/"]
 RUN dotnet restore "LetsGame.Web/LetsGame.Web.csproj"
+
+COPY ["LetsGame.Frontend/package.json", "LetsGame.Frontend/package-lock.json", "LetsGame.Frontend/"]
+WORKDIR "/src/LetsGame.Frontend"
+RUN npm ci
+
+WORKDIR /src
 COPY . .
+
+WORKDIR "/src/LetsGame.Frontend"
+RUN npm run build
+
 WORKDIR "/src/LetsGame.Web"
 RUN dotnet build "LetsGame.Web.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "LetsGame.Web.csproj" --no-build -c Release -o /app/publish
+RUN dotnet publish "LetsGame.Web.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
