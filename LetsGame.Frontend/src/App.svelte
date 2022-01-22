@@ -38,7 +38,7 @@
         <AppHeader me={$me} />
 
         <div
-          class="flex flex-col sm:flex-row flex-grow flex-shrink overflow-y-hidden"
+          class="flex flex-col sm:flex-row flex-grow flex-shrink sm:overflow-y-hidden"
         >
           <AppSidebar {groups} />
 

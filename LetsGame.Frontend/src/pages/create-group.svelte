@@ -38,7 +38,7 @@
 </script>
 
 <div class="flex-grow p-4">
-  <div class="flex-grow overflow-y-auto">
+  <div class="flex-grow sm:overflow-y-auto">
     <div class="p-4 max-w-2xl m-auto">
       <div class="text-gray-100 text-xl">
         <div class="text-6xl font-thin mb-16">Create new group</div>

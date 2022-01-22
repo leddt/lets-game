@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply text-gray-800 bg-gray-500 overflow-hidden;
+    @apply text-gray-800 bg-gray-500 sm:overflow-hidden;
   }
   h1 {
     @apply font-medium text-4xl;

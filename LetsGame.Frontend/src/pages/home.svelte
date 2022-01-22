@@ -35,7 +35,7 @@
   $: proposedSessions = $sessionsData.data?.proposedSessions;
 </script>
 
-<div class="flex-grow overflow-y-auto">
+<div class="flex-grow sm:overflow-y-auto">
   <div class="p-4 max-w-5xl m-auto">
     <div class="text-gray-100 text-xl text-center">
       <div class="text-6xl sm:text-8xl font-thin mb-16">Welcome</div>

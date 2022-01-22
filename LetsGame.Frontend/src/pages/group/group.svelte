@@ -137,7 +137,7 @@
   }
 </script>
 
-<div class="flex flex-col flex-grow min-w-0 overflow-y-scroll">
+<div class="flex flex-col flex-grow min-w-0 sm:overflow-y-scroll">
   {#if $groupData.data}
     <div
       class="p-4 bg-gray-600 text-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between"
