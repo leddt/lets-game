@@ -20,7 +20,8 @@ namespace LetsGame.Web.RecurringTasks
             var utcThreshold = DateTime.UtcNow - TimeSpan.FromDays(1);
             
             var events = await _db.GroupEvents
-                .Where(x => x.ChosenDateAndTimeUtc < utcThreshold)
+                .Where(x => x.ChosenDateAndTimeUtc < utcThreshold ||
+                            x.Slots.All(s => s.ProposedDateAndTimeUtc < utcThreshold))
                 .ToListAsync();
 
             Console.WriteLine("{0} events to delete", events.Count);
