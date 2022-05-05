@@ -98,7 +98,14 @@ namespace LetsGame.Web.Services
             
             if (groupGame == null) return;
 
+            var events = await _db.GroupEvents
+                .Where(x => x.GroupId == groupId && 
+                            x.GameId == groupGameId)
+                .ToListAsync();
+
+            _db.GroupEvents.RemoveRange(events);
             _db.GroupGames.Remove(groupGame);
+            
             await _db.SaveChangesAsync();
         }
 
