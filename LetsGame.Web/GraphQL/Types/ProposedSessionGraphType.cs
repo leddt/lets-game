@@ -22,6 +22,7 @@ namespace LetsGame.Web.GraphQL.Types
             var result = await context.LoadSlotsByEventId(GroupEvent.Id);
             return result
                 .Where(x => x.ProposedDateAndTimeUtc > DateTime.UtcNow)
+                .OrderBy(x => x.ProposedDateAndTimeUtc)
                 .Select(x => new SessionSlotGraphType(x));
         }
 
