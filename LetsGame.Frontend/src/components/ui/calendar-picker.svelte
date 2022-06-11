@@ -58,14 +58,14 @@
   }
 
   function toggleDate(date) {
-    isPicked(date) ? addPickedDate(date) : removePickedDate(date);
-  }
-
-  function addPickedDate(date) {
-    pickedDates = pickedDates.filter((x) => !isSameDay(x, date));
+    isPicked(date) ? removePickedDate(date) : addPickedDate(date);
   }
 
   function removePickedDate(date) {
+    pickedDates = pickedDates.filter((x) => !isSameDay(x, date));
+  }
+
+  function addPickedDate(date) {
     pickedDates = sortBy([...pickedDates, date]);
   }
 
