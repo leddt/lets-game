@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.4.15",
+    "@microsoft/signalr": "^6.0.9",
     "date-fns": "^2.24.0",
     "graphql": "^15.6.0",
     "graphql-tag": "^2.12.5",

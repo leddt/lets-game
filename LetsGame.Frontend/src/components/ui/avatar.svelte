@@ -5,6 +5,7 @@
   export let name;
   export let link = null;
   export let active = false;
+  export let online = false;
 
   const location = useLocation();
 
@@ -42,6 +43,7 @@
       style="background-color: {backgroundColor};"
     >
       {initials}
+      {#if online}<i class="online" />{/if}
     </div>
   </a>
 {:else}
@@ -53,12 +55,14 @@
     style="background-color: {backgroundColor};"
   >
     {initials}
+    {#if online}<i class="online" />{/if}
   </div>
 {/if}
 
 <style lang="postcss">
   div {
     @apply rounded-full w-10 h-10 
+           relative
            flex items-center justify-center 
            cursor-default 
            font-semibold
@@ -77,5 +81,11 @@
 
   .highlighted {
     @apply border-green-300;
+  }
+
+  .online {
+    @apply rounded-full w-2 h-2 
+           block absolute bottom-0 right-0
+         bg-blue-500 border border-white;
   }
 </style>
