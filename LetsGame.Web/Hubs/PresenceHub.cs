@@ -32,12 +32,12 @@ namespace LetsGame.Web.Hubs
 
         private IEnumerable<string> GetUsersInGroup(string group)
         {
-            return _presences.Where(x => x.group == group).Select(x => x.userId).Distinct();
+            return _presences.Where(x => x.group == group).Select(x => x.userId).Distinct().ToList();
         }
 
         public IEnumerable<string> GetGroupsByConnectionId(string connectionId)
         {
-            return _presences.Where(x => x.connectionId == connectionId).Select(x => x.group);
+            return _presences.Where(x => x.connectionId == connectionId).Select(x => x.group).ToList();
         }
     }
     
