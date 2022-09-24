@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using LetsGame.Web.Data;
 using LetsGame.Web.GraphQL;
+using LetsGame.Web.Hubs;
 using LetsGame.Web.Infrastructure.AspNet;
 using LetsGame.Web.RecurringTasks;
 using LetsGame.Web.Services;
@@ -145,6 +146,8 @@ namespace LetsGame.Web
             services.AddTransient<WebPushClient>();
             services.AddTransient<IPushSender, PushSender>();
 
+            services.AddSingleton<PresenceCache>();
+
             // Recurring tasks
             services.AddTransient<RecurringTaskRunner>();
             services.AddTransient<IRecurringTask, SendEventStartingSoonNotifications>();
@@ -165,6 +168,9 @@ namespace LetsGame.Web
             {
                 options.RootPath = "ClientApp";
             });
+            
+            // SignalR
+            services.AddSignalR();
         }
 
         private string ConvertPostgresqlConnectionString(string uriString)
@@ -227,6 +233,7 @@ namespace LetsGame.Web
                 endpoints.MapGraphQL();
                 endpoints.MapRazorPages();
                 endpoints.MapControllers();
+                endpoints.MapHub<PresenceHub>("/presences");
             });
 
             // Force login before going to SPA
