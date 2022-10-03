@@ -99,7 +99,11 @@
           class:invisible={allSame && index > 0}
         >
           {#each getTimes(times, date) as time}
-            <TimePicker bind:value={time} on:change={() => (times = times)} />
+            <TimePicker
+              bind:value={time}
+              on:change={() => (times = times)}
+              list="common-times"
+            />
           {/each}
           <div class="whitespace-nowrap">
             <Button
@@ -121,3 +125,8 @@
     </tr>
   {/each}
 </table>
+
+<datalist id="common-times">
+  <option value="13:00" />
+  <option value="19:30" />
+</datalist>

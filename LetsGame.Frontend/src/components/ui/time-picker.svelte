@@ -17,6 +17,7 @@
   {step}
   bind:value
   on:change={(ev) => dispatch("change", ev)}
+  {...$$restProps}
 />
 
 <style lang="postcss">
