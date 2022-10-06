@@ -58,6 +58,7 @@ namespace LetsGame.Web.GraphQL.Types
             return events
                 .Where(x => x.ChosenDateAndTimeUtc == null)
                 .Where(x => x.Slots.Any(s => s.ProposedDateAndTimeUtc > DateTime.UtcNow))
+                .OrderBy(x => x.Slots.Where(s => s.ProposedDateAndTimeUtc > DateTime.UtcNow).Min(s => s.ProposedDateAndTimeUtc))
                 .Select(x => new ProposedSessionGraphType(x));
         }
 
@@ -68,6 +69,7 @@ namespace LetsGame.Web.GraphQL.Types
             return events
                 .Where(x => x.ChosenDateAndTimeUtc != null)
                 .Where(x => x.ChosenDateAndTimeUtc > DateTime.UtcNow.AddHours(-6))
+                .OrderBy(x => x.ChosenDateAndTimeUtc)
                 .Select(x => new UpcomingSessionGraphType(x));
         }
 
