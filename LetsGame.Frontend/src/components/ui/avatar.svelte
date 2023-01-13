@@ -16,6 +16,7 @@
 
   function getInitials(text) {
     return (text || "")
+      .trim()
       .split(" ")
       .map((x) => x[0].toUpperCase())
       .slice(0, 3)
