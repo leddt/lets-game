@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using HotChocolate.Subscriptions;
@@ -327,7 +328,11 @@ namespace LetsGame.Web.Services
                 Slots = slotsUtc
                     .Select(dt => new GroupEventSlot
                     {
-                        ProposedDateAndTimeUtc = dt
+                        ProposedDateAndTimeUtc = dt,
+                        Votes = new List<GroupEventSlotVote>
+                        {
+                            new() { VoterId = CurrentUserId }
+                        }
                     })
                     .ToList()
             };
