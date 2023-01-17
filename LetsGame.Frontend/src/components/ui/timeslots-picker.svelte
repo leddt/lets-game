@@ -129,4 +129,5 @@
 <datalist id="common-times">
   <option value="13:00" />
   <option value="19:30" />
+  <option value="21:00" />
 </datalist>
