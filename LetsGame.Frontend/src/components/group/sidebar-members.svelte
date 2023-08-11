@@ -60,6 +60,7 @@
     {#each group.members as member (member.id)}
       <div class="flex items-center gap-2">
         <Avatar
+          id={member.id}
           name={member.displayName}
           active={!!member.availableUntil}
           online={$presences.includes(member.userId)}

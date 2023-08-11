@@ -3,6 +3,7 @@
   import { useLocation } from "svelte-navigator";
 
   export let name;
+  export let id = null;
   export let link = null;
   export let active = false;
   export let online = false;
@@ -10,7 +11,7 @@
   const location = useLocation();
 
   $: initials = getInitials(name);
-  $: backgroundColor = getBackgroundColor(name);
+  $: backgroundColor = getBackgroundColor(id || name);
 
   $: highlighted = active || (link && $location.pathname.startsWith(link));
 

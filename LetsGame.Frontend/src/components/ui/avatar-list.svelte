@@ -22,7 +22,7 @@
     <div class="flex flex-wrap mb-4 mr-4" transition:scale|local>
       {#each sorted as person (`${ownId}|${person.id}`)}
         <div class="w-6 h-6 hover:z-10" transition:scale|local animate:flip>
-          <Avatar name={person.displayName} />
+          <Avatar name={person.displayName} id={person.id} />
         </div>
       {/each}
     </div>

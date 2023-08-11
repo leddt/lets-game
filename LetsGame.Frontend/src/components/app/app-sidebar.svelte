@@ -13,7 +13,7 @@
 >
   {#each groups as group (group.id)}
     <div class="writing-mode-horizontal">
-      <Avatar name={group.name} link="/group/{group.slug}" />
+      <Avatar id={group.id} name={group.name} link="/group/{group.slug}" />
     </div>
   {/each}
 
