@@ -37,6 +37,7 @@
   export let session;
 
   $: slotCount = session.slots.length;
+  $: slotCountLabel = slotCount > 1 ? `${slotCount} slots` : "1 slot";
   $: memberCount = session.group.members.length;
   $: voteCount = memberCount - session.missingVotes.length;
   $: didVote = !session.missingVotes.find((x) => x.userId === $me.id);
@@ -74,7 +75,7 @@
     <span class="text-blue-500">{session.group.name}</span>
   </p>
   <p class="text-gray-500">
-    {slotCount} slots,
+    {slotCountLabel},
 
     {#if voteCount < memberCount}
       {voteCount}/{memberCount} votes
