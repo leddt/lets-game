@@ -383,8 +383,23 @@ namespace LetsGame.Web.GraphQL
             string displayName,
             [Service] GroupService groupService)
         {
+            if (string.IsNullOrWhiteSpace(displayName)) throw new Exception("Display name can't be blank");
+            
             var group = await groupService.CreateGroupAsync(groupName, displayName);
             return new GroupPayload(new GroupGraphType(group));
+        }
+
+        [Authorize]
+        public async Task<MembershipPayload> EditDisplayName(
+            [GraphQLType(typeof(IdType))] string groupId,
+            string newName,
+            [Service] GroupService groupService
+        )
+        {
+            if (string.IsNullOrWhiteSpace(newName)) throw new Exception("New name can't be blank");
+            
+            var membership = await groupService.UpdateMemberDisplayNameAsync(ID.ToLong<Group>(groupId), newName);
+            return new MembershipPayload(new MembershipGraphType(membership));
         }
     }
 }

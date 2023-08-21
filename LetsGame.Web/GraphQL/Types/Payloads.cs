@@ -39,4 +39,14 @@
 
         public GroupGraphType Group { get; }
     }
+
+    public class MembershipPayload
+    {
+        public MembershipPayload(MembershipGraphType membership)
+        {
+            Membership = membership;
+        }
+        
+        public MembershipGraphType Membership { get; }
+    }
 }

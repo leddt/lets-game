@@ -6,6 +6,7 @@
       self {
         id
         role
+        displayName
       }
       members {
         id
@@ -53,6 +54,28 @@
       },
     });
   }
+
+  function editDisplayName() {
+    const newName = prompt("Enter your new name", group.self.displayName);
+    if (!newName || newName === group.self.displayName) return;
+
+    client.mutate({
+      mutation: gql`
+        mutation EditDisplayName($groupId: ID!, $newName: String!) {
+          editDisplayName(groupId: $groupId, newName: $newName) {
+            membership {
+              id
+              displayName
+            }
+          }
+        }
+      `,
+      variables: {
+        groupId: group.id,
+        newName,
+      },
+    });
+  }
 </script>
 
 {#if group?.members}
@@ -81,8 +104,14 @@
             </div>
           {/if}
         </div>
-        {#if isOwner && member.id !== group.self.id}
-          <Button color="red" on:click={() => removeMember(member)}>
+        {#if member.id === group.self.id}
+          <Button on:click={editDisplayName} tip="Edit display name">✎</Button>
+        {:else if isOwner}
+          <Button
+            color="red"
+            on:click={() => removeMember(member)}
+            tip="Remove from group"
+          >
             &times;
           </Button>
         {/if}

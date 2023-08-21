@@ -50,6 +50,9 @@ namespace LetsGame.Web.Pages
             if (!User.Identity?.IsAuthenticated == true)
                 return Unauthorized();
             
+            if (string.IsNullOrWhiteSpace(DisplayName))
+                ModelState.AddModelError(nameof(DisplayName), "Display name can't be blank");
+
             if (!ModelState.IsValid)
             {
                 await LoadInvite(db, id);

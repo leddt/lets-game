@@ -405,6 +405,22 @@ namespace LetsGame.Web.Services
             }
         }
 
+        public async Task<Membership> UpdateMemberDisplayNameAsync(long groupId, string newName)
+        {
+            var membership = await _db.Memberships
+                .FirstOrDefaultAsync(x =>
+                    x.GroupId == groupId &&
+                    x.UserId == CurrentUserId);
+
+            if (membership != null)
+            {
+                membership.DisplayName = newName;
+                await _db.SaveChangesAsync();
+            }
+
+            return membership;
+        }
+
         private string CurrentUserId => _userManager.GetUserId(_currentUserAccessor.CurrentUser);
 
         private Task<string> CreateSlugFromGroupNameAsync(string name)
