@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using HotChocolate;
 using LetsGame.Web.Data;
 using LetsGame.Web.Helpers;
 using LetsGame.Web.Services.Igdb;
@@ -440,7 +441,7 @@ namespace LetsGame.Web.Services
             if (!isGroupOwner) throw new InvalidOperationException("Not group owner");
         }
 
-        public async Task<GroupEvent?> UpdateEventAsync(long eventId, string? details)
+        public async Task<GroupEvent?> UpdateEventAsync(long eventId, string? details, Optional<long?> gameId)
         {
             var ev = await _db.GroupEvents
                 .Where(x => x.CreatorId == CurrentUserId ||
@@ -449,7 +450,23 @@ namespace LetsGame.Web.Services
 
             if (ev == null) return null;
             
-            if (details != null) ev.Details = details;
+            if (details != null)
+            {
+                ev.Details = details;
+            }
+            
+            if (gameId.HasValue)
+            {
+                GroupGame? game = null;
+                
+                if (gameId.Value != null)
+                {
+                    game = await _db.GroupGames.FirstOrDefaultAsync(x => x.GroupId == ev.GroupId && x.Id == gameId.Value);
+                    if (game == null) throw new InvalidOperationException("Unknown game");
+                }
+
+                ev.GameId = game?.Id;
+            }
             
             await _db.SaveChangesAsync();
 

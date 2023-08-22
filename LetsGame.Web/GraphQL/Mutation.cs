@@ -408,7 +408,11 @@ namespace LetsGame.Web.GraphQL
             [Service] GroupService groupService
         )
         {
-            var ev = await groupService.UpdateEventAsync(ID.ToLong<GroupEvent>(input.SessionId), input.Details);
+            var ev = await groupService.UpdateEventAsync(
+                ID.ToLong<GroupEvent>(input.SessionId), 
+                input.Details, 
+                input.GameId.Map(ID.ToLongOptional<GroupGame>));
+            
             return new ProposedSessionPayload(new ProposedSessionGraphType(ev));
         }
     }

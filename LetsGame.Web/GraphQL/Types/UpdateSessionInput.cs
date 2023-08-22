@@ -10,5 +10,6 @@ namespace LetsGame.Web.GraphQL.Types
         [GraphQLType(typeof(IdType))] public string SessionId { get; set; } = null!;
         
         public string? Details { get; set; }
+        [GraphQLType(typeof(IdType))] public Optional<string?> GameId { get; set; }
     }
 }
