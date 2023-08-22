@@ -7,14 +7,16 @@
   export let color = null;
   export let tip = null;
   export let submit = false;
+  export let small = false;
   const dispatch = createEventDispatcher();
 
   $: buttonType = submit ? "submit" : "button";
+  $: sizeClass = small ? "small" : null;
 </script>
 
 <button
   type={buttonType}
-  class={[color, classNames].join(" ")}
+  class={[color, sizeClass, classNames].join(" ")}
   on:click={() => dispatch("click")}
   use:tooltip={tip}
 >
@@ -39,5 +41,9 @@
   button.green {
     @apply from-green-200 to-green-300 border-green-300
            hover:from-green-600 hover:to-green-900 hover:text-green-200 hover:border-green-900;
+  }
+
+  button.small {
+    @apply py-0;
   }
 </style>

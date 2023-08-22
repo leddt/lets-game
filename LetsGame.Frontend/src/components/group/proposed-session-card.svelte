@@ -66,18 +66,22 @@
   import { subscribe } from "svelte-apollo";
   import throttle from "lodash/throttle.js";
 
+  import AvatarList from "@/components/ui/avatar-list.svelte";
   import Button from "@/components/ui/button.svelte";
   import Card from "@/components/ui/card.svelte";
   import CircleButton from "@/components/ui/circle-button.svelte";
-  import Panel from "@/components/ui/panel.svelte";
   import FlexTrailer from "@/components/ui/flex-trailer.svelte";
-  import AvatarList from "@/components/ui/avatar-list.svelte";
+  import LinkButton from "@/components/ui/link-button.svelte";
+  import Panel from "@/components/ui/panel.svelte";
+  import Textarea from "@/components/ui/textarea.svelte";
 
   import { friendlyDateTime } from "@/lib/date-helpers";
   import client from "@/lib/apollo";
   import { me } from "@/lib/store";
 
   export let session;
+
+  let edittingDetails = null;
 
   $: gameImage = session.game?.igdbImageId
     ? `https://images.igdb.com/igdb/image/upload/t_screenshot_med/${session.game.igdbImageId}.jpg`
@@ -260,6 +264,29 @@
       },
     });
   }
+
+  async function saveDetails() {
+    await client.mutate({
+      mutation: gql`
+        mutation UpdateSessionDetails($sessionId: ID!, $details: String!) {
+          updateProposedSession(
+            input: { sessionId: $sessionId, details: $details }
+          ) {
+            session {
+              id
+              details
+            }
+          }
+        }
+      `,
+      variables: {
+        sessionId: session.id,
+        details: edittingDetails,
+      },
+    });
+
+    edittingDetails = null;
+  }
 </script>
 
 <Card image={gameImage} width="w-164" imageHeight="h-48">
@@ -272,11 +299,41 @@
         </Button>
       {/if}
     </div>
-    {#if session.details}
+
+    {#if edittingDetails !== null}
+      <Textarea
+        autofocus
+        bind:value={edittingDetails}
+        class="w-full max-w-3xl"
+        on:escape={() => (edittingDetails = null)}
+      />
+      <div>
+        <Button small on:click={saveDetails}>Save details</Button>
+        <LinkButton on:click={() => (edittingDetails = null)}>
+          Cancel
+        </LinkButton>
+      </div>
+    {:else if session.details}
       <p class="text-gray-500 font-light whitespace-pre-wrap">
         {session.details}
+
+        {#if canManageSession}
+          <LinkButton
+            tip="Edit details"
+            on:click={() => (edittingDetails = session.details)}
+          >
+            ✎
+          </LinkButton>
+        {/if}
+      </p>
+    {:else}
+      <p class="text-gray-500 font-light whitespace-pre-wrap">
+        <LinkButton on:click={() => (edittingDetails = session.details)}>
+          Add details
+        </LinkButton>
       </p>
     {/if}
+
     {#if session.missingVotes.length > 0}
       <div>
         Missing votes:

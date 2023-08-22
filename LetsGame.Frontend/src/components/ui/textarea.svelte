@@ -1,11 +1,22 @@
 <script>
+  import { createEventDispatcher } from "svelte";
+
   let className = "";
   export let id = null;
   export let value = "";
+  export let autofocus = false;
   export { className as class };
+
+  const dispatch = createEventDispatcher();
 </script>
 
-<textarea {id} class={className} bind:value />
+<textarea
+  {id}
+  {autofocus}
+  class={className}
+  bind:value
+  on:keydown={(e) => e.key === "Escape" && dispatch("escape")}
+/>
 
 <style lang="postcss">
   textarea {
