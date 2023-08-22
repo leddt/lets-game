@@ -1,8 +1,9 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using HotChocolate.Subscriptions;
 using LetsGame.Web.Data;
 using LetsGame.Web.Helpers;
 using LetsGame.Web.Services.Igdb;
@@ -312,7 +313,7 @@ namespace LetsGame.Web.Services
 
         public async Task ProposeEventAsync(long groupId, long? gameId, string details, DateTime[] slotsUtc)
         {
-            GroupGame game = null;
+            GroupGame? game = null;
             if (gameId.HasValue)
             {
                 game = await _db.GroupGames.FirstOrDefaultAsync(x => x.GroupId == groupId && x.Id == gameId);
@@ -405,7 +406,7 @@ namespace LetsGame.Web.Services
             }
         }
 
-        public async Task<Membership> UpdateMemberDisplayNameAsync(long groupId, string newName)
+        public async Task<Membership?> UpdateMemberDisplayNameAsync(long groupId, string newName)
         {
             var membership = await _db.Memberships
                 .FirstOrDefaultAsync(x =>
@@ -437,6 +438,22 @@ namespace LetsGame.Web.Services
                                    m.UserId == CurrentUserId));
             
             if (!isGroupOwner) throw new InvalidOperationException("Not group owner");
+        }
+
+        public async Task<GroupEvent?> UpdateEventAsync(long eventId, string? details)
+        {
+            var ev = await _db.GroupEvents
+                .Where(x => x.CreatorId == CurrentUserId ||
+                            x.Group.Memberships.Any(m => m.Role == GroupRole.Owner && m.UserId == CurrentUserId))
+                .FirstOrDefaultAsync(x => x.Id == eventId);
+
+            if (ev == null) return null;
+            
+            if (details != null) ev.Details = details;
+            
+            await _db.SaveChangesAsync();
+
+            return ev;
         }
     }
 }

@@ -401,5 +401,15 @@ namespace LetsGame.Web.GraphQL
             var membership = await groupService.UpdateMemberDisplayNameAsync(ID.ToLong<Group>(groupId), newName);
             return new MembershipPayload(new MembershipGraphType(membership));
         }
+
+        [Authorize(Policy = AuthPolicies.ManageSession)]
+        public async Task<ProposedSessionPayload> UpdateProposedSession(
+            [GraphQLNonNullType] UpdateSessionInput input,
+            [Service] GroupService groupService
+        )
+        {
+            var ev = await groupService.UpdateEventAsync(ID.ToLong<GroupEvent>(input.SessionId), input.Details);
+            return new ProposedSessionPayload(new ProposedSessionGraphType(ev));
+        }
     }
 }

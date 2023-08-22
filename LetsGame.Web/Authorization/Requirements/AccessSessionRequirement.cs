@@ -65,6 +65,12 @@ namespace LetsGame.Web.Authorization.Requirements
                     result = ID.ToLong<GroupEvent>(sessionId);
                     return true;
                 }
+                
+                if (resolver.TryGetArgumentValue<ISessionIdInput>("input", out var input))
+                {
+                    result = ID.ToLong<GroupEvent>(input.SessionId);
+                    return true;
+                }
 
                 if (resolver.TryGetParent<SessionGraphType>(out var sessionGraphType))
                 {
