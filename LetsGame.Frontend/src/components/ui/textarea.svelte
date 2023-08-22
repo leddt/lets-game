@@ -10,6 +10,7 @@
   const dispatch = createEventDispatcher();
 </script>
 
+<!-- svelte-ignore a11y-autofocus -->
 <textarea
   {id}
   {autofocus}
