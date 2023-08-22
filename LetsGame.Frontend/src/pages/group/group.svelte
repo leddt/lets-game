@@ -204,7 +204,7 @@
                 {#if group.proposedSessions.length > 0}
                   <CardList>
                     {#each group.proposedSessions as s (s.id)}
-                      <ProposedSessionCard session={s} />
+                      <ProposedSessionCard session={s} {group} />
                     {/each}
                   </CardList>
                 {:else}

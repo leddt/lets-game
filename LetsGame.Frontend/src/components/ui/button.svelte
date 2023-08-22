@@ -8,6 +8,7 @@
   export let tip = null;
   export let submit = false;
   export let small = false;
+  export let disabled = false;
   const dispatch = createEventDispatcher();
 
   $: buttonType = submit ? "submit" : "button";
@@ -15,6 +16,7 @@
 </script>
 
 <button
+  {disabled}
   type={buttonType}
   class={[color, sizeClass, classNames].join(" ")}
   on:click={() => dispatch("click")}
@@ -45,5 +47,9 @@
 
   button.small {
     @apply py-0;
+  }
+
+  button:disabled {
+    @apply cursor-default opacity-80 pointer-events-none;
   }
 </style>

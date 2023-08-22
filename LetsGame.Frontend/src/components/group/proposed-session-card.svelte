@@ -66,10 +66,12 @@
   import { subscribe } from "svelte-apollo";
   import throttle from "lodash/throttle.js";
 
+  import GamePicker from "@/components/group/game-picker.svelte";
   import AvatarList from "@/components/ui/avatar-list.svelte";
   import Button from "@/components/ui/button.svelte";
   import Card from "@/components/ui/card.svelte";
   import CircleButton from "@/components/ui/circle-button.svelte";
+  import Dialog from "@/components/ui/dialog.svelte";
   import FlexTrailer from "@/components/ui/flex-trailer.svelte";
   import LinkButton from "@/components/ui/link-button.svelte";
   import Panel from "@/components/ui/panel.svelte";
@@ -80,8 +82,12 @@
   import { me } from "@/lib/store";
 
   export let session;
+  export let group;
 
   let edittingDetails = null;
+
+  let editGameDialog;
+  let selectedGame = null;
 
   $: gameImage = session.game?.igdbImageId
     ? `https://images.igdb.com/igdb/image/upload/t_screenshot_med/${session.game.igdbImageId}.jpg`
@@ -287,14 +293,67 @@
 
     edittingDetails = null;
   }
+
+  async function saveGame(callback) {
+    await client.mutate({
+      mutation: gql`
+        mutation UpdateSessionDetails($sessionId: ID!, $gameId: ID) {
+          updateProposedSession(
+            input: { sessionId: $sessionId, gameId: $gameId }
+          ) {
+            session {
+              id
+              game {
+                id
+                name
+                igdbImageId
+              }
+            }
+          }
+        }
+      `,
+      variables: {
+        sessionId: session.id,
+        gameId: selectedGame.id,
+      },
+    });
+
+    if (callback) callback();
+  }
 </script>
 
 <Card image={gameImage} width="w-164" imageHeight="h-48">
   <div class="flex flex-col gap-2 h-full">
-    <div class="flex justify-between items-center">
+    <div class="flex items-center">
       <h3>{session.game?.name || "Any game"}</h3>
       {#if canManageSession}
-        <Button color="red" tip="Cancel this session" on:click={deleteSession}>
+        <LinkButton
+          class="ml-2"
+          tip="Edit game"
+          on:click={() => editGameDialog.showModal()}>✎</LinkButton
+        >
+        <Dialog bind:this={editGameDialog} let:close>
+          <h2 class="mb-4">Choose new game</h2>
+          <GamePicker games={group.games} bind:game={selectedGame} />
+
+          <div class="mt-8 flex gap-8">
+            <Button
+              disabled={!selectedGame}
+              on:click={async () => await saveGame(close)}
+            >
+              Set game
+            </Button>
+            <LinkButton on:click={close}>Cancel</LinkButton>
+          </div>
+        </Dialog>
+      {/if}
+      {#if canManageSession}
+        <Button
+          class="ml-auto"
+          color="red"
+          tip="Cancel this session"
+          on:click={deleteSession}
+        >
           &times;
         </Button>
       {/if}

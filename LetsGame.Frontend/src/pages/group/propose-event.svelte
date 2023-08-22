@@ -8,7 +8,7 @@
   import Section from "@/components/ui/section.svelte";
   import Textarea from "@/components/ui/textarea.svelte";
   import TimeslotsPicker from "@/components/ui/timeslots-picker.svelte";
-  import GameTile from "@/components/group/game-tile.svelte";
+  import GamePicker from "@/components/group/game-picker.svelte";
   import { proposedSessionCardFragment } from "@/components/group/proposed-session-card.svelte";
 
   import { friendlyDateTime } from "@/lib/date-helpers";
@@ -23,13 +23,6 @@
   let details = "";
 
   export let group;
-
-  const anyGame = {
-    id: null,
-    name: "Any game",
-    description: "I don't care what we play, let's game!",
-  };
-  $: selectableGames = [...group.games, anyGame];
 
   function toLocalTimeString(date) {
     return format(date, "yyyy-MM-dd'T'HH:mm:ss");
@@ -76,17 +69,7 @@
   <Section title="Propose a session">
     <div>
       <h3>Pick game</h3>
-      <div class="flex flex-wrap gap-4">
-        {#each selectableGames as game (game.id)}
-          <div class="w-80">
-            <GameTile
-              {game}
-              class="item {game === selectedGame ? 'selected' : ''}"
-              on:click={() => (selectedGame = game)}
-            />
-          </div>
-        {/each}
-      </div>
+      <GamePicker games={group.games} bind:game={selectedGame} />
     </div>
 
     {#if selectedGame}
@@ -118,7 +101,7 @@
     {#if dateTimes.length > 0}
       <div class="pt-4">
         <h3>Summary</h3>
-        Your {selectedGame === anyGame ? "gaming" : selectedGame.name} session will
+        Your {selectedGame.id === null ? "gaming" : selectedGame.name} session will
         have {dateTimes.length}
         {dateTimes.length > 1 ? "slots" : "slot"}:
         <ul class="list-disc mb-4">
