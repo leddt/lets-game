@@ -3,7 +3,6 @@ import "tippy.js/dist/tippy.css";
 
 export default function (node, text) {
   let tippyInstance;
-  let owner = node.closest("dialog");
 
   update(text);
 
@@ -24,7 +23,10 @@ export default function (node, text) {
     if (tippyInstance) {
       tippyInstance.setContent(text);
     } else {
-      tippyInstance = tippy(node, { content: text, appendTo: owner });
+      tippyInstance = tippy(node, {
+        content: text,
+        appendTo: node.closest("dialog") ?? undefined,
+      });
     }
   }
 
