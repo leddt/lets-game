@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using LetsGame.Web.Data;
 using Microsoft.EntityFrameworkCore;
+using NodaTime;
 
 namespace LetsGame.Web.RecurringTasks
 {
@@ -17,11 +18,11 @@ namespace LetsGame.Web.RecurringTasks
 
         public async Task Run()
         {
-            var utcThreshold = DateTime.UtcNow - TimeSpan.FromDays(1);
+            var threshold = SystemClock.Instance.GetCurrentInstant() - Duration.FromDays(1);
             
             var events = await _db.GroupEvents
-                .Where(x => x.ChosenDateAndTimeUtc < utcThreshold ||
-                            x.Slots.All(s => s.ProposedDateAndTimeUtc < utcThreshold))
+                .Where(x => x.ChosenTime < threshold ||
+                            x.Slots.All(s => s.ProposedTime < threshold))
                 .ToListAsync();
 
             Console.WriteLine("{0} events to delete", events.Count);

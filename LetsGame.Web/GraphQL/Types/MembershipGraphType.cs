@@ -28,9 +28,10 @@ namespace LetsGame.Web.GraphQL.Types
 
         public LocalDateTime? GetAvailableUntil([Service] DateService dateService)
         {
-            if (_membership.AvailableUntilUtc == null || _membership.AvailableUntilUtc < DateTime.UtcNow) return null;
+            var now = SystemClock.Instance.GetCurrentInstant();
+            if (_membership.AvailableUntil == null || _membership.AvailableUntil < now) return null;
             
-            return dateService.ConvertFromUtcToUserLocalTime(_membership.AvailableUntilUtc.Value);
+            return dateService.ConvertToUserLocalTime(_membership.AvailableUntil.Value);
         }
 
         public bool IsAvailableNow => _membership.IsAvailableNow();

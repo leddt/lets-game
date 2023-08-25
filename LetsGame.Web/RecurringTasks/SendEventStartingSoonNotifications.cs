@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using LetsGame.Web.Data;
 using LetsGame.Web.Services;
 using Microsoft.EntityFrameworkCore;
+using NodaTime;
 
 namespace LetsGame.Web.RecurringTasks
 {
@@ -20,13 +21,13 @@ namespace LetsGame.Web.RecurringTasks
 
         public async Task Run()
         {
-            var utcNow = DateTime.UtcNow;
-            var utcThreshold = utcNow + TimeSpan.FromHours(2);
+            var now = SystemClock.Instance.GetCurrentInstant();
+            var threshold = now + Duration.FromHours(2);
 
             var events = await _db.GroupEvents
-                .Where(x => x.ChosenDateAndTimeUtc > utcNow)
-                .Where(x => x.ChosenDateAndTimeUtc < utcThreshold)
-                .Where(x => x.StartingSoonNotificationSentAtUtc == null)
+                .Where(x => x.ChosenTime > now)
+                .Where(x => x.ChosenTime < threshold)
+                .Where(x => x.StartingSoonNotificationSentAt == null)
                 .ToListAsync();
             
             Console.WriteLine("{0} events to notify", events.Count);
@@ -34,7 +35,7 @@ namespace LetsGame.Web.RecurringTasks
             foreach (var ev in events)
             {
                 // Mark as sent BEFORE sending the emails. If it crashes we don't want to be sending duplicate emails.
-                ev.StartingSoonNotificationSentAtUtc = utcNow;
+                ev.StartingSoonNotificationSentAt = now;
                 await _db.SaveChangesAsync();
                 
                 Console.WriteLine("Processing event {0} for group {1}", ev.Id, ev.GroupId);

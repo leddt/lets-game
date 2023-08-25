@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations.Schema;
+using NodaTime;
 
 namespace LetsGame.Web.Data
 {
@@ -7,7 +8,7 @@ namespace LetsGame.Web.Data
     {
         public string Id { get; set; }
         
-        public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+        public Instant CreatedAt { get; set; } = SystemClock.Instance.GetCurrentInstant();
 
         [ForeignKey("Group")]
         public long GroupId { get; set; }

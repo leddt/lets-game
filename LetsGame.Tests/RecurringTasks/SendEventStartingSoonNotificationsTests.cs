@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using LetsGame.Web.Data;
 using LetsGame.Web.RecurringTasks;
 using LetsGame.Web.Services;
 using Moq;
+using NodaTime;
 using Xunit;
 
 namespace LetsGame.Tests.RecurringTasks
@@ -29,11 +29,11 @@ namespace LetsGame.Tests.RecurringTasks
             
             var invalidEvent1 = GetValidEvent();
             invalidEvent1.Group.Name = "Invalid";
-            invalidEvent1.ChosenDateAndTimeUtc = DateTime.UtcNow + TimeSpan.FromHours(3);
+            invalidEvent1.ChosenTime = SystemClock.Instance.GetCurrentInstant() + Duration.FromHours(3);
             
             var invalidEvent2 = GetValidEvent();
             invalidEvent1.Group.Name = "Invalid";
-            invalidEvent2.StartingSoonNotificationSentAtUtc = DateTime.UtcNow;
+            invalidEvent2.StartingSoonNotificationSentAt = SystemClock.Instance.GetCurrentInstant();
             
             _db.GroupEvents.Add(validEvent);
             _db.GroupEvents.Add(invalidEvent1);
@@ -48,7 +48,7 @@ namespace LetsGame.Tests.RecurringTasks
 
         private GroupEvent GetValidEvent()
         {
-            var chosenTime = DateTime.UtcNow.AddHours(1);
+            var chosenTime = SystemClock.Instance.GetCurrentInstant() + Duration.FromHours(1);
 
             var user1 = new AppUser {Email = "user1@example.com"};
             var user2 = new AppUser {Email = "user2@example.com"};
@@ -72,12 +72,12 @@ namespace LetsGame.Tests.RecurringTasks
                 },
                 Details = "This is a test event",
                 Game = new GroupGame {Name = "Test game"},
-                ChosenDateAndTimeUtc = chosenTime,
+                ChosenTime = chosenTime,
                 Slots = new List<GroupEventSlot>
                 {
                     new()
                     {
-                        ProposedDateAndTimeUtc = chosenTime,
+                        ProposedTime = chosenTime,
                         Votes = new List<GroupEventSlotVote>
                         {
                             new() {VoterId = user1.Id},

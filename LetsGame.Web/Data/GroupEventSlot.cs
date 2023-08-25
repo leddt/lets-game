@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using NodaTime;
 
 namespace LetsGame.Web.Data
 {
@@ -11,7 +12,7 @@ namespace LetsGame.Web.Data
         public GroupEvent Event { get; set; }
         [ForeignKey("Event")] public long EventId { get; set; }
         
-        public DateTime ProposedDateAndTimeUtc { get; set; }
+        public Instant ProposedTime { get; set; }
         
         public ICollection<AppUser> Voters { get; set; }
         public ICollection<GroupEventSlotVote> Votes { get; set; }

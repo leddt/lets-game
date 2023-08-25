@@ -28,7 +28,7 @@ namespace LetsGame.Web.GraphQL
             var id = ID.ToLong<GroupEventSlot>(slotId);
             
             var slot = await db.GroupEventSlots.Include(x=> x.Event).FirstAsync(x => x.Id == id);
-            if (slot.Event.ChosenDateAndTimeUtc.HasValue)
+            if (slot.Event.ChosenTime.HasValue)
                 throw new Exception("Can't vote on confirmed event");
 
             await groupService.AddSlotVoteAsync(id);
@@ -48,7 +48,7 @@ namespace LetsGame.Web.GraphQL
             var id = ID.ToLong<GroupEventSlot>(slotId);
             
             var slot = await db.GroupEventSlots.Include(x => x.Event).FirstAsync(x => x.Id == id);
-            if (slot.Event.ChosenDateAndTimeUtc.HasValue)
+            if (slot.Event.ChosenTime.HasValue)
                 throw new Exception("Can't vote on confirmed event");
             
             await groupService.RemoveSlotVoteAsync(ID.ToLong<GroupEventSlot>(slotId));
@@ -70,7 +70,7 @@ namespace LetsGame.Web.GraphQL
             var slot = await db.GroupEventSlots
                 .Include(x => x.Event)
                 .Where(x => x.EventId == id)
-                .Where(x => x.ProposedDateAndTimeUtc == x.Event.ChosenDateAndTimeUtc)
+                .Where(x => x.ProposedTime == x.Event.ChosenTime)
                 .FirstOrDefaultAsync();
 
             if (slot == null) throw new Exception("Can't find chosen slot");
@@ -94,7 +94,7 @@ namespace LetsGame.Web.GraphQL
             var slot = await db.GroupEventSlots
                 .Include(x => x.Event)
                 .Where(x => x.EventId == id)
-                .Where(x => x.ProposedDateAndTimeUtc == x.Event.ChosenDateAndTimeUtc)
+                .Where(x => x.ProposedTime == x.Event.ChosenTime)
                 .FirstOrDefaultAsync();
 
             if (slot == null) throw new Exception("Can't find chosen slot");
@@ -116,7 +116,7 @@ namespace LetsGame.Web.GraphQL
             var id = ID.ToLong<GroupEvent>(sessionId);
 
             var groupEvent = await db.GroupEvents.FindAsync(id);
-            if (groupEvent.ChosenDateAndTimeUtc.HasValue)
+            if (groupEvent.ChosenTime.HasValue)
                 throw new Exception("Can't vote on confirmed event");
             
             await groupService.SetCantPlayAsync(id);
@@ -136,7 +136,7 @@ namespace LetsGame.Web.GraphQL
             var id = ID.ToLong<GroupEvent>(sessionId);
 
             var groupEvent = await db.GroupEvents.FindAsync(id);
-            if (groupEvent.ChosenDateAndTimeUtc.HasValue)
+            if (groupEvent.ChosenTime.HasValue)
                 throw new Exception("Can't send reminder on confirmed event");
             
             await notificationService.SendEventReminderAsync(id);
@@ -160,7 +160,7 @@ namespace LetsGame.Web.GraphQL
                 .Where(x => x.Slots.Any(s => s.Id == id))
                 .FirstOrDefaultAsync();
             
-            if (groupEvent.ChosenDateAndTimeUtc.HasValue)
+            if (groupEvent.ChosenTime.HasValue)
                 throw new Exception("Can't pick slot on confirmed event");
             
             await groupService.PickSlotAsync(ID.ToLong<GroupEventSlot>(slotId));
@@ -295,15 +295,15 @@ namespace LetsGame.Web.GraphQL
             [Service] ApplicationDbContext db,
             [Service] ITopicEventSender sender)
         {
-            var utcDateTimes = dateTimes
-                .Select(x => dateService.ConvertFromUserLocalTimeToUtc(x))
+            var instants = dateTimes
+                .Select(x => dateService.ConvertFromUserLocalTime(x))
                 .ToArray();
             
             await groupService.ProposeEventAsync(
                 ID.ToLong<Group>(groupId),
                 gameId == null ? null : ID.ToLong<GroupGame>(gameId),
                 details,
-                utcDateTimes);
+                instants);
             
             var group = await db.Groups.FindAsync(ID.ToLong<Group>(groupId));
 

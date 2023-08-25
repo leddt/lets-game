@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using LetsGame.Web.Data;
 using LetsGame.Web.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using Microsoft.AspNetCore.Routing;
 using Moq;
 using NodaTime;
 using Xunit;
@@ -31,7 +29,6 @@ namespace LetsGame.Tests.Services
                 new DateService(config, DateTimeZoneProviders.Bcl),
                 _emailSender.Object,
                 Mock.Of<IPushSender>(),
-                Mock.Of<LinkGenerator>(),
                 Mock.Of<IHttpContextAccessor>());
         }
 
@@ -87,7 +84,7 @@ namespace LetsGame.Tests.Services
 
         private GroupEvent GetValidEvent()
         {
-            var chosenTime = DateTime.UtcNow.AddHours(1);
+            var chosenTime = SystemClock.Instance.GetCurrentInstant() + Duration.FromHours(1);
 
             var user1 = new AppUser {Email = "user1@example.com"};
             var user2 = new AppUser {Email = "user2@example.com"};
@@ -111,12 +108,12 @@ namespace LetsGame.Tests.Services
                 },
                 Details = "This is a test event",
                 Game = new GroupGame {Name = "Test game"},
-                ChosenDateAndTimeUtc = chosenTime,
+                ChosenTime = chosenTime,
                 Slots = new List<GroupEventSlot>
                 {
                     new()
                     {
-                        ProposedDateAndTimeUtc = chosenTime,
+                        ProposedTime = chosenTime,
                         Votes = new List<GroupEventSlotVote>
                         {
                             new() {VoterId = user1.Id},

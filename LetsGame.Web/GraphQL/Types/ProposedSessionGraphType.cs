@@ -21,8 +21,8 @@ namespace LetsGame.Web.GraphQL.Types
         {
             var result = await context.LoadSlotsByEventId(GroupEvent.Id);
             return result
-                .Where(x => x.ProposedDateAndTimeUtc > DateTime.UtcNow)
-                .OrderBy(x => x.ProposedDateAndTimeUtc)
+                .Where(x => x.ProposedTime > SystemClock.Instance.GetCurrentInstant())
+                .OrderBy(x => x.ProposedTime)
                 .Select(x => new SessionSlotGraphType(x));
         }
 
@@ -44,8 +44,8 @@ namespace LetsGame.Web.GraphQL.Types
 
         public LocalDateTime? GetReminderSentAtTime([Service] DateService dateService)
         {
-            if (GroupEvent.ReminderSentAtUtc == null) return null;
-            return dateService.ConvertFromUtcToUserLocalTime(GroupEvent.ReminderSentAtUtc.Value);
+            if (GroupEvent.ReminderSentAt == null) return null;
+            return dateService.ConvertToUserLocalTime(GroupEvent.ReminderSentAt.Value);
         }
     }
 }

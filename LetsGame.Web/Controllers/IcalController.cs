@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using Ical.Net;
 using Ical.Net.CalendarComponents;
@@ -8,6 +7,7 @@ using Ical.Net.Serialization;
 using LetsGame.Web.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NodaTime;
 
 namespace LetsGame.Web.Controllers
 {
@@ -25,7 +25,7 @@ namespace LetsGame.Web.Controllers
         public async Task<IActionResult> GetGroupCalendarAsIcalAsync(string slug, string k)
         {
             var group = await _db.Groups
-                .Include(g => g.Events.Where(e => e.ChosenDateAndTimeUtc.HasValue)).ThenInclude(e => e.Game)
+                .Include(g => g.Events.Where(e => e.ChosenTime.HasValue)).ThenInclude(e => e.Game)
                 .Where(g => g.Slug == slug)
                 .Where(g => g.SharingKey == k)
                 .FirstOrDefaultAsync();
@@ -45,13 +45,14 @@ namespace LetsGame.Web.Controllers
 
         private CalendarEvent GetCalendarEvent(GroupEvent ev)
         {
-            var dt = DateTime.SpecifyKind(ev.ChosenDateAndTimeUtc.Value, DateTimeKind.Utc);
-
+            var start = ev.ChosenTime.Value;
+            var end = start + Duration.FromHours(1);
+            
             return new CalendarEvent
             {
                 Summary = ev.Game == null ? "Any game" : ev.Game.Name,
-                Start = new CalDateTime(dt),
-                End = new CalDateTime(dt + TimeSpan.FromHours(1))
+                Start = new CalDateTime(start.ToDateTimeUtc()),
+                End = new CalDateTime(end.ToDateTimeUtc())
             };
         }
     }

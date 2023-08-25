@@ -1,15 +1,11 @@
 ﻿using System;
 using System.Text.Json.Serialization;
+using NodaTime;
 
 namespace LetsGame.Web.Services.Igdb.Models
 {
     public class IgdbAccessToken
     {
-        public IgdbAccessToken()
-        {
-            CreatedAtUtc = DateTime.UtcNow;
-        }
-
         [JsonPropertyName("access_token")]
         public string AccessToken { get; set; }
 
@@ -19,9 +15,9 @@ namespace LetsGame.Web.Services.Igdb.Models
         [JsonPropertyName("token_type")]
         public string TokenType { get; set; }
 
-        public DateTime CreatedAtUtc { get; }
-        public DateTime ExpiresAtUtc => CreatedAtUtc.AddSeconds(ExpiresIn);
-        public bool IsExpired => ExpiresAtUtc <= DateTime.UtcNow;
+        public Instant CreatedAt { get; } = SystemClock.Instance.GetCurrentInstant();
+        public Instant ExpiresAt => CreatedAt + Duration.FromSeconds(ExpiresIn);
+        public bool IsExpired => ExpiresAt <= SystemClock.Instance.GetCurrentInstant();
 
         public override string ToString() => AccessToken;
     }

@@ -10,6 +10,7 @@ using LetsGame.Web.Helpers;
 using LetsGame.Web.Services.Igdb;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using NodaTime;
 
 namespace LetsGame.Web.Services
 {
@@ -125,7 +126,7 @@ namespace LetsGame.Web.Services
                 {
                     Slot = slot,
                     VoterId = CurrentUserId,
-                    VotedAtUtc = DateTime.UtcNow
+                    VotedAt = SystemClock.Instance.GetCurrentInstant()
                 });
                 
                 var cantPlay = await _db.GroupEventCantPlays.FirstOrDefaultAsync(x => x.EventId == slot.EventId && x.UserId == CurrentUserId);
@@ -136,8 +137,8 @@ namespace LetsGame.Web.Services
 
                 var groupEvent = await _db.GroupEvents.FindAsync(slot.EventId);
                 if (groupEvent.CreatorId != CurrentUserId && 
-                    groupEvent.ChosenDateAndTimeUtc == null && 
-                    groupEvent.AllVotesInNotificationSentAtUtc == null)
+                    groupEvent.ChosenTime == null && 
+                    groupEvent.AllVotesInNotificationSentAt == null)
                 {
                     var groupMemberCount = await _db.Groups
                         .Where(x => x.Events.Any(e => e.Id == groupEvent.Id))
@@ -154,7 +155,7 @@ namespace LetsGame.Web.Services
 
                     if (groupMemberCount == distinctVoterCount)
                     {
-                        groupEvent.AllVotesInNotificationSentAtUtc = DateTime.UtcNow;
+                        groupEvent.AllVotesInNotificationSentAt = SystemClock.Instance.GetCurrentInstant();
                         await _db.SaveChangesAsync();
                         
                         await _notificationService.NotifyAllVotesIn(groupEvent);
@@ -201,7 +202,7 @@ namespace LetsGame.Web.Services
                 .Where(x => x.Event.CreatorId == CurrentUserId || x.Event.Group.Memberships.Any(m => m.Role == GroupRole.Owner && m.UserId == CurrentUserId))
                 .FirstOrDefaultAsync(x => x.Id == slotId);
 
-            slot.Event.ChosenDateAndTimeUtc = slot.ProposedDateAndTimeUtc;
+            slot.Event.ChosenTime = slot.ProposedTime;
             await _db.SaveChangesAsync();
 
             await _notificationService.NotifySlotPicked(slot.Event, CurrentUserId);
@@ -312,7 +313,7 @@ namespace LetsGame.Web.Services
             return invite.Group;
         }
 
-        public async Task ProposeEventAsync(long groupId, long? gameId, string details, DateTime[] slotsUtc)
+        public async Task ProposeEventAsync(long groupId, long? gameId, string details, Instant[] slots)
         {
             GroupGame? game = null;
             if (gameId.HasValue)
@@ -327,10 +328,10 @@ namespace LetsGame.Web.Services
                 Game = game,
                 Details = details,
                 CreatorId = CurrentUserId,
-                Slots = slotsUtc
-                    .Select(dt => new GroupEventSlot
+                Slots = slots
+                    .Select(s => new GroupEventSlot
                     {
-                        ProposedDateAndTimeUtc = dt,
+                        ProposedTime = s,
                         Votes = new List<GroupEventSlotVote>
                         {
                             new() { VoterId = CurrentUserId }
@@ -357,16 +358,16 @@ namespace LetsGame.Web.Services
             {
                 var wasAvailable = member.IsAvailableNow();
 
-                var utcNow = DateTime.UtcNow;
-                member.AvailableUntilUtc = utcNow + TimeSpan.FromSeconds(lengthInSeconds);
+                var now = SystemClock.Instance.GetCurrentInstant();
+                member.AvailableUntil = now + Duration.FromSeconds(lengthInSeconds);
                 await _db.SaveChangesAsync();
 
                 if (member.IsAvailableNow() &&
                     !wasAvailable &&
-                    (member.AvailabilityNotificationSentAtUtc == null ||
-                     member.AvailabilityNotificationSentAtUtc < utcNow - TimeSpan.FromHours(1)))
+                    (member.AvailabilityNotificationSentAt == null ||
+                     member.AvailabilityNotificationSentAt < now - Duration.FromHours(1)))
                 {
-                    member.AvailabilityNotificationSentAtUtc = utcNow;
+                    member.AvailabilityNotificationSentAt = now;
                     await _db.SaveChangesAsync();
 
                     await _notificationService.NotifyMemberAvailable(member.Group, member);

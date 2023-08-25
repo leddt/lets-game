@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
+using NodaTime;
 
 namespace LetsGame.Web.Data
 {
@@ -16,10 +17,10 @@ namespace LetsGame.Web.Data
         
         public GroupRole Role { get; set; }
         
-        public DateTime? AvailableUntilUtc { get; set; }
-        public DateTime? AvailabilityNotificationSentAtUtc { get; set; }
+        public Instant? AvailableUntil { get; set; }
+        public Instant? AvailabilityNotificationSentAt { get; set; }
 
-        [MemberNotNullWhen(true, nameof(AvailableUntilUtc))]
-        public bool IsAvailableNow() => AvailableUntilUtc > DateTime.UtcNow;
+        [MemberNotNullWhen(true, nameof(AvailableUntil))]
+        public bool IsAvailableNow() => AvailableUntil > SystemClock.Instance.GetCurrentInstant();
     }
 }

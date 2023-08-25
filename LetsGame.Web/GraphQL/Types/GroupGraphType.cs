@@ -10,6 +10,7 @@ using LetsGame.Web.Data;
 using LetsGame.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using NodaTime;
 
 namespace LetsGame.Web.GraphQL.Types
 {
@@ -54,22 +55,24 @@ namespace LetsGame.Web.GraphQL.Types
         public async Task<IEnumerable<ProposedSessionGraphType>> GetProposedSessions(IResolverContext context)
         {
             var events = await context.LoadEventsWithSlotsByGroupId(_group.Id);
+            var now = SystemClock.Instance.GetCurrentInstant();
             
             return events
-                .Where(x => x.ChosenDateAndTimeUtc == null)
-                .Where(x => x.Slots.Any(s => s.ProposedDateAndTimeUtc > DateTime.UtcNow))
-                .OrderBy(x => x.Slots.Where(s => s.ProposedDateAndTimeUtc > DateTime.UtcNow).Min(s => s.ProposedDateAndTimeUtc))
+                .Where(x => x.ChosenTime == null)
+                .Where(x => x.Slots.Any(s => s.ProposedTime > now))
+                .OrderBy(x => x.Slots.Where(s => s.ProposedTime > now).Min(s => s.ProposedTime))
                 .Select(x => new ProposedSessionGraphType(x));
         }
 
         public async Task<IEnumerable<UpcomingSessionGraphType>> GetUpcomingSessions(IResolverContext context)
         {
             var events = await context.LoadEventsWithSlotsByGroupId(_group.Id);
+            var cutoff = SystemClock.Instance.GetCurrentInstant() - Duration.FromHours(6);
             
             return events
-                .Where(x => x.ChosenDateAndTimeUtc != null)
-                .Where(x => x.ChosenDateAndTimeUtc > DateTime.UtcNow.AddHours(-6))
-                .OrderBy(x => x.ChosenDateAndTimeUtc)
+                .Where(x => x.ChosenTime != null)
+                .Where(x => x.ChosenTime > cutoff)
+                .OrderBy(x => x.ChosenTime)
                 .Select(x => new UpcomingSessionGraphType(x));
         }
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using NodaTime;
 
 namespace LetsGame.Web.Data
 {
@@ -19,10 +20,10 @@ namespace LetsGame.Web.Data
         public ICollection<GroupEventSlot> Slots { get; set; }
         public ICollection<GroupEventCantPlay> CantPlays { get; set; }
         
-        public DateTime? ChosenDateAndTimeUtc { get; set; }
-        public DateTime? AllVotesInNotificationSentAtUtc { get; set; }
-        public DateTime? StartingSoonNotificationSentAtUtc { get; set; }
-        public DateTime? ReminderSentAtUtc { get; set; }
+        public Instant? ChosenTime { get; set; }
+        public Instant? AllVotesInNotificationSentAt { get; set; }
+        public Instant? StartingSoonNotificationSentAt { get; set; }
+        public Instant? ReminderSentAt { get; set; }
         
         public string Details { get; set; }
         
@@ -44,7 +45,7 @@ namespace LetsGame.Web.Data
 
         public GroupEventSlot GetChosenSlot()
         {
-            return Slots.FirstOrDefault(s => s.ProposedDateAndTimeUtc == ChosenDateAndTimeUtc);
+            return Slots.FirstOrDefault(s => s.ProposedTime == ChosenTime);
         }
     }
 }

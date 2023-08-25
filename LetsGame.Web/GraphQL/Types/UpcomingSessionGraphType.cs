@@ -12,16 +12,16 @@ namespace LetsGame.Web.GraphQL.Types
 {
     public class UpcomingSessionGraphType : SessionGraphType
     {
-        private GroupEventSlot _slot;
+        private readonly GroupEventSlot _slot;
 
         public UpcomingSessionGraphType(GroupEvent groupEvent) : base(groupEvent)
         {
-            _slot = groupEvent.Slots.Single(x => x.ProposedDateAndTimeUtc == groupEvent.ChosenDateAndTimeUtc);
+            _slot = groupEvent.Slots.Single(x => x.ProposedTime == groupEvent.ChosenTime);
         }
 
         public LocalDateTime GetSessionTime([Service] DateService dateService)
         {
-            return dateService.ConvertFromUtcToUserLocalTime(_slot.ProposedDateAndTimeUtc);
+            return dateService.ConvertToUserLocalTime(_slot.ProposedTime);
         }
 
         public async Task<IEnumerable<MembershipGraphType>> GetParticipants(IResolverContext context)

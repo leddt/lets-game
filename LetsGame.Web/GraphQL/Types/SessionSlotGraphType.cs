@@ -23,7 +23,7 @@ namespace LetsGame.Web.GraphQL.Types
 
         public LocalDateTime GetProposedTime([Service] DateService dateService)
         {
-            return dateService.ConvertFromUtcToUserLocalTime(_slot.ProposedDateAndTimeUtc);
+            return dateService.ConvertToUserLocalTime(_slot.ProposedTime);
         }
 
         public async Task<IEnumerable<MembershipGraphType>> GetVoters(IResolverContext context)

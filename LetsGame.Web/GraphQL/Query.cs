@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -15,7 +14,7 @@ using LetsGame.Web.GraphQL.Types;
 using LetsGame.Web.Services.Igdb;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
+using NodaTime;
 
 namespace LetsGame.Web.GraphQL
 {
@@ -72,13 +71,13 @@ namespace LetsGame.Web.GraphQL
             [ScopedService] ApplicationDbContext db)
         {
             var userId = userManager.GetUserId(user);
-            var threshold = DateTime.UtcNow.AddHours(-3);
+            var threshold = SystemClock.Instance.GetCurrentInstant() - Duration.FromHours(3);
 
             var sessions = await db.GroupEvents
                 .Include(x => x.Slots)
                 .Where(x => x.Group.Memberships.Any(m => m.UserId == userId))
-                .Where(x => x.ChosenDateAndTimeUtc > threshold)
-                .OrderBy(x => x.ChosenDateAndTimeUtc)
+                .Where(x => x.ChosenTime > threshold)
+                .OrderBy(x => x.ChosenTime)
                 .ToListAsync();
 
             return sessions.Select(x => new UpcomingSessionGraphType(x));
@@ -91,13 +90,14 @@ namespace LetsGame.Web.GraphQL
             [ScopedService] ApplicationDbContext db)
         {
             var userId = userManager.GetUserId(user);
+            var now = SystemClock.Instance.GetCurrentInstant();
 
             var sessions = await db.GroupEvents
                 .Include(x => x.Slots)
                 .Where(x => x.Group.Memberships.Any(m => m.UserId == userId))
-                .Where(x => x.ChosenDateAndTimeUtc == null)
-                .Where(x => x.Slots.Any(s => s.ProposedDateAndTimeUtc > DateTime.UtcNow))
-                .OrderBy(x => x.Slots.Where(s => s.ProposedDateAndTimeUtc > DateTime.UtcNow).Min(s => s.ProposedDateAndTimeUtc))
+                .Where(x => x.ChosenTime == null)
+                .Where(x => x.Slots.Any(s => s.ProposedTime > now))
+                .OrderBy(x => x.Slots.Where(s => s.ProposedTime > now).Min(s => s.ProposedTime))
                 .ToListAsync();
 
             return sessions.Select(x => new ProposedSessionGraphType(x));

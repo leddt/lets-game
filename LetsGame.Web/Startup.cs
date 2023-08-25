@@ -30,6 +30,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NodaTime;
+using Npgsql;
 using WebPush;
 
 namespace LetsGame.Web
@@ -50,6 +51,7 @@ namespace LetsGame.Web
         public void ConfigureServices(IServiceCollection services)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            NpgsqlConnection.GlobalTypeMapper.UseNodaTime();
 
             var databaseUrl = Configuration["DATABASE_URL"];
             if (string.IsNullOrWhiteSpace(databaseUrl))
@@ -57,17 +59,17 @@ namespace LetsGame.Web
                 services.AddHostedService<EmbeddedPostgresHostedService>();
                 databaseUrl = EmbeddedPostgresHostedService.DatabaseUrl;
             }
-
+            
             services.AddPooledDbContextFactory<ApplicationDbContext>(options =>
             {
                 options
-                    .UseNpgsql(ConvertPostgresqlConnectionString(databaseUrl))
+                    .UseNpgsql(ConvertPostgresqlConnectionString(databaseUrl), o => o.UseNodaTime())
                     .LogTo(Console.WriteLine, new[] {DbLoggerCategory.Database.Command.Name}, LogLevel.Information);
             });
             services.AddDbContextPool<ApplicationDbContext>(options =>
             {
                 options
-                    .UseNpgsql(ConvertPostgresqlConnectionString(databaseUrl))
+                    .UseNpgsql(ConvertPostgresqlConnectionString(databaseUrl), o => o.UseNodaTime())
                     .LogTo(Console.WriteLine, new[] {DbLoggerCategory.Database.Command.Name}, LogLevel.Information);
             });
             
