@@ -39,7 +39,7 @@ namespace LetsGame.Web.Services
             _notificationService = notificationService;
         }
 
-        public Task<Group> FindBySlugAsync(string slug)
+        public Task<Group?> FindBySlugAsync(string slug)
         {
             return _db.Groups.FirstOrDefaultAsync(x => x.Slug == slug &&
                                                        x.Memberships.Any(m => m.UserId == CurrentUserId));
@@ -135,7 +135,8 @@ namespace LetsGame.Web.Services
                 
                 await _db.SaveChangesAsync();
 
-                var groupEvent = await _db.GroupEvents.FindAsync(slot.EventId);
+                var groupEvent = await _db.GroupEvents.FindAsync(slot.EventId)
+                                 ?? throw new Exception("Event not found");
                 if (groupEvent.CreatorId != CurrentUserId && 
                     groupEvent.ChosenTime == null && 
                     groupEvent.AllVotesInNotificationSentAt == null)
@@ -200,7 +201,7 @@ namespace LetsGame.Web.Services
             var slot = await _db.GroupEventSlots
                 .Include(x => x.Event)
                 .Where(x => x.Event.CreatorId == CurrentUserId || x.Event.Group.Memberships.Any(m => m.Role == GroupRole.Owner && m.UserId == CurrentUserId))
-                .FirstOrDefaultAsync(x => x.Id == slotId);
+                .FirstAsync(x => x.Id == slotId);
 
             slot.Event.ChosenTime = slot.ProposedTime;
             await _db.SaveChangesAsync();
@@ -254,7 +255,7 @@ namespace LetsGame.Web.Services
         {
             var member = await _db.Memberships
                 .Where(m => m.GroupId == groupId && m.UserId == CurrentUserId)
-                .FirstOrDefaultAsync();
+                .FirstAsync();
 
             if (member.Role == GroupRole.Owner)
                 throw new InvalidOperationException("Owner can't leave group");
@@ -290,7 +291,7 @@ namespace LetsGame.Web.Services
         {
             var invite = await _db.GroupInvites
                 .Include(x => x.Group).ThenInclude(x => x.Memberships)
-                .FirstOrDefaultAsync(x => x.Id == inviteId);
+                .FirstAsync(x => x.Id == inviteId);
 
             if (invite.Group.Memberships.Any(m => m.UserId == CurrentUserId))
                 return invite.Group;

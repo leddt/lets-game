@@ -51,7 +51,6 @@ namespace LetsGame.Web
         public void ConfigureServices(IServiceCollection services)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            NpgsqlConnection.GlobalTypeMapper.UseNodaTime();
 
             var databaseUrl = Configuration["DATABASE_URL"];
             if (string.IsNullOrWhiteSpace(databaseUrl))
@@ -59,17 +58,21 @@ namespace LetsGame.Web
                 services.AddHostedService<EmbeddedPostgresHostedService>();
                 databaseUrl = EmbeddedPostgresHostedService.DatabaseUrl;
             }
+
+            var dataSourceBuilder = new NpgsqlDataSourceBuilder(ConvertPostgresqlConnectionString(databaseUrl));
+            dataSourceBuilder.UseNodaTime();
+            var dataSource = dataSourceBuilder.Build();
             
             services.AddPooledDbContextFactory<ApplicationDbContext>(options =>
             {
                 options
-                    .UseNpgsql(ConvertPostgresqlConnectionString(databaseUrl), o => o.UseNodaTime())
+                    .UseNpgsql(dataSource, o => o.UseNodaTime())
                     .LogTo(Console.WriteLine, new[] {DbLoggerCategory.Database.Command.Name}, LogLevel.Information);
             });
             services.AddDbContextPool<ApplicationDbContext>(options =>
             {
                 options
-                    .UseNpgsql(ConvertPostgresqlConnectionString(databaseUrl), o => o.UseNodaTime())
+                    .UseNpgsql(dataSource, o => o.UseNodaTime())
                     .LogTo(Console.WriteLine, new[] {DbLoggerCategory.Database.Command.Name}, LogLevel.Information);
             });
             
