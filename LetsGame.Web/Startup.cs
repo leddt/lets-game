@@ -2,6 +2,7 @@ using System;
 using System.Net;
 using System.Text;
 using HotChocolate;
+using HotChocolate.Data;
 using HotChocolate.Types.NodaTime;
 using LetsGame.Web.Authorization;
 using LetsGame.Web.Authorization.Requirements;
@@ -51,7 +52,6 @@ namespace LetsGame.Web
         public void ConfigureServices(IServiceCollection services)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            NpgsqlConnection.GlobalTypeMapper.UseNodaTime();
 
             var databaseUrl = Configuration["DATABASE_URL"];
             if (string.IsNullOrWhiteSpace(databaseUrl))
@@ -59,17 +59,21 @@ namespace LetsGame.Web
                 services.AddHostedService<EmbeddedPostgresHostedService>();
                 databaseUrl = EmbeddedPostgresHostedService.DatabaseUrl;
             }
+
+            var dataSourceBuilder = new NpgsqlDataSourceBuilder(ConvertPostgresqlConnectionString(databaseUrl));
+            dataSourceBuilder.UseNodaTime();
+            var dataSource = dataSourceBuilder.Build();
             
             services.AddPooledDbContextFactory<ApplicationDbContext>(options =>
             {
                 options
-                    .UseNpgsql(ConvertPostgresqlConnectionString(databaseUrl), o => o.UseNodaTime())
+                    .UseNpgsql(dataSource, o => o.UseNodaTime())
                     .LogTo(Console.WriteLine, new[] {DbLoggerCategory.Database.Command.Name}, LogLevel.Information);
             });
             services.AddDbContextPool<ApplicationDbContext>(options =>
             {
                 options
-                    .UseNpgsql(ConvertPostgresqlConnectionString(databaseUrl), o => o.UseNodaTime())
+                    .UseNpgsql(dataSource, o => o.UseNodaTime())
                     .LogTo(Console.WriteLine, new[] {DbLoggerCategory.Database.Command.Name}, LogLevel.Information);
             });
             
@@ -163,6 +167,7 @@ namespace LetsGame.Web
                 .AddMutationType<Mutation>()
                 .AddSubscriptionType<Subscription>()
                 .AddInMemorySubscriptions()
+                .RegisterDbContext<ApplicationDbContext>(DbContextKind.Pooled)
                 .ConfigureSchema(x => x.AddType<LocalDateTimeType>());
             
             // SPA Services

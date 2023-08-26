@@ -7,6 +7,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NodaTime;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
+#nullable disable
+
 namespace LetsGame.Web.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
@@ -16,9 +18,10 @@ namespace LetsGame.Web.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .UseIdentityByDefaultColumns()
-                .HasAnnotation("Relational:MaxIdentifierLength", 63)
-                .HasAnnotation("ProductVersion", "5.0.10");
+                .HasAnnotation("ProductVersion", "7.0.10")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("LetsGame.Web.Data.AppUser", b =>
                 {
@@ -117,15 +120,16 @@ namespace LetsGame.Web.Data.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex");
 
-                    b.ToTable("AspNetUsers");
+                    b.ToTable("AspNetUsers", (string)null);
                 });
 
             modelBuilder.Entity("LetsGame.Web.Data.Group", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .UseIdentityByDefaultColumn();
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Name")
                         .HasColumnType("text");
@@ -145,14 +149,15 @@ namespace LetsGame.Web.Data.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .UseIdentityByDefaultColumn();
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<Instant?>("AllVotesInNotificationSentAt")
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Instant?>("ChosenTime")
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("CreatorId")
                         .HasColumnType("text");
@@ -167,10 +172,10 @@ namespace LetsGame.Web.Data.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<Instant?>("ReminderSentAt")
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Instant?>("StartingSoonNotificationSentAt")
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -192,7 +197,7 @@ namespace LetsGame.Web.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<Instant>("AddedAt")
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("EventId", "UserId");
 
@@ -205,14 +210,15 @@ namespace LetsGame.Web.Data.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .UseIdentityByDefaultColumn();
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<long>("EventId")
                         .HasColumnType("bigint");
 
                     b.Property<Instant>("ProposedTime")
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -230,7 +236,7 @@ namespace LetsGame.Web.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<Instant>("VotedAt")
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("SlotId", "VoterId");
 
@@ -243,8 +249,9 @@ namespace LetsGame.Web.Data.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .UseIdentityByDefaultColumn();
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<long>("GroupId")
                         .HasColumnType("bigint");
@@ -271,7 +278,7 @@ namespace LetsGame.Web.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<Instant>("CreatedAt")
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<long>("GroupId")
                         .HasColumnType("bigint");
@@ -295,10 +302,10 @@ namespace LetsGame.Web.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<Instant?>("AvailabilityNotificationSentAt")
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Instant?>("AvailableUntil")
-                        .HasColumnType("timestamp");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("DisplayName")
                         .HasColumnType("text");
@@ -319,8 +326,9 @@ namespace LetsGame.Web.Data.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .UseIdentityByDefaultColumn();
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("SubscriptionJson")
                         .HasColumnType("text");
@@ -340,8 +348,9 @@ namespace LetsGame.Web.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .UseIdentityByDefaultColumn();
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("FriendlyName")
                         .HasColumnType("text");
@@ -377,15 +386,16 @@ namespace LetsGame.Web.Data.Migrations
                         .IsUnique()
                         .HasDatabaseName("RoleNameIndex");
 
-                    b.ToTable("AspNetRoles");
+                    b.ToTable("AspNetRoles", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .UseIdentityByDefaultColumn();
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
                         .HasColumnType("text");
@@ -401,15 +411,16 @@ namespace LetsGame.Web.Data.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("AspNetRoleClaims");
+                    b.ToTable("AspNetRoleClaims", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .UseIdentityByDefaultColumn();
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
                         .HasColumnType("text");
@@ -425,7 +436,7 @@ namespace LetsGame.Web.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AspNetUserClaims");
+                    b.ToTable("AspNetUserClaims", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
@@ -449,7 +460,7 @@ namespace LetsGame.Web.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AspNetUserLogins");
+                    b.ToTable("AspNetUserLogins", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
@@ -464,7 +475,7 @@ namespace LetsGame.Web.Data.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("AspNetUserRoles");
+                    b.ToTable("AspNetUserRoles", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
@@ -485,7 +496,7 @@ namespace LetsGame.Web.Data.Migrations
 
                     b.HasKey("UserId", "LoginProvider", "Name");
 
-                    b.ToTable("AspNetUserTokens");
+                    b.ToTable("AspNetUserTokens", (string)null);
                 });
 
             modelBuilder.Entity("LetsGame.Web.Data.GroupEvent", b =>

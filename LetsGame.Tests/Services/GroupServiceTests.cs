@@ -97,9 +97,9 @@ namespace LetsGame.Tests.Services
             
             Assert.Equal("Test group", group.Name);
             Assert.Equal("test-group", group.Slug);
-            Assert.Equal(1, group.Memberships.Count);
-            Assert.Equal(_currentUser, group.Memberships.First().User);
-            Assert.Equal(GroupRole.Owner, group.Memberships.First().Role);
+            var membership = Assert.Single(group.Memberships);
+            Assert.Equal(_currentUser, membership.User);
+            Assert.Equal(GroupRole.Owner, membership.Role);
         }
 
         [Fact]
@@ -147,7 +147,7 @@ namespace LetsGame.Tests.Services
             
             await _sut.AddGameToGroupAsync(group.Id, 42);
 
-            Assert.Equal(1, group.Games.Count);
+            Assert.Single(group.Games);
         }
 
         [Fact]
@@ -162,8 +162,8 @@ namespace LetsGame.Tests.Services
                 .Include(x => x.Votes).ThenInclude(x => x.Voter)
                 .FirstOrDefaultAsync(x => x.Id == slot.Id);
             
-            Assert.Equal(1, slot.Votes.Count);
-            Assert.Equal(_currentUser, slot.Votes.First().Voter);
+            var vote = Assert.Single(slot.Votes);
+            Assert.Equal(_currentUser, vote.Voter);
         }
 
         [Fact]
@@ -181,7 +181,7 @@ namespace LetsGame.Tests.Services
                 .Include(x => x.Votes).ThenInclude(x => x.Voter)
                 .FirstOrDefaultAsync(x => x.Id == slot.Id);
             
-            Assert.Equal(0, slot.Votes.Count);
+            Assert.Empty(slot.Votes);
         }
 
         [Fact]
@@ -198,7 +198,7 @@ namespace LetsGame.Tests.Services
                 .Include(x => x.Votes).ThenInclude(x => x.Voter)
                 .FirstOrDefaultAsync(x => x.Id == slot.Id);
             
-            Assert.Equal(1, slot.Votes.Count);
+            Assert.Single(slot.Votes);
         }
 
         [Fact]
