@@ -3,7 +3,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using HotChocolate;
-using HotChocolate.AspNetCore.Authorization;
+using HotChocolate.Authorization;
 using HotChocolate.Data;
 using HotChocolate.Resolvers;
 using HotChocolate.Types;
@@ -29,7 +29,7 @@ namespace LetsGame.Web.GraphQL
         public async Task<IEnumerable<GroupGraphType>> GetGroups(
             ClaimsPrincipal user,
             [Service] UserManager<AppUser> userManager,
-            [ScopedService] ApplicationDbContext db)
+            ApplicationDbContext db)
         {
             var userId = userManager.GetUserId(user);
             
@@ -68,7 +68,7 @@ namespace LetsGame.Web.GraphQL
         public async Task<IEnumerable<UpcomingSessionGraphType>> GetUpcomingSessions(
             ClaimsPrincipal user,
             [Service] UserManager<AppUser> userManager,
-            [ScopedService] ApplicationDbContext db)
+            ApplicationDbContext db)
         {
             var userId = userManager.GetUserId(user);
             var threshold = SystemClock.Instance.GetCurrentInstant() - Duration.FromHours(3);
@@ -87,7 +87,7 @@ namespace LetsGame.Web.GraphQL
         public async Task<IEnumerable<ProposedSessionGraphType>> GetProposedSessions(
             ClaimsPrincipal user,
             [Service] UserManager<AppUser> userManager,
-            [ScopedService] ApplicationDbContext db)
+            ApplicationDbContext db)
         {
             var userId = userManager.GetUserId(user);
             var now = SystemClock.Instance.GetCurrentInstant();

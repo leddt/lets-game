@@ -2,6 +2,7 @@ using System;
 using System.Net;
 using System.Text;
 using HotChocolate;
+using HotChocolate.Data;
 using HotChocolate.Types.NodaTime;
 using LetsGame.Web.Authorization;
 using LetsGame.Web.Authorization.Requirements;
@@ -166,6 +167,7 @@ namespace LetsGame.Web
                 .AddMutationType<Mutation>()
                 .AddSubscriptionType<Subscription>()
                 .AddInMemorySubscriptions()
+                .RegisterDbContext<ApplicationDbContext>(DbContextKind.Pooled)
                 .ConfigureSchema(x => x.AddType<LocalDateTimeType>());
             
             // SPA Services

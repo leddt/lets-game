@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using HotChocolate;
-using HotChocolate.AspNetCore.Authorization;
+using HotChocolate.Authorization;
 using HotChocolate.Subscriptions;
 using HotChocolate.Types;
 using LetsGame.Web.Authorization;
