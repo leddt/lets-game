@@ -3,7 +3,9 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace LetsGame.Web.Data.Migrations
 {
+#pragma warning disable CS8981 // The type name only contains lower-cased ascii characters. Such names may become reserved for the language.
     public partial class cantplays : Migration
+#pragma warning restore CS8981 // The type name only contains lower-cased ascii characters. Such names may become reserved for the language.
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {

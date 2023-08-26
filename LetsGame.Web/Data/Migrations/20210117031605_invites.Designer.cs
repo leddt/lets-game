@@ -11,7 +11,9 @@ namespace LetsGame.Web.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     [Migration("20210117031605_invites")]
+#pragma warning disable CS8981 // The type name only contains lower-cased ascii characters. Such names may become reserved for the language.
     partial class invites
+#pragma warning restore CS8981 // The type name only contains lower-cased ascii characters. Such names may become reserved for the language.
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

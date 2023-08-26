@@ -424,7 +424,7 @@ namespace LetsGame.Web.Services
             return membership;
         }
 
-        private string CurrentUserId => _userManager.GetUserId(_currentUserAccessor.CurrentUser);
+        private string? CurrentUserId => _userManager.GetUserId(_currentUserAccessor.CurrentUser);
 
         private Task<string> CreateSlugFromGroupNameAsync(string name)
         {
