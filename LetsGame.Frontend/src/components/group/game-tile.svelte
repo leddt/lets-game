@@ -5,6 +5,7 @@
   let classNames = "";
 
   export let game;
+  export let small = false;
   export { classNames as class };
 
   const dispatch = createEventDispatcher();
@@ -12,18 +13,20 @@
 
 {#if game.igdbImageId}
   <div
-    class="game-tile {classNames}"
+    class="game-tile {classNames} {small ? 'small' : ''}"
     style="background-image: url(https://images.igdb.com/igdb/image/upload/t_screenshot_med/{game.igdbImageId}.jpg)"
-    use:tooltip={game.name}
     on:click={() => dispatch("click")}
   >
+    <div>
+      <p>{game.name}</p>
+    </div>
     <div class="slot">
       <slot />
     </div>
   </div>
 {:else}
   <div
-    class="game-tile no-image {classNames}"
+    class="game-tile no-image {classNames} {small ? 'small' : ''}"
     on:click={() => dispatch("click")}
   >
     <div>
@@ -47,10 +50,21 @@
     @apply border-gray-600;
   }
 
-  .game-tile.no-image div {
+  .game-tile div:not(.slot) {
     @apply absolute overflow-hidden px-1
            w-full h-full flex flex-col items-center justify-evenly
-           text-sm text-center leading-tight;
+           text-2xl text-center leading-tight
+           text-white font-bold
+           bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.5),transparent)];
+  }
+
+  .game-tile.small div:not(.slot) {
+    @apply text-sm;
+  }
+
+  .game-tile.no-image div:not(.slot) {
+    @apply text-sm text-black font-normal;
+    background-image: none;
   }
 
   .game-tile .slot {

@@ -55,7 +55,7 @@
 {:else}
   <div class="grid grid-cols-2 gap-2">
     {#each group?.games || [] as game (game.id)}
-      <GameTile {game}>
+      <GameTile {game} small>
         {#if isOwner}
           <Button
             class="absolute bottom-1 right-1"

@@ -112,7 +112,7 @@
         variables: {
           sessionId: session.id,
         },
-      }
+      },
     ).subscribe(() => {});
 
     onDestroy(unsubscribe);
@@ -127,7 +127,7 @@
     400,
     {
       trailing: false,
-    }
+    },
   );
 
   function vote(slot) {
@@ -322,40 +322,62 @@
   }
 </script>
 
-<Card image={gameImage} width="w-164" imageHeight="h-48">
-  <div class="flex flex-col gap-2 h-full">
-    <div class="flex items-center">
-      <h3>{session.game?.name || "Any game"}</h3>
-      {#if canManageSession}
-        <LinkButton
-          class="ml-2"
-          tip="Edit game"
-          on:click={() => editGameDialog.showModal()}>✎</LinkButton
-        >
-        <Dialog bind:this={editGameDialog} let:close>
-          <h2 class="mb-4">Choose new game</h2>
-          <GamePicker games={group.games} bind:game={selectedGame} />
+{#if canManageSession}
+  <Dialog bind:this={editGameDialog} let:close>
+    <h2 class="mb-4">Choose new game</h2>
+    <GamePicker games={group.games} bind:game={selectedGame} />
 
-          <div class="mt-8 flex gap-8">
-            <Button
-              disabled={!selectedGame}
-              on:click={async () => await saveGame(close)}
-            >
-              Set game
-            </Button>
-            <LinkButton on:click={close}>Cancel</LinkButton>
-          </div>
-        </Dialog>
-      {/if}
-      {#if canManageSession}
-        <Button
-          class="ml-auto"
-          color="red"
-          tip="Cancel this session"
-          on:click={deleteSession}
-        >
+    <div class="mt-8 flex gap-8">
+      <Button
+        disabled={!selectedGame}
+        on:click={async () => await saveGame(close)}
+      >
+        Set game
+      </Button>
+      <LinkButton on:click={close}>Cancel</LinkButton>
+    </div>
+  </Dialog>
+{/if}
+
+<Card image={gameImage} width="w-164" imageHeight="h-48">
+  <div
+    slot="image-content"
+    class="relative h-full flex items-center justify-center bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.5),transparent)]"
+  >
+    <div class="text-white text-2xl font-bold">
+      {session.game?.name}
+    </div>
+    {#if canManageSession}
+      <div class="absolute top-0 right-0 p-1 flex gap-1">
+        <Button tip="Edit game" on:click={() => editGameDialog.showModal()}>
+          ✎
+        </Button>
+        <Button color="red" tip="Cancel this session" on:click={deleteSession}>
           &times;
         </Button>
+      </div>
+    {/if}
+  </div>
+
+  <div class="flex flex-col gap-2 h-full">
+    <div class="flex items-center">
+      {#if !gameImage}
+        <h3>{session.game?.name || "Any game"}</h3>
+        {#if canManageSession}
+          <LinkButton
+            class="ml-2"
+            tip="Edit game"
+            on:click={() => editGameDialog.showModal()}>✎</LinkButton
+          >
+          <Button
+            class="ml-auto"
+            color="red"
+            tip="Cancel this session"
+            on:click={deleteSession}
+          >
+            &times;
+          </Button>
+        {/if}
       {/if}
     </div>
 

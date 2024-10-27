@@ -14,7 +14,9 @@
     <div
       class="bg-cover bg-center {imageHeight} rounded-t"
       style="background-image: url({image})"
-    />
+    >
+      <slot name="image-content" />
+    </div>
   {/if}
   <div class="m-2 flex-grow">
     <slot />

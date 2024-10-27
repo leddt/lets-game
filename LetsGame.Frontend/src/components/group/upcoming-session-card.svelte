@@ -53,7 +53,7 @@
     : null;
 
   $: isPartOfSession = !!session?.participants?.find(
-    (x) => x.userId === $me.id
+    (x) => x.userId === $me.id,
   );
   $: isSessionCreator = session.creator.userId === $me?.id;
 
@@ -71,7 +71,7 @@
         variables: {
           sessionId: session.id,
         },
-      }
+      },
     ).subscribe(() => {});
 
     onDestroy(unsubscribe);
@@ -141,15 +141,36 @@
 </script>
 
 <Card image={gameImage}>
-  <div class="flex flex-col gap-2 h-full">
-    <div class="flex justify-between items-center">
-      <h3>{session.game?.name || "Any game"}</h3>
-      {#if isSessionCreator}
+  <div
+    slot="image-content"
+    class="relative h-full flex items-center justify-center bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.5),transparent)]"
+  >
+    <div class="text-white text-xl font-bold">
+      {session.game?.name}
+    </div>
+    {#if isSessionCreator}
+      <div class="absolute top-0 right-0 p-1 flex gap-1">
         <Button color="red" tip="Cancel this session" on:click={deleteSession}>
           &times;
         </Button>
-      {/if}
-    </div>
+      </div>
+    {/if}
+  </div>
+  <div class="flex flex-col gap-2 h-full">
+    {#if !gameImage}
+      <div class="flex justify-between items-center">
+        <h3>{session.game?.name || "Any game"}</h3>
+        {#if isSessionCreator}
+          <Button
+            color="red"
+            tip="Cancel this session"
+            on:click={deleteSession}
+          >
+            &times;
+          </Button>
+        {/if}
+      </div>
+    {/if}
     <span class="font-semibold">{friendlyDateTime(session.sessionTime)}</span>
     <AvatarList people={session.participants}>
       {#if isPartOfSession}
