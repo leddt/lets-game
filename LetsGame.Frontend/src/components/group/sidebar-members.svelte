@@ -23,14 +23,12 @@
   import { fade } from "svelte/transition";
   import { time } from "@/lib/date-helpers";
   import { me } from "@/lib/store";
-  import { usePresence } from "@/lib/presence";
   import client from "@/lib/apollo";
   import Avatar from "@/components/ui/avatar.svelte";
   import Button from "@/components/ui/button.svelte";
 
   export let group;
 
-  $: presences = group ? usePresence(group.id) : null;
   $: isOwner = group?.self.role === "OWNER";
 
   function removeMember(member) {
@@ -86,7 +84,6 @@
           id={member.id}
           name={member.displayName}
           active={!!member.availableUntil}
-          online={$presences.includes(member.userId)}
         />
         <div class="flex-grow">
           <div>
