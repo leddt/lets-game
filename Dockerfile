@@ -9,7 +9,7 @@ FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
  
 RUN apt-get update -yq \
     && apt-get install curl gnupg -yq \
-    && curl -sL https://deb.nodesource.com/setup_14.x | bash \
+    && curl -sL https://deb.nodesource.com/setup_22.x | bash \
     && apt-get install nodejs -yq
 
 WORKDIR /src
