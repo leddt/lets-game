@@ -203,6 +203,12 @@ namespace LetsGame.Web
             {
                 db.Database.Migrate();
             }
+
+            app.Use(async (ctx, next) =>
+            {
+                Console.WriteLine("Request IP: {0}", ctx.Connection.RemoteIpAddress);
+                await next();
+            });
             
             app.UseForwardedHeaders();
 
