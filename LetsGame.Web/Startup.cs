@@ -117,6 +117,7 @@ namespace LetsGame.Web
 
             services.Configure<ForwardedHeadersOptions>(options =>
             {
+                options.KnownNetworks.Add(new IPNetwork(IPAddress.Parse("::ffff:169.0.0.0"), 104));
                 options.KnownNetworks.Add(new IPNetwork(IPAddress.Parse("::ffff:172.0.0.0"), 104));
                 options.ForwardedHeaders = ForwardedHeaders.XForwardedFor |
                                            ForwardedHeaders.XForwardedProto;
