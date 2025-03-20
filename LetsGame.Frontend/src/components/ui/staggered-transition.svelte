@@ -2,7 +2,8 @@
   import { onMount } from "svelte";
 
   export let key = undefined;
-  export let baseDelay = 75;
+  export let delay = 0;
+  export let increment = 75;
   export let duration = 200;
   export let start = 0.95;
 
@@ -11,7 +12,7 @@
   // Create a function to get transition params
   const getTransition = () => ({
     duration,
-    delay: baseDelay * nextIndex++,
+    delay: delay + increment * nextIndex++,
     start,
   });
 

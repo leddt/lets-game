@@ -6,6 +6,7 @@
   import Button from "@/components/ui/button.svelte";
   import CalendarPicker from "@/components/ui/calendar-picker.svelte";
   import Section from "@/components/ui/section.svelte";
+  import StaggeredTransition from "@/components/ui/staggered-transition.svelte";
   import Textarea from "@/components/ui/textarea.svelte";
   import TimeslotsPicker from "@/components/ui/timeslots-picker.svelte";
   import GamePicker from "@/components/group/game-picker.svelte";
@@ -13,6 +14,7 @@
 
   import { friendlyDateTime } from "@/lib/date-helpers";
   import client from "@/lib/apollo";
+  import { scale } from "svelte/transition";
 
   const navigate = useNavigate();
   const today = startOfDay(new Date());
@@ -66,53 +68,59 @@
 </script>
 
 <div class="p-4 flex-grow">
-  <Section title="Propose a session">
-    <div>
-      <h3>Pick game</h3>
-      <GamePicker games={group.games} bind:game={selectedGame} />
-    </div>
+  <StaggeredTransition let:getTransition>
+    <div in:scale={getTransition()}>
+      <Section title="Propose a session">
+        <div>
+          <h3>Pick game</h3>
+          <GamePicker games={group.games} bind:game={selectedGame} />
+        </div>
 
-    {#if selectedGame}
-      <div class="pt-4">
-        <h3>Choose time slots</h3>
+        {#if selectedGame}
+          <div class="pt-4">
+            <h3>Choose time slots</h3>
 
-        <div class="flex flex-col lg:flex-row gap-4">
-          <div>
-            <div class="w-80">
-              <h4>Pick dates</h4>
-              <CalendarPicker min={today} bind:pickedDates />
+            <div class="flex flex-col lg:flex-row gap-4">
+              <div>
+                <div class="w-80">
+                  <h4>Pick dates</h4>
+                  <CalendarPicker min={today} bind:pickedDates />
+                </div>
+              </div>
+              {#if pickedDates.length > 0}
+                <div>
+                  <h4>Pick times</h4>
+                  <TimeslotsPicker dates={pickedDates} bind:dateTimes />
+                </div>
+              {/if}
             </div>
           </div>
-          {#if pickedDates.length > 0}
-            <div>
-              <h4>Pick times</h4>
-              <TimeslotsPicker dates={pickedDates} bind:dateTimes />
-            </div>
-          {/if}
-        </div>
-      </div>
 
-      <div class="pt-4">
-        <h3>Anything to add?</h3>
-        <Textarea bind:value={details} class="w-full max-w-3xl" />
-      </div>
-    {/if}
+          <div class="pt-4">
+            <h3>Anything to add?</h3>
+            <Textarea bind:value={details} class="w-full max-w-3xl" />
+          </div>
+        {/if}
 
-    {#if dateTimes.length > 0}
-      <div class="pt-4">
-        <h3>Summary</h3>
-        Your {selectedGame.id === null ? "gaming" : selectedGame.name} session will
-        have {dateTimes.length}
-        {dateTimes.length > 1 ? "slots" : "slot"}:
-        <ul class="list-disc mb-4">
-          {#each dateTimes as dateTime}
-            <li class="ml-6">{friendlyDateTime(dateTime)}</li>
-          {/each}
-        </ul>
-        <Button on:click={createSession}>Looks good, create the session</Button>
-      </div>
-    {/if}
-  </Section>
+        {#if dateTimes.length > 0}
+          <div class="pt-4">
+            <h3>Summary</h3>
+            Your {selectedGame.id === null ? "gaming" : selectedGame.name} session
+            will have {dateTimes.length}
+            {dateTimes.length > 1 ? "slots" : "slot"}:
+            <ul class="list-disc mb-4">
+              {#each dateTimes as dateTime}
+                <li class="ml-6">{friendlyDateTime(dateTime)}</li>
+              {/each}
+            </ul>
+            <Button on:click={createSession}
+              >Looks good, create the session</Button
+            >
+          </div>
+        {/if}
+      </Section>
+    </div>
+  </StaggeredTransition>
 </div>
 
 <style lang="postcss">

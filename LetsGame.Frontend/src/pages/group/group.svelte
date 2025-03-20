@@ -10,6 +10,7 @@
 
   import CardList from "@/components/ui/card-list.svelte";
   import Section from "@/components/ui/section.svelte";
+  import StaggeredTransition from "@/components/ui/staggered-transition.svelte";
   import Button from "@/components/ui/button.svelte";
   import UpcomingSessionCard from "@/components/group/upcoming-session-card.svelte";
   import ProposedSessionCard from "@/components/group/proposed-session-card.svelte";
@@ -20,6 +21,7 @@
 
   import { copyToClipboard } from "@/lib/clipboard";
   import client from "@/lib/apollo";
+  import { scale } from "svelte/transition";
 
   export let slug;
 
@@ -59,7 +61,7 @@
       variables: {
         slug,
       },
-    }
+    },
   );
 
   $: groupData.refetch();
@@ -68,6 +70,7 @@
   $: isMainGroupPage = $location.pathname === mainGroupPage;
   $: icalLink = `${window.location.origin}/group/${slug}.ics?k=${group?.sharingKey}`;
   $: isOwner = group?.self.role === "OWNER";
+  $: key = $location.pathname;
 
   $: if (group) {
     const unsubscribe = subscribe(
@@ -91,7 +94,7 @@
         variables: {
           groupId: group.id,
         },
-      }
+      },
     ).subscribe(() => {});
 
     onDestroy(unsubscribe);
@@ -143,23 +146,30 @@
       class="p-4 bg-gray-600 text-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between"
     >
       <h1>{group?.name}</h1>
-      <div class="flex gap-2">
-        {#if isMainGroupPage}
-          <Button on:click={() => copyToClipboard(icalLink)}>
-            Copy iCal URL
-          </Button>
-
-          {#if isOwner}
-            <Button color="red" on:click={deleteGroup}>Delete group</Button>
+      <StaggeredTransition {key} let:getTransition>
+        <div class="flex gap-2 flex-row-reverse">
+          {#if isMainGroupPage}
+            <span in:scale={getTransition()}>
+              {#if isOwner}
+                <Button color="red" on:click={deleteGroup}>Delete group</Button>
+              {:else}
+                <Button color="red" on:click={leaveGroup}>Leave group</Button>
+              {/if}
+            </span>
+            <span in:scale={getTransition()}>
+              <Button on:click={() => copyToClipboard(icalLink)}>
+                Copy iCal URL
+              </Button>
+            </span>
           {:else}
-            <Button color="red" on:click={leaveGroup}>Leave group</Button>
+            <span in:scale={getTransition()}>
+              <Button on:click={() => navigate(mainGroupPage)}>
+                Back to group page
+              </Button>
+            </span>
           {/if}
-        {:else}
-          <Button on:click={() => navigate(mainGroupPage)}>
-            Back to group page
-          </Button>
-        {/if}
-      </div>
+        </div>
+      </StaggeredTransition>
     </div>
 
     <div class="flex flex-col sm:flex-row flex-grow">
@@ -174,44 +184,50 @@
               to get started.
             </div>
           {:else}
-            {#if group?.upcomingSessions?.length > 0}
-              <Section
-                title="Upcoming sessions ({group.upcomingSessions.length})"
-              >
-                <CardList>
-                  {#each group.upcomingSessions as s (s.id)}
-                    <UpcomingSessionCard session={s} />
-                  {/each}
-                </CardList>
-              </Section>
-            {/if}
+            <StaggeredTransition {key} let:getTransition>
+              {#if group?.upcomingSessions?.length > 0}
+                <div in:scale={getTransition()}>
+                  <Section
+                    title="Upcoming sessions ({group.upcomingSessions.length})"
+                  >
+                    <CardList>
+                      {#each group.upcomingSessions as s (s.id)}
+                        <UpcomingSessionCard session={s} />
+                      {/each}
+                    </CardList>
+                  </Section>
+                </div>
+              {/if}
 
-            {#if group?.proposedSessions}
-              <Section
-                title={"Proposed sessions" +
-                  (group.proposedSessions.length > 0
-                    ? ` (${group.proposedSessions.length})`
-                    : "")}
-              >
-                <Button
-                  color="green"
-                  slot="right"
-                  on:click={() => navigate("propose-event")}
-                >
-                  Propose new session
-                </Button>
+              {#if group?.proposedSessions}
+                <div in:scale={getTransition()}>
+                  <Section
+                    title={"Proposed sessions" +
+                      (group.proposedSessions.length > 0
+                        ? ` (${group.proposedSessions.length})`
+                        : "")}
+                  >
+                    <Button
+                      color="green"
+                      slot="right"
+                      on:click={() => navigate("propose-event")}
+                    >
+                      Propose new session
+                    </Button>
 
-                {#if group.proposedSessions.length > 0}
-                  <CardList>
-                    {#each group.proposedSessions as s (s.id)}
-                      <ProposedSessionCard session={s} {group} />
-                    {/each}
-                  </CardList>
-                {:else}
-                  <p>No session is being planned right now.</p>
-                {/if}
-              </Section>
-            {/if}
+                    {#if group.proposedSessions.length > 0}
+                      <CardList>
+                        {#each group.proposedSessions as s (s.id)}
+                          <ProposedSessionCard session={s} {group} />
+                        {/each}
+                      </CardList>
+                    {:else}
+                      <p>No session is being planned right now.</p>
+                    {/if}
+                  </Section>
+                </div>
+              {/if}
+            </StaggeredTransition>
           {/if}
         </div>
 

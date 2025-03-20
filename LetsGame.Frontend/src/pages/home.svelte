@@ -3,9 +3,11 @@
   import { proposedSessionSummaryCardFragment } from "@/components/home/proposed-session-summary-card.svelte";
 
   import Section from "@/components/ui/section.svelte";
+  import StaggeredTransition from "@/components/ui/staggered-transition.svelte";
   import CardList from "@/components/ui/card-list.svelte";
   import UpcomingSessionSummaryCard from "@/components/home/upcoming-session-summary-card.svelte";
   import ProposedSessionSummaryCard from "@/components/home/proposed-session-summary-card.svelte";
+  import { scale } from "svelte/transition";
 
   import gql from "graphql-tag";
   import { query } from "svelte-apollo";
@@ -51,26 +53,32 @@
       {/if}
     </div>
 
-    <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-      {#if upcomingSessions?.length > 0}
-        <Section title="Upcoming sessions">
-          <CardList>
-            {#each upcomingSessions as session (session.id)}
-              <UpcomingSessionSummaryCard {session} />
-            {/each}
-          </CardList>
-        </Section>
-      {/if}
-      {#if proposedSessions?.length > 0}
-        <Section title="Proposed sessions">
-          <CardList>
-            {#each proposedSessions as session (session.id)}
-              <ProposedSessionSummaryCard {session} />
-            {/each}
-          </CardList>
-        </Section>
-      {/if}
-    </div>
+    <StaggeredTransition let:getTransition>
+      <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {#if upcomingSessions?.length > 0}
+          <div in:scale={getTransition()}>
+            <Section title="Upcoming sessions">
+              <CardList>
+                {#each upcomingSessions as session (session.id)}
+                  <UpcomingSessionSummaryCard {session} />
+                {/each}
+              </CardList>
+            </Section>
+          </div>
+        {/if}
+        {#if proposedSessions?.length > 0}
+          <div in:scale={getTransition()}>
+            <Section title="Proposed sessions">
+              <CardList>
+                {#each proposedSessions as session (session.id)}
+                  <ProposedSessionSummaryCard {session} />
+                {/each}
+              </CardList>
+            </Section>
+          </div>
+        {/if}
+      </div>
+    </StaggeredTransition>
   </div>
 </div>
 
