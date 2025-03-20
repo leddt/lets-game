@@ -30,8 +30,8 @@
   import { useNavigate } from "svelte-navigator";
   import Button from "@/components/ui/button.svelte";
   import Section from "@/components/ui/section.svelte";
+  import StaggeredTransition from "@/components/ui/staggered-transition.svelte";
   import { scale } from "svelte/transition";
-  import { writable } from "svelte/store";
 
   import SidebarMembers from "./sidebar-members.svelte";
   import SidebarAvailability from "./sidebar-availability.svelte";
@@ -45,18 +45,6 @@
 
   let nextIndex = 0;
   const baseDelay = 75;
-
-  // Create a function to get transition params
-  const getTransition = () => ({
-    duration: 200,
-    delay: baseDelay * nextIndex++,
-    start: 0.95,
-  });
-
-  // Reset counter when group changes
-  $: if (group) {
-    nextIndex = 0;
-  }
 
   $: isOwner = group?.self.role === "OWNER";
 
@@ -82,8 +70,8 @@
 </script>
 
 <div>
-  {#key group?.id}
-    <div class="sm:w-72 pb-4 sm:pt-4 px-4 sm:pl-0 flex flex-col gap-4">
+  <div class="sm:w-72 pb-4 sm:pt-4 px-4 sm:pl-0">
+    <StaggeredTransition key={group?.id} let:getTransition>
       <div in:scale={getTransition()}>
         <Section title="Members">
           <SidebarMembers {group} />
@@ -132,6 +120,6 @@
           <SidebarGames {group} />
         </Section>
       </div>
-    </div>
-  {/key}
+    </StaggeredTransition>
+  </div>
 </div>
