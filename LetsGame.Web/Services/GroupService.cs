@@ -135,33 +135,7 @@ namespace LetsGame.Web.Services
                 
                 await _db.SaveChangesAsync();
 
-                var groupEvent = await _db.GroupEvents.FindAsync(slot.EventId)
-                                 ?? throw new Exception("Event not found");
-                if (groupEvent.CreatorId != CurrentUserId && 
-                    groupEvent.ChosenTime == null && 
-                    groupEvent.AllVotesInNotificationSentAt == null)
-                {
-                    var groupMemberCount = await _db.Groups
-                        .Where(x => x.Events.Any(e => e.Id == groupEvent.Id))
-                        .SelectMany(x => x.Memberships)
-                        .CountAsync();
-
-                    var distinctVoterCount = await _db.GroupEvents
-                        .Where(x => x.Id == groupEvent.Id)
-                        .SelectMany(x => x.Slots)
-                        .SelectMany(x => x.Votes)
-                        .Select(x => x.Voter)
-                        .Distinct()
-                        .CountAsync();
-
-                    if (groupMemberCount == distinctVoterCount)
-                    {
-                        groupEvent.AllVotesInNotificationSentAt = SystemClock.Instance.GetCurrentInstant();
-                        await _db.SaveChangesAsync();
-                        
-                        await _notificationService.NotifyAllVotesIn(groupEvent);
-                    }
-                }
+                await CheckForAllVotesReceived(slot.EventId);
             }
         }
 
@@ -194,6 +168,8 @@ namespace LetsGame.Web.Services
             }
 
             await _db.SaveChangesAsync();
+
+            await CheckForAllVotesReceived(eventId);
         }
 
         public async Task PickSlotAsync(long slotId)
@@ -261,6 +237,45 @@ namespace LetsGame.Web.Services
                 throw new InvalidOperationException("Owner can't leave group");
 
             await DeleteMember(member);
+        }
+
+        private async Task CheckForAllVotesReceived(long eventId)
+        {
+            var groupEvent = await _db.GroupEvents.FindAsync(eventId)
+                             ?? throw new Exception("Event not found");
+            if (groupEvent.CreatorId != CurrentUserId && 
+                groupEvent.ChosenTime == null && 
+                groupEvent.AllVotesInNotificationSentAt == null)
+            {
+                var groupMemberCount = await _db.Groups
+                    .Where(x => x.Events.Any(e => e.Id == groupEvent.Id))
+                    .SelectMany(x => x.Memberships)
+                    .CountAsync();
+
+                var voterIds = _db.GroupEvents
+                    .Where(x => x.Id == groupEvent.Id)
+                    .SelectMany(x => x.Slots)
+                    .SelectMany(x => x.Votes)
+                    .Select(x => x.VoterId);
+                    
+                var cantPlayIds = _db.GroupEvents
+                    .Where(x => x.Id == groupEvent.Id)
+                    .SelectMany(x => x.CantPlays)
+                    .Select(x => x.UserId);
+                    
+                var distinctVoterCount = await voterIds
+                    .Union(cantPlayIds)
+                    .Distinct()
+                    .CountAsync();
+
+                if (groupMemberCount == distinctVoterCount)
+                {
+                    groupEvent.AllVotesInNotificationSentAt = SystemClock.Instance.GetCurrentInstant();
+                    await _db.SaveChangesAsync();
+                        
+                    await _notificationService.NotifyAllVotesIn(groupEvent);
+                }
+            }
         }
 
         private async Task DeleteMember(Membership member)
