@@ -4,6 +4,7 @@ import {
   InMemoryCache,
   split,
 } from "@apollo/client/core";
+import { SubscriptionClient } from "subscriptions-transport-ws";
 import { WebSocketLink } from "@apollo/client/link/ws";
 import { getMainDefinition } from "@apollo/client/utilities";
 
@@ -16,24 +17,29 @@ const httpLink = new HttpLink({
 });
 
 const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-const wsLink = new WebSocketLink({
-  uri: `${protocol}://${window.location.host}/graphql`,
-  options: {
-    reconnect: true,
-  },
-});
+let subscriptionClient;
 
-const splitLink = split(
-  ({ query }) => {
-    const definition = getMainDefinition(query);
-    return (
-      definition.kind === "OperationDefinition" &&
-      definition.operation === "subscription"
-    );
-  },
-  wsLink,
-  httpLink
-);
+function createLink() {
+  subscriptionClient?.close();
+  subscriptionClient = new SubscriptionClient(
+    `${protocol}://${window.location.host}/graphql`,
+    { reconnect: true }
+  );
+
+  const wsLink = new WebSocketLink(subscriptionClient);
+
+  return split(
+    ({ query }) => {
+      const definition = getMainDefinition(query);
+      return (
+        definition.kind === "OperationDefinition" &&
+        definition.operation === "subscription"
+      );
+    },
+    wsLink,
+    httpLink
+  );
+}
 
 export const cache = new InMemoryCache({
   typePolicies: {
@@ -81,8 +87,22 @@ export const cache = new InMemoryCache({
 });
 
 const client = new ApolloClient({
-  link: splitLink,
   cache,
+});
+
+if (document.visibilityState === "visible") {
+  client.setLink(createLink());
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") {
+    subscriptionClient?.close();
+    subscriptionClient = null;
+  } else {
+    if (!subscriptionClient) {
+      window.location.reload();
+    }
+  }
 });
 
 export default client;
