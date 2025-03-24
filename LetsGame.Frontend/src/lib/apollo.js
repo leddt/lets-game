@@ -94,13 +94,18 @@ if (document.visibilityState === "visible") {
   client.setLink(createLink());
 }
 
+let visibilityTimeout;
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "hidden") {
-    subscriptionClient?.close();
-    subscriptionClient = null;
+    visibilityTimeout = setTimeout(() => {
+      subscriptionClient?.close();
+      subscriptionClient = null;
+    }, 10_000);
   } else {
     if (!subscriptionClient) {
       window.location.reload();
+    } else {
+      clearTimeout(visibilityTimeout);
     }
   }
 });
