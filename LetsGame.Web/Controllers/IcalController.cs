@@ -51,8 +51,8 @@ namespace LetsGame.Web.Controllers
             return new CalendarEvent
             {
                 Summary = ev.Game == null ? "Any game" : ev.Game.Name,
-                Start = new CalDateTime(start.ToDateTimeUtc()),
-                End = new CalDateTime(end.ToDateTimeUtc())
+                Start = new CalDateTime(start.ToDateTimeUtc()) { HasTime = true },
+                End = new CalDateTime(end.ToDateTimeUtc()) { HasTime = true }
             };
         }
     }
