@@ -33,6 +33,7 @@ using Microsoft.Extensions.Logging;
 using NodaTime;
 using Npgsql;
 using WebPush;
+using IPNetwork = Microsoft.AspNetCore.HttpOverrides.IPNetwork;
 
 namespace LetsGame.Web
 {
