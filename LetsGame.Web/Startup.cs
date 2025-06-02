@@ -54,14 +54,8 @@ namespace LetsGame.Web
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            var databaseUrl = Configuration["DATABASE_URL"];
-            if (string.IsNullOrWhiteSpace(databaseUrl))
-            {
-                services.AddHostedService<EmbeddedPostgresHostedService>();
-                databaseUrl = EmbeddedPostgresHostedService.DatabaseUrl;
-            }
-
-            var dataSourceBuilder = new NpgsqlDataSourceBuilder(ConvertPostgresqlConnectionString(databaseUrl));
+            var connectionString = GetPostgresConnectionString(services);
+            var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
             dataSourceBuilder.UseNodaTime();
             var dataSource = dataSourceBuilder.Build();
             
@@ -182,7 +176,21 @@ namespace LetsGame.Web
             services.AddSignalR();
         }
 
-        private string ConvertPostgresqlConnectionString(string uriString)
+        private string GetPostgresConnectionString(IServiceCollection services)
+        {
+            var databaseUrl = Configuration["DATABASE_URL"];
+            if (!string.IsNullOrWhiteSpace(databaseUrl))
+                return ConvertPostgresUrlToConnectionString(databaseUrl);
+            
+            var connectionString = Configuration.GetConnectionString("db");
+            if (!string.IsNullOrWhiteSpace(connectionString))
+                return connectionString;
+            
+            services.AddHostedService<EmbeddedPostgresHostedService>();
+            return ConvertPostgresUrlToConnectionString(EmbeddedPostgresHostedService.DatabaseUrl);
+        }
+        
+        private string ConvertPostgresUrlToConnectionString(string uriString)
         {
             var uri = new Uri(uriString);
             var userInfo = uri.UserInfo.Split(':');
