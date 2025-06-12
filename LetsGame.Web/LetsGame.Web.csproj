@@ -5,6 +5,7 @@
         <UserSecretsId>aspnet-LetsGame.Web-28824777-699D-4F3A-9B5E-BCD2E0BD6C34</UserSecretsId>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <LangVersion>default</LangVersion>
+        <IdentityUIFrameworkVersion>Bootstrap4</IdentityUIFrameworkVersion>
     </PropertyGroup>
 
     <ItemGroup>

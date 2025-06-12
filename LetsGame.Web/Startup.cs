@@ -7,14 +7,12 @@ using Microsoft.EntityFrameworkCore;
 using LetsGame.Web.Data;
 using LetsGame.Web.Extensions;
 using LetsGame.Web.Hubs;
-using LetsGame.Web.Infrastructure.AspNet;
 using LetsGame.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -67,7 +65,6 @@ namespace LetsGame.Web
             services.Configure<SendGridOptions>(Configuration.GetSection("SendGrid"));
             
             services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();
-            services.Replace(ServiceDescriptor.Singleton<IHtmlGenerator, CustomHtmlGenerator>());
 
             services.AddTransient(_ => DateTimeZoneProviders.Bcl);
             
