@@ -64,8 +64,7 @@ public static class ServiceCollectionExtensions
             if (!string.IsNullOrWhiteSpace(result))
                 return result;
             
-            services.AddHostedService<EmbeddedPostgresHostedService>();
-            return ConvertPostgresUrlToConnectionString(EmbeddedPostgresHostedService.DatabaseUrl);
+            throw new InvalidOperationException("No db connection string is configured");
         }
         
         string ConvertPostgresUrlToConnectionString(string uriString)
