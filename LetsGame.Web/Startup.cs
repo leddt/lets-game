@@ -1,38 +1,25 @@
 using System;
 using System.Net;
 using System.Text;
-using HotChocolate;
-using HotChocolate.Data;
-using HotChocolate.Types.NodaTime;
-using LetsGame.Web.Authorization;
-using LetsGame.Web.Authorization.Requirements;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using LetsGame.Web.Data;
-using LetsGame.Web.GraphQL;
+using LetsGame.Web.Extensions;
 using LetsGame.Web.Hubs;
 using LetsGame.Web.Infrastructure.AspNet;
-using LetsGame.Web.RecurringTasks;
 using LetsGame.Web.Services;
-using LetsGame.Web.Services.Igdb;
-using LetsGame.Web.Services.Itad;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using NodaTime;
-using Npgsql;
-using WebPush;
 using IPNetwork = Microsoft.AspNetCore.HttpOverrides.IPNetwork;
 
 namespace LetsGame.Web
@@ -54,28 +41,7 @@ namespace LetsGame.Web
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            var connectionString = GetPostgresConnectionString(services);
-            var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
-            dataSourceBuilder.UseNodaTime();
-            var dataSource = dataSourceBuilder.Build();
-            
-            services.AddPooledDbContextFactory<ApplicationDbContext>(options =>
-            {
-                options
-                    .UseNpgsql(dataSource, o => o
-                        .UseNodaTime()
-                        .MigrationsHistoryTable("__EFMigrationsHistory", "private"))
-                    .LogTo(Console.WriteLine, [DbLoggerCategory.Database.Command.Name], LogLevel.Information);
-            });
-            services.AddDbContextPool<ApplicationDbContext>(options =>
-            {
-                options
-                    .UseNpgsql(dataSource, o => o
-                        .UseNodaTime()
-                        .MigrationsHistoryTable("__EFMigrationsHistory", "private"))
-                    .LogTo(Console.WriteLine, [DbLoggerCategory.Database.Command.Name], LogLevel.Information);
-            });
-            
+            services.AddApplicationDatabase(Configuration);
             services.AddDatabaseDeveloperPageExceptionFilter();
 
             services.AddDataProtection()
@@ -85,34 +51,7 @@ namespace LetsGame.Web
             services.AddDefaultIdentity<AppUser>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
-            var googleConfig = Configuration.GetSection("Authentication:Google");
-
-            var auth = services
-                .AddAuthentication()
-                .AddSteam();
-            
-            if (!string.IsNullOrWhiteSpace(googleConfig["ClientId"]))
-            {
-                auth
-                    .AddGoogle(options =>
-                    {
-                        options.ClientId = googleConfig["ClientId"];
-                        options.ClientSecret = googleConfig["ClientSecret"];
-                    });
-            }
-
-            services.AddAuthorization(x =>
-            {
-                x.AddPolicy(AuthPolicies.ReadGroup, policy => policy.AddRequirements(new AccessGroupRequirement(asOwner: false)));
-                x.AddPolicy(AuthPolicies.ManageGroup, policy => policy.AddRequirements(new AccessGroupRequirement(asOwner: true)));
-                x.AddPolicy(AuthPolicies.ReadSession, policy => policy.AddRequirements(new AccessSessionRequirement(manage: false)));
-                x.AddPolicy(AuthPolicies.ManageSession, policy => policy.AddRequirements(new AccessSessionRequirement(manage: true)));
-                x.AddPolicy(AuthPolicies.ReadSlot, policy => policy.AddRequirements(new AccessSlotRequirement(manage: false)));
-                x.AddPolicy(AuthPolicies.ManageSlot, policy => policy.AddRequirements(new AccessSlotRequirement(manage: true)));
-            });
-            services.AddTransient<IAuthorizationHandler, AccessGroupRequirementHandler>();
-            services.AddTransient<IAuthorizationHandler, AccessSessionRequirementHandler>();
-            services.AddTransient<IAuthorizationHandler, AccessSlotRequirementHandler>();
+            services.AddApplicationAuth(Configuration);
 
             services.Configure<ForwardedHeadersOptions>(options =>
             {
@@ -124,51 +63,13 @@ namespace LetsGame.Web
             
             services.AddRazorPages();
 
-            services.Configure<ItadOptions>(Configuration.GetSection("itad"));
-            services.Configure<IgdbOptions>(Configuration.GetSection("igdb"));
+            services.AddApplicationServices(Configuration);
             services.Configure<SendGridOptions>(Configuration.GetSection("SendGrid"));
             
-            services.AddHttpClient<ItadClient>(ItadClient.Configure);
-            services.AddHttpClient<IGameSearcher, IgdbClient>(IgdbClient.Configure);
-            
             services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();
-            
             services.Replace(ServiceDescriptor.Singleton<IHtmlGenerator, CustomHtmlGenerator>());
 
-            services.AddTransient<SlugGenerator>();
-            services.AddTransient<GroupService>();
-            services.AddTransient<DateService>();
-            services.AddTransient<ICurrentUserAccessor, HttpContextCurrentUserAccessor>();
-
             services.AddTransient(_ => DateTimeZoneProviders.Bcl);
-            
-            services.AddTransient<IEmailSender, EmailSender>();
-            services.AddTransient<INotificationService, NotificationService>();
-
-            services.AddSingleton(new VapidDetails(
-                Configuration["vapid:subject"],
-                Configuration["vapid:publicKey"],
-                Configuration["vapid:privateKey"]));
-            services.AddTransient<WebPushClient>();
-            services.AddTransient<IPushSender, PushSender>();
-
-            services.AddSingleton<PresenceCache>();
-
-            // Recurring tasks
-            services.AddTransient<RecurringTaskRunner>();
-            services.AddTransient<IRecurringTask, SendEventStartingSoonNotifications>();
-            services.AddTransient<IRecurringTask, CleanUpPastEvents>();
-            
-            // GraphQL
-            services
-                .AddGraphQLServer()
-                .AddAuthorization()
-                .AddQueryType<Query>()
-                .AddMutationType<Mutation>()
-                .AddSubscriptionType<Subscription>()
-                .AddInMemorySubscriptions()
-                .RegisterDbContext<ApplicationDbContext>(DbContextKind.Pooled)
-                .ConfigureSchema(x => x.AddType<LocalDateTimeType>());
             
             // SPA Services
             services.AddSpaStaticFiles(options =>
@@ -178,36 +79,6 @@ namespace LetsGame.Web
             
             // SignalR
             services.AddSignalR();
-        }
-
-        private string GetPostgresConnectionString(IServiceCollection services)
-        {
-            var databaseUrl = Configuration["DATABASE_URL"];
-            if (!string.IsNullOrWhiteSpace(databaseUrl))
-                return ConvertPostgresUrlToConnectionString(databaseUrl);
-            
-            var connectionString = Configuration.GetConnectionString("db");
-            if (!string.IsNullOrWhiteSpace(connectionString))
-                return connectionString;
-            
-            services.AddHostedService<EmbeddedPostgresHostedService>();
-            return ConvertPostgresUrlToConnectionString(EmbeddedPostgresHostedService.DatabaseUrl);
-        }
-        
-        private string ConvertPostgresUrlToConnectionString(string uriString)
-        {
-            var uri = new Uri(uriString);
-            var userInfo = uri.UserInfo.Split(':');
-
-            var cs = $"Host={uri.Host};" +
-                     $"Port={uri.Port};" +
-                     $"Database={uri.AbsolutePath.Trim('/')};" +
-                     $"Username={userInfo[0]};" +
-                     $"Password={userInfo[1]};" +
-                     $"SSL Mode=Prefer;" +
-                     $"Trust Server Certificate=true;";
-            
-            return cs;
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
