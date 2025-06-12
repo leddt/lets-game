@@ -62,14 +62,18 @@ namespace LetsGame.Web
             services.AddPooledDbContextFactory<ApplicationDbContext>(options =>
             {
                 options
-                    .UseNpgsql(dataSource, o => o.UseNodaTime())
-                    .LogTo(Console.WriteLine, new[] {DbLoggerCategory.Database.Command.Name}, LogLevel.Information);
+                    .UseNpgsql(dataSource, o => o
+                        .UseNodaTime()
+                        .MigrationsHistoryTable("__EFMigrationsHistory", "private"))
+                    .LogTo(Console.WriteLine, [DbLoggerCategory.Database.Command.Name], LogLevel.Information);
             });
             services.AddDbContextPool<ApplicationDbContext>(options =>
             {
                 options
-                    .UseNpgsql(dataSource, o => o.UseNodaTime())
-                    .LogTo(Console.WriteLine, new[] {DbLoggerCategory.Database.Command.Name}, LogLevel.Information);
+                    .UseNpgsql(dataSource, o => o
+                        .UseNodaTime()
+                        .MigrationsHistoryTable("__EFMigrationsHistory", "private"))
+                    .LogTo(Console.WriteLine, [DbLoggerCategory.Database.Command.Name], LogLevel.Information);
             });
             
             services.AddDatabaseDeveloperPageExceptionFilter();

@@ -36,6 +36,8 @@ namespace LetsGame.Web.Data
             base.OnModelCreating(builder);
             
             void Entity<T>(Action<EntityTypeBuilder<T>> action) where T : class => action(builder.Entity<T>());
+
+            builder.HasDefaultSchema("private");
             
             Entity<Group>(_ =>
             {
