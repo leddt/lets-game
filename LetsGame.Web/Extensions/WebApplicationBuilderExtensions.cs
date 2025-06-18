@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NodaTime;
 using Npgsql;
@@ -51,6 +52,8 @@ public static class ServiceCollectionExtensions
                     .MigrationsHistoryTable("__EFMigrationsHistory", "private"))
                 .LogTo(Console.WriteLine, [DbLoggerCategory.Database.Command.Name], LogLevel.Information);
         });
+        
+        builder.EnrichNpgsqlDbContext<ApplicationDbContext>();
         
         return builder;
 
