@@ -23,6 +23,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 #region Configure services
 
+builder.AddServiceDefaults();
 builder.AddApplicationDatabase();
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -109,6 +110,7 @@ app.UseAuthorization();
 app.UseWebSockets();
 app.UseEndpoints(_ => { });
 
+app.MapDefaultEndpoints();
 app.MapGraphQL();
 app.MapRazorPages();
 app.MapControllers();

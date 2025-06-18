@@ -42,5 +42,9 @@
         <PackageReference Include="WebPush" Version="1.0.12" />
     </ItemGroup>
     
+    <ItemGroup>
+      <ProjectReference Include="..\LetsGame.ServiceDefaults\LetsGame.ServiceDefaults.csproj" />
+    </ItemGroup>
+    
     
 </Project>
