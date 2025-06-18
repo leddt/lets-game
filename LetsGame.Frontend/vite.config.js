@@ -5,6 +5,9 @@ import preprocess from "svelte-preprocess";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  server: {
+    port: process.env.PORT || 3000,
+  },
   build: {
     outDir: resolve(__dirname, "../LetsGame.Web/ClientApp"),
   },

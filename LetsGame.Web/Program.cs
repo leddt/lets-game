@@ -128,10 +128,11 @@ app.Use(async (context, next) =>
 app.UseSpaStaticFiles();
 app.UseSpa(spa =>
 {
-    var devServer = builder.Configuration["FrontendDevServer"];
-    if (builder.Environment.IsDevelopment() && !string.IsNullOrEmpty(devServer))
+    // HACK: Spa Proxy does not support service discovery because they create their own HttpClient which bypasses the defaults
+    var frontendServer = app.Configuration["services:frontend:http:0"];
+    if (builder.Environment.IsDevelopment() && !string.IsNullOrEmpty(frontendServer))
     {
-        spa.UseProxyToSpaDevelopmentServer(devServer);
+        spa.UseProxyToSpaDevelopmentServer(frontendServer);
     }
 });
 
