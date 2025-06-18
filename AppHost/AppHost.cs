@@ -10,10 +10,10 @@ var frontend = builder
     .WithHttpEndpoint(env: "PORT");
 
 builder.AddProject<Projects.LetsGame_Web>("web")
-    .WithUrl("http://localhost:5000")
     .WithReference(pg)
     .WithReference(frontend)
     .WaitFor(pg)
-    .WaitFor(frontend);
+    .WaitFor(frontend)
+    .WithHttpEndpoint();
 
 builder.Build().Run();
