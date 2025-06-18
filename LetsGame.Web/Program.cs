@@ -1,39 +1,136 @@
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Net;
+using System.Text;
+using LetsGame.Web.Data;
+using LetsGame.Web.Extensions;
+using LetsGame.Web.Hubs;
 using LetsGame.Web.RecurringTasks;
-using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using IPNetwork = Microsoft.AspNetCore.HttpOverrides.IPNetwork;
 
-namespace LetsGame.Web
+Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+var builder = WebApplication.CreateBuilder(args);
+
+#region Configure services
+
+builder.AddApplicationDatabase();
+builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
+builder.Services.AddDataProtection()
+    .PersistKeysToDbContext<ApplicationDbContext>()
+    .SetApplicationName("LetsGame");
+
+builder.Services.AddDefaultIdentity<AppUser>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddEntityFrameworkStores<ApplicationDbContext>();
+
+builder.AddApplicationAuth();
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
-    public class Program
-    {
-        public static async Task Main(string[] args)
-        {
-            var host = CreateHostBuilder(args).Build();
+    options.KnownNetworks.Add(new IPNetwork(IPAddress.Parse("::ffff:169.0.0.0"), 104));
+    options.KnownNetworks.Add(new IPNetwork(IPAddress.Parse("::ffff:172.0.0.0"), 104));
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor |
+                               ForwardedHeaders.XForwardedProto;
+});
             
-            if (args.Contains("run-tasks")) 
-                await RunTasks(host);
-            else
-                await host.RunAsync();
-        }
+builder.Services.AddRazorPages();
 
-        private static async Task RunTasks(IHost host)
-        {
-            using var scope = host.Services.CreateScope();
+builder.AddApplicationServices();
 
-            var runner = scope.ServiceProvider.GetRequiredService<RecurringTaskRunner>();
-            await runner.RunAll();
-        }
+builder.Services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();
 
-        private static IHostBuilder CreateHostBuilder(string[] args)
-        {
-            return Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                });
-        }
+builder.Services.AddSpaStaticFiles(options =>
+{
+    options.RootPath = "ClientApp";
+});
+            
+builder.Services.AddSignalR();
+
+#endregion
+
+var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    if (args.Contains("run-tasks"))
+    {
+        var runner = scope.ServiceProvider.GetRequiredService<RecurringTaskRunner>();
+        await runner.RunAll();
+        return;
     }
+
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await db.Database.MigrateAsync();
 }
+
+// For debug purposes
+// app.Use(async (ctx, next) =>
+// {
+//     Console.WriteLine("Request IP: {0}", ctx.Connection.RemoteIpAddress);
+//     await next();
+// });
+
+app.UseForwardedHeaders();
+
+if (builder.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+    app.UseMigrationsEndPoint();
+}
+else
+{
+    app.UseExceptionHandler("/Error");
+    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseHsts();
+}
+
+app.UseCookiePolicy(new CookiePolicyOptions
+{
+    MinimumSameSitePolicy = SameSiteMode.Lax
+});
+
+// For now we'll rely on the hosting platform to redirect to https 
+// app.UseHttpsRedirection();
+            
+app.UseStaticFiles();
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseWebSockets();
+app.UseEndpoints(_ => { });
+
+app.MapGraphQL();
+app.MapRazorPages();
+app.MapControllers();
+app.MapHub<PresenceHub>("/presences");
+
+// Force login before going to SPA
+app.Use(async (context, next) =>
+{
+    if (context.User.Identity?.IsAuthenticated != true)
+        await context.ChallengeAsync();
+    else
+        await next();
+});
+            
+app.UseSpaStaticFiles();
+app.UseSpa(spa =>
+{
+    var devServer = builder.Configuration["FrontendDevServer"];
+    if (builder.Environment.IsDevelopment() && !string.IsNullOrEmpty(devServer))
+    {
+        spa.UseProxyToSpaDevelopmentServer(devServer);
+    }
+});
+
+app.Run();
