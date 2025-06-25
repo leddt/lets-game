@@ -4,8 +4,9 @@ var pg = builder
     .AddPostgres("db")
     .WithDataVolume();
 
+var frontendDir = Path.GetFullPath("../LetsGame.Frontend", builder.AppHostDirectory);
 var frontend = builder
-    .AddNpmApp("frontend", "../LetsGame.Frontend", "dev")
+    .AddNpmApp("frontend", frontendDir, "dev")
     .WithNpmPackageInstallation()
     .WithHttpEndpoint(env: "PORT");
 
