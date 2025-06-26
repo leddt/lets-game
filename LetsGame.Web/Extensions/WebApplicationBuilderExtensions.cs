@@ -18,40 +18,25 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using NodaTime;
 using Npgsql;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 using WebPush;
 
 namespace LetsGame.Web.Extensions;
 
-public static class ServiceCollectionExtensions
+public static class WebApplicationBuilderExtensions
 {
-    public static WebApplicationBuilder AddApplicationDatabase(
-        this WebApplicationBuilder builder
-    )
+    public static WebApplicationBuilder AddApplicationDatabase(this WebApplicationBuilder builder)
     {
         var connectionString = GetPostgresConnectionString();
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
         dataSourceBuilder.UseNodaTime();
         var dataSource = dataSourceBuilder.Build();
             
-        builder.Services.AddPooledDbContextFactory<ApplicationDbContext>(options =>
-        {
-            options
-                .UseNpgsql(dataSource, o => o
-                    .UseNodaTime()
-                    .MigrationsHistoryTable("__EFMigrationsHistory", "private"))
-                .LogTo(Console.WriteLine, [DbLoggerCategory.Database.Command.Name], LogLevel.Information);
-        });
-        builder.Services.AddDbContextPool<ApplicationDbContext>(options =>
-        {
-            options
-                .UseNpgsql(dataSource, o => o
-                    .UseNodaTime()
-                    .MigrationsHistoryTable("__EFMigrationsHistory", "private"))
-                .LogTo(Console.WriteLine, [DbLoggerCategory.Database.Command.Name], LogLevel.Information);
-        });
+        builder.Services
+            .AddPooledDbContextFactory<ApplicationDbContext>(x => ConfigureDbContext(x, dataSource))
+            .AddDbContextPool<ApplicationDbContext>(x => ConfigureDbContext(x, dataSource));
         
         builder.EnrichNpgsqlDbContext<ApplicationDbContext>();
         
@@ -84,6 +69,23 @@ public static class ServiceCollectionExtensions
                      $"Trust Server Certificate=true;";
             
             return cs;
+        }
+    }
+
+    public static void ConfigureDbContext(DbContextOptionsBuilder options, NpgsqlDataSource dataSource = null)
+    {
+        if (dataSource is not null)
+            options.UseNpgsql(dataSource, ConfigureNpgsql);
+        else
+            options.UseNpgsql(ConfigureNpgsql);
+
+        return;
+
+        void ConfigureNpgsql(NpgsqlDbContextOptionsBuilder npgsqlOptions)
+        {
+            npgsqlOptions
+                .UseNodaTime()
+                .MigrationsHistoryTable("__EFMigrationsHistory", "private");
         }
     }
 

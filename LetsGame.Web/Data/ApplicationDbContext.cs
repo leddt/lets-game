@@ -1,87 +1,89 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using LetsGame.Web.Extensions;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace LetsGame.Web.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<AppUser>, IDataProtectionKeyContext
+    public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+        : IdentityDbContext<AppUser>(options), IDataProtectionKeyContext
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-            : base(options)
-        {
-        }
-
-        public DbSet<Group> Groups { get; set; }
+        public DbSet<Group> Groups => Set<Group>();
         
-        public DbSet<Membership> Memberships { get; set; }
+        public DbSet<Membership> Memberships => Set<Membership>();
         
-        public DbSet<GroupGame> GroupGames { get; set; }
+        public DbSet<GroupGame> GroupGames => Set<GroupGame>();
         
-        public DbSet<GroupEvent> GroupEvents { get; set; }
-        public DbSet<GroupEventSlot> GroupEventSlots { get; set; }
-        public DbSet<GroupEventSlotVote> GroupEventSlotVotes { get; set; }
-        public DbSet<GroupEventCantPlay> GroupEventCantPlays { get; set; }
-        public DbSet<GroupInvite> GroupInvites { get; set; }
+        public DbSet<GroupEvent> GroupEvents => Set<GroupEvent>();
+        public DbSet<GroupEventSlot> GroupEventSlots => Set<GroupEventSlot>();
+        public DbSet<GroupEventSlotVote> GroupEventSlotVotes => Set<GroupEventSlotVote>();
+        public DbSet<GroupEventCantPlay> GroupEventCantPlays => Set<GroupEventCantPlay>();
+        public DbSet<GroupInvite> GroupInvites => Set<GroupInvite>();
         
-
-        public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
+        public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
             
-            void Entity<T>(Action<EntityTypeBuilder<T>> action) where T : class => action(builder.Entity<T>());
-
             builder.HasDefaultSchema("private");
             
-            Entity<Group>(_ =>
+            builder.Entity<Group>(e =>
             {
-                _.HasMany(x => x.Members)
+                e.HasMany(x => x.Members)
                     .WithMany(x => x.Groups)
                     .UsingEntity<Membership>(
                         m => m.HasOne(x => x.User).WithMany(x => x.Memberships),
                         m => m.HasOne(x => x.Group).WithMany(x => x.Memberships));
 
-                _.HasMany(x => x.Games)
+                e.HasMany(x => x.Games)
                     .WithOne(x => x.Group)
                     .IsRequired();
             });
             
-            Entity<Membership>(_ =>
+            builder.Entity<Membership>(e =>
             {
-                _.Property(x => x.Role)
+                e.Property(x => x.Role)
                     .HasMaxLength(20)
                     .HasConversion(new EnumToStringConverter<GroupRole>());
             });
             
-            Entity<GroupEvent>(_ =>
+            builder.Entity<GroupEvent>(e =>
             {
-                _.HasOne(x => x.Group).WithMany(x => x.Events).IsRequired().OnDelete(DeleteBehavior.NoAction);
-                _.HasOne(x => x.Game).WithMany().IsRequired(false);
-                _.HasOne(x => x.Creator).WithMany().OnDelete(DeleteBehavior.SetNull);
-                _.HasMany(x => x.Slots).WithOne(x => x.Event).IsRequired();
+                e.HasOne(x => x.Group).WithMany(x => x.Events).IsRequired().OnDelete(DeleteBehavior.NoAction);
+                e.HasOne(x => x.Game).WithMany().IsRequired(false);
+                e.HasOne(x => x.Creator).WithMany().OnDelete(DeleteBehavior.SetNull);
+                e.HasMany(x => x.Slots).WithOne(x => x.Event).IsRequired();
             });
             
-            Entity<GroupEventCantPlay>(_ =>
+            builder.Entity<GroupEventCantPlay>(e =>
             {
-                _.HasKey(x => new {x.EventId, x.UserId});
-                _.HasOne(x => x.Event).WithMany(x => x.CantPlays).IsRequired();
-                _.HasOne(x => x.User).WithMany().IsRequired();
+                e.HasKey(x => new {x.EventId, x.UserId});
+                e.HasOne(x => x.Event).WithMany(x => x.CantPlays).IsRequired();
+                e.HasOne(x => x.User).WithMany().IsRequired();
             });
             
-            Entity<GroupEventSlot>(_ =>
+            builder.Entity<GroupEventSlot>(e =>
             {
-                _.HasMany(x => x.Voters)
+                e.HasMany(x => x.Voters)
                     .WithMany("SlotVotes")
                     .UsingEntity<GroupEventSlotVote>(
                         v => v.HasOne(x => x.Voter).WithMany(),
                         v => v.HasOne(x => x.Slot).WithMany(x => x.Votes));
             });
+        }
+    }
+
+    public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
+    {
+        public ApplicationDbContext CreateDbContext(string[] args)
+        {
+            var builder = new DbContextOptionsBuilder<ApplicationDbContext>();
+            WebApplicationBuilderExtensions.ConfigureDbContext(builder);
+            
+            return new ApplicationDbContext(builder.Options);
         }
     }
 }
