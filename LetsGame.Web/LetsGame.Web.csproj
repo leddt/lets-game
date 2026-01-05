@@ -15,7 +15,7 @@
     </ItemGroup>
     
     <ItemGroup>
-        <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.3.1" />
+        <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="13.1.0" />
         <PackageReference Include="AspNet.Security.OpenId.Steam" Version="9.0.0" />
         <PackageReference Include="HotChocolate.AspNetCore" Version="13.5.1" />
         <PackageReference Include="HotChocolate.AspNetCore.Authorization" Version="13.5.1" />

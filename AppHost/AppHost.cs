@@ -14,7 +14,6 @@ builder.AddProject<Projects.LetsGame_Web>("web")
     .WithReference(pg)
     .WithReference(frontend)
     .WaitFor(pg)
-    .WaitFor(frontend)
-    .WithHttpEndpoint();
+    .WaitFor(frontend);
 
 builder.Build().Run();
