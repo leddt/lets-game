@@ -8,6 +8,7 @@ using LetsGame.Web.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
+using Duration = NodaTime.Duration;
 
 namespace LetsGame.Web.Controllers
 {
@@ -45,14 +46,14 @@ namespace LetsGame.Web.Controllers
 
         private CalendarEvent GetCalendarEvent(GroupEvent ev)
         {
-            var start = ev.ChosenTime.Value;
+            var start = ev.ChosenTime!.Value;
             var end = start + Duration.FromHours(1);
             
             return new CalendarEvent
             {
                 Summary = ev.Game == null ? "Any game" : ev.Game.Name,
-                Start = new CalDateTime(start.ToDateTimeUtc()) { HasTime = true },
-                End = new CalDateTime(end.ToDateTimeUtc()) { HasTime = true }
+                Start = new CalDateTime(start.ToDateTimeUtc()),
+                End = new CalDateTime(end.ToDateTimeUtc())
             };
         }
     }

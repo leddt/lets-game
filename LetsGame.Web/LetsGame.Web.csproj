@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <UserSecretsId>aspnet-LetsGame.Web-28824777-699D-4F3A-9B5E-BCD2E0BD6C34</UserSecretsId>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <LangVersion>default</LangVersion>
@@ -16,29 +16,29 @@
     
     <ItemGroup>
         <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="13.1.0" />
-        <PackageReference Include="AspNet.Security.OpenId.Steam" Version="9.0.0" />
-        <PackageReference Include="HotChocolate.AspNetCore" Version="13.5.1" />
-        <PackageReference Include="HotChocolate.AspNetCore.Authorization" Version="13.5.1" />
-        <PackageReference Include="HotChocolate.Data.EntityFramework" Version="13.5.1" />
-        <PackageReference Include="HotChocolate.Types.NodaTime" Version="13.5.1" />
-        <PackageReference Include="Ical.Net" Version="4.3.1" />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="9.0.6" />
-        <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="9.0.6" />
-        <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.0.6" />
-        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.6" />
-        <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="9.0.6" />
-        <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="9.0.6" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.6" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.6">
+        <PackageReference Include="AspNet.Security.OpenId.Steam" Version="10.0.0" />
+        <PackageReference Include="HotChocolate.AspNetCore" Version="15.1.11" />
+        <PackageReference Include="HotChocolate.AspNetCore.Authorization" Version="15.1.11" />
+        <PackageReference Include="HotChocolate.Data.EntityFramework" Version="15.1.11" />
+        <PackageReference Include="HotChocolate.Types.NodaTime" Version="15.1.11" />
+        <PackageReference Include="Ical.Net" Version="5.2.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.1" />
+        <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="10.0.1" />
+        <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.1" />
+        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.1" />
+        <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="10.0.1" />
+        <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="10.0.1" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.1" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.1">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
-        <PackageReference Include="NodaTime" Version="3.2.2" />
-        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
-        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="9.0.4" />
+        <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="10.0.1" />
+        <PackageReference Include="NodaTime" Version="3.3.0" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="10.0.0" />
         <PackageReference Include="SendGrid" Version="9.29.3" />
-        <PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.6" />
+        <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.1" />
         <PackageReference Include="WebPush" Version="1.0.12" />
     </ItemGroup>
     

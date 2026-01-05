@@ -173,7 +173,7 @@ public static class WebApplicationBuilderExtensions
             .AddMutationType<Mutation>()
             .AddSubscriptionType<Subscription>()
             .AddInMemorySubscriptions()
-            .RegisterDbContext<ApplicationDbContext>(DbContextKind.Pooled)
+            .RegisterDbContextFactory<ApplicationDbContext>()
             .ConfigureSchema(x => x.AddType<LocalDateTimeType>());
         
         // SendGrid

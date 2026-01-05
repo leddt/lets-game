@@ -25,7 +25,7 @@ namespace LetsGame.Web.GraphQL
             return new UserGraphType(user);
         }
         
-        [Authorize, UseDbContext(typeof(ApplicationDbContext))]
+        [Authorize]
         public async Task<IEnumerable<GroupGraphType>> GetGroups(
             ClaimsPrincipal user,
             [Service] UserManager<AppUser> userManager,
@@ -64,7 +64,7 @@ namespace LetsGame.Web.GraphQL
                 : new GroupGraphType(group);
         }
 
-        [Authorize, UseDbContext(typeof(ApplicationDbContext))]
+        [Authorize]
         public async Task<IEnumerable<UpcomingSessionGraphType>> GetUpcomingSessions(
             ClaimsPrincipal user,
             [Service] UserManager<AppUser> userManager,
@@ -83,7 +83,7 @@ namespace LetsGame.Web.GraphQL
             return sessions.Select(x => new UpcomingSessionGraphType(x));
         }
 
-        [Authorize, UseDbContext(typeof(ApplicationDbContext))]
+        [Authorize]
         public async Task<IEnumerable<ProposedSessionGraphType>> GetProposedSessions(
             ClaimsPrincipal user,
             [Service] UserManager<AppUser> userManager,
