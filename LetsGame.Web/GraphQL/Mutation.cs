@@ -212,7 +212,7 @@ namespace LetsGame.Web.GraphQL
 
             await groupService.DeleteInviteAsync(inviteCode);
             
-            var result = new GroupGraphType(invite.Group);
+            var result = new GroupGraphType(invite.Group!);
             await sender.Send(result);
             return new GroupPayload(result);
         }

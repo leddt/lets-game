@@ -12,6 +12,6 @@ namespace LetsGame.Web.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public ClaimsPrincipal CurrentUser => _httpContextAccessor.HttpContext?.User;
+        public ClaimsPrincipal? CurrentUser => _httpContextAccessor.HttpContext?.User;
     }
 }

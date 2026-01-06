@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -47,6 +45,8 @@ namespace LetsGame.Web.Services
 
         public async Task<Group> CreateGroupAsync(string groupName, string ownerDisplayName)
         {
+            if (CurrentUserId == null) throw new InvalidOperationException("No current user");
+            
             var group = new Group
             {
                 Name = groupName,
@@ -115,6 +115,8 @@ namespace LetsGame.Web.Services
 
         public async Task AddSlotVoteAsync(long slotId)
         {
+            if (CurrentUserId == null) throw new InvalidOperationException("No current user");
+            
             var slot = await _db.GroupEventSlots
                 .Include(x => x.Votes)
                 .Where(x => x.Event.Group.Memberships.Any(m => m.UserId == CurrentUserId))
@@ -153,6 +155,8 @@ namespace LetsGame.Web.Services
 
         public async Task SetCantPlayAsync(long eventId)
         {
+            if (CurrentUserId == null) throw new InvalidOperationException("No current user");
+            
             var isGroupMember = await _db.GroupEvents
                 .Where(e => e.Group.Memberships.Any(m => m.UserId == CurrentUserId))
                 .AnyAsync(e => e.Id == eventId);
@@ -174,6 +178,8 @@ namespace LetsGame.Web.Services
 
         public async Task PickSlotAsync(long slotId)
         {
+            if (CurrentUserId == null) throw new InvalidOperationException("No current user");
+            
             var slot = await _db.GroupEventSlots
                 .Include(x => x.Event)
                 .Where(x => x.Event.CreatorId == CurrentUserId || x.Event.Group.Memberships.Any(m => m.Role == GroupRole.Owner && m.UserId == CurrentUserId))
@@ -210,7 +216,7 @@ namespace LetsGame.Web.Services
         public async Task DeleteInviteAsync(string id)
         {
             var invite = await _db.GroupInvites
-                .Where(x => x.Group.Memberships.Any(m => m.Role == GroupRole.Owner && m.UserId == CurrentUserId))
+                .Where(x => x.Group!.Memberships.Any(m => m.Role == GroupRole.Owner && m.UserId == CurrentUserId))
                 .FirstOrDefaultAsync(x => x.Id == id);
             
             if (invite != null) _db.GroupInvites.Remove(invite);
@@ -221,7 +227,7 @@ namespace LetsGame.Web.Services
         public async Task RemoveGroupMember(long groupId, string memberId)
         {
             var member = await _db.Memberships
-                .Where(x => x.Group.Memberships.Any(m => m.UserId == CurrentUserId && m.Role == GroupRole.Owner))
+                .Where(x => x.Group!.Memberships.Any(m => m.UserId == CurrentUserId && m.Role == GroupRole.Owner))
                 .FirstOrDefaultAsync(x => x.GroupId == groupId && x.UserId == memberId && x.Role != GroupRole.Owner);
             
             if (member != null) await DeleteMember(member);
@@ -304,11 +310,13 @@ namespace LetsGame.Web.Services
 
         public async Task<Group> AcceptInviteAsync(string displayName, string inviteId)
         {
+            if (CurrentUserId == null) throw new InvalidOperationException("No current user");
+            
             var invite = await _db.GroupInvites
-                .Include(x => x.Group).ThenInclude(x => x.Memberships)
+                .Include(x => x.Group).ThenInclude(x => x!.Memberships)
                 .FirstAsync(x => x.Id == inviteId);
 
-            if (invite.Group.Memberships.Any(m => m.UserId == CurrentUserId))
+            if (invite.Group!.Memberships.Any(m => m.UserId == CurrentUserId))
                 return invite.Group;
 
             _db.Memberships.Add(new Membership
@@ -331,6 +339,8 @@ namespace LetsGame.Web.Services
 
         public async Task ProposeEventAsync(long groupId, long? gameId, string details, Instant[] slots)
         {
+            if (CurrentUserId == null) throw new InvalidOperationException("No current user");
+            
             GroupGame? game = null;
             if (gameId.HasValue)
             {
@@ -386,7 +396,7 @@ namespace LetsGame.Web.Services
                     member.AvailabilityNotificationSentAt = now;
                     await _db.SaveChangesAsync();
 
-                    await _notificationService.NotifyMemberAvailable(member.Group, member);
+                    await _notificationService.NotifyMemberAvailable(member.Group!, member);
                 }
             }
         }
@@ -412,7 +422,7 @@ namespace LetsGame.Web.Services
                 .FirstOrDefaultAsync(x =>
                     x.Id == groupId &&
                     x.Memberships.Any(m => m.Role == GroupRole.Owner &&
-                                           m.User.Id == CurrentUserId));
+                                           m.User!.Id == CurrentUserId));
 
             if (group != null)
             {

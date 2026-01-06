@@ -4,7 +4,7 @@
 @{
     @if (Model.Invite != null)
     {
-        ViewData["Title"] = $"You are invited to join {Model.Invite.Group.Name}";
+        ViewData["Title"] = $"You are invited to join {Model.Invite.Group?.Name}";
     }
     else
     {
@@ -22,10 +22,10 @@
     else
     {
         <p class="display-4">You are invited to join</p>
-        <p class="display-1">@Model.Invite.Group.Name</p>
+        <p class="display-1">@Model.Invite.Group?.Name</p>
 
         <div class="mt-5">
-            @if (User.Identity.IsAuthenticated)
+            @if (User.Identity?.IsAuthenticated == true)
             {
                 <div class="m-auto" style="max-width: 30rem">
                     <form method="post">

@@ -13,13 +13,13 @@ namespace LetsGame.Web.Services.Igdb
     public interface IGameSearcher
     {
         Task<Game[]> SearchGamesAsync(string query);
-        Task<Game> GetGameAsync(long id);
+        Task<Game?> GetGameAsync(long id);
     }
 
     public class IgdbClient(HttpClient client, IOptions<IgdbOptions> options) : IGameSearcher
     {
         private const string DefaultGameFields = "name,screenshots.image_id,artworks.image_id,first_release_date";
-        private static IgdbAccessToken _accessToken;
+        private static IgdbAccessToken? _accessToken;
 
         private async Task<IgdbAccessToken> GetAccessTokenAsync()
         {
@@ -32,7 +32,7 @@ namespace LetsGame.Web.Services.Igdb
 
             _accessToken = await response.Content.ReadFromJsonAsync<IgdbAccessToken>();
 
-            return _accessToken;
+            return _accessToken ?? throw new InvalidOperationException("Failed to get access token");
         }
 
         private bool IsEnabled => !string.IsNullOrWhiteSpace(options.Value.ClientId);
@@ -46,10 +46,10 @@ namespace LetsGame.Web.Services.Igdb
                 fields: DefaultGameFields,
                 search: query,
                 where: "parent_game = null & version_parent = null",
-                limit: 48);
+                limit: 48) ?? [];
         }
 
-        public async Task<Game> GetGameAsync(long id)
+        public async Task<Game?> GetGameAsync(long id)
         {
             if (!IsEnabled) return GetFakeGame();
             
@@ -58,7 +58,7 @@ namespace LetsGame.Web.Services.Igdb
                 fields: DefaultGameFields,
                 where: $"id = {id}");
 
-            return results.FirstOrDefault();
+            return results?.FirstOrDefault();
         }
 
         private static Game GetFakeGame() => new()
@@ -67,11 +67,11 @@ namespace LetsGame.Web.Services.Igdb
             Name = "Fake Game"
         };
 
-        private async Task<T> IgdbQuery<T>(
+        private async Task<T?> IgdbQuery<T>(
             string endpoint,
-            string fields = null,
-            string search = null,
-            string where = null,
+            string? fields = null,
+            string? search = null,
+            string? where = null,
             int? limit = null)
         {
             var queryBuilder = new StringBuilder();
@@ -91,7 +91,7 @@ namespace LetsGame.Web.Services.Igdb
 
             return await response.Content.ReadFromJsonAsync<T>();
 
-            void AddClause(string name, object value, bool quoted = false)
+            void AddClause(string name, object? value, bool quoted = false)
             {
                 if (value == null) return;
 

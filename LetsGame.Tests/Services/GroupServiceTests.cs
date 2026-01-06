@@ -220,7 +220,7 @@ namespace LetsGame.Tests.Services
             {
                 Memberships = new List<Membership>
                 {
-                    new() {User = _currentUser, Role = GroupRole.Owner}
+                    new() {User = _currentUser, Role = GroupRole.Owner, DisplayName = "Test user"}
                 }
             };
             

@@ -49,13 +49,13 @@ namespace LetsGame.Web.Services
         public async Task NotifyEventAdded(GroupEvent newEvent)
         {
             var allGroupMembers = await _db.Memberships
-                .Include(x => x.User).ThenInclude(x => x.PushSubscriptions)
+                .Include(x => x.User).ThenInclude(x => x!.PushSubscriptions)
                 .Where(x => x.GroupId == newEvent.GroupId)
                 .ToListAsync();
 
             var creator = allGroupMembers.First(x => x.UserId == newEvent.CreatorId);
             var game = await _db.GroupGames.FindAsync(newEvent.GameId);
-            var group = await _db.Groups.FindAsync(newEvent.GroupId);
+            var group = (await _db.Groups.FindAsync(newEvent.GroupId))!;
             var slotsUtc = newEvent.Slots.Select(x => x.ProposedTime).ToList();
             var groupUrl = GetGroupUrl(group);
 
@@ -84,7 +84,7 @@ namespace LetsGame.Web.Services
                        $"<p>A new session for <strong>{(game == null ? "any game" : HtmlEncode(game.Name))}</strong> has been proposed by <strong>{HtmlEncode(creator.DisplayName)}</strong>." +
                        $"<p>The proposed time slots are:" +
                        $"<ul>" +
-                       string.Join("", slotsUtc.Select(x => $"<li>{HtmlEncode(_dateService.FormatToUserFriendlyDate(x, member.User))}")) +
+                       string.Join("", slotsUtc.Select(x => $"<li>{HtmlEncode(_dateService.FormatToUserFriendlyDate(x, member.User!))}")) +
                        $"</ul>" +
                        $"<p><a href=\"{groupUrl}\">Go to your group's page to vote on it!</a>";
             }
@@ -93,7 +93,7 @@ namespace LetsGame.Web.Services
         public async Task NotifySlotPicked(GroupEvent ev, string pickingUserId)
         {
             var allGroupMembers = await _db.Memberships
-                .Include(x => x.User).ThenInclude(x => x.PushSubscriptions)
+                .Include(x => x.User).ThenInclude(x => x!.PushSubscriptions)
                 .Where(x => x.GroupId == ev.GroupId)
                 .ToListAsync();
 
@@ -107,11 +107,12 @@ namespace LetsGame.Web.Services
                 .Select(x => x.Voter)
                 .Distinct();
             
-            var group = await _db.Groups.FindAsync(ev.GroupId);
+            var group = (await _db.Groups.FindAsync(ev.GroupId))!;
             var game = await _db.GroupGames.FindAsync(ev.GameId);
             var groupUrl = GetGroupUrl(group);
             var slotPicker = allGroupMembers.FirstOrDefault(x => x.UserId == pickingUserId);
             var pickedSlot = slots.FirstOrDefault(x => x.ProposedTime == ev.ChosenTime);
+            if (pickedSlot == null) return;
 
             var membersToNotify = allGroupMembers
                 .Where(x => allVoters.Any(v => v.Id == x.UserId))
@@ -138,7 +139,7 @@ namespace LetsGame.Web.Services
             string GetEmailMessage(Membership member)
             {
                 return $"<p>Hi {HtmlEncode(member.DisplayName)}!" +
-                       $"<p>{slotPicker?.DisplayName ?? "Someone"} selected <strong>{_dateService.FormatToUserFriendlyDate(pickedSlot.ProposedTime, member.User)}</strong> for the <strong>{(game == null ? "gaming" : HtmlEncode(game.Name))}</strong> session in {group.Name}." +
+                       $"<p>{slotPicker?.DisplayName ?? "Someone"} selected <strong>{_dateService.FormatToUserFriendlyDate(pickedSlot.ProposedTime, member.User!)}</strong> for the <strong>{(game == null ? "gaming" : HtmlEncode(game.Name))}</strong> session in {group.Name}." +
                        (pickedSlot.Votes.Any(x => x.VoterId == member.UserId)
                            ? $"<p><a href=\"{groupUrl}\">Go to your group's page for more details</a>"
                            : $"<p>You did not vote for this slot, but you can still <a href=\"{groupUrl}\">join it from your group's page</a>!</p>");
@@ -148,24 +149,24 @@ namespace LetsGame.Web.Services
         public async Task NotifyAllVotesIn(GroupEvent ev)
         {
             var creator = await _db.Memberships
-                .Include(x => x.User).ThenInclude(x => x.PushSubscriptions)
+                .Include(x => x.User).ThenInclude(x => x!.PushSubscriptions)
                 .Where(x => x.GroupId == ev.GroupId && x.UserId == ev.CreatorId)
                 .FirstOrDefaultAsync();
 
             if (creator == null) return;
             
-            var group = await _db.Groups.FindAsync(ev.GroupId);
+            var group = (await _db.Groups.FindAsync(ev.GroupId))!;
             var game = await _db.GroupGames.FindAsync(ev.GameId);
             var groupUrl = GetGroupUrl(group);
             
             await EmailMembersAsync(
-                new[]{creator},
+                [creator],
                 $"All votes are in for {game?.Name ?? "gaming"} session",
                 GetEmailMessage,
                 x => x.UnsubscribeAllVotesIn);
 
             await PushMembersAsync(
-                new[]{creator},
+                [creator],
                 new SimpleNotificationPayload
                 {
                     Title = group.Name,
@@ -196,13 +197,13 @@ namespace LetsGame.Web.Services
             if (eventSlot == null) return;
             
             var participants = await _db.Memberships
-                .Include(x => x.User).ThenInclude(x => x.PushSubscriptions)
+                .Include(x => x.User).ThenInclude(x => x!.PushSubscriptions)
                 .Where(m => eventSlot.Votes.Select(v => v.VoterId).Contains(m.UserId))
                 .Where(x => x.GroupId == ev.GroupId)
                 .OrderBy(x => x.DisplayName)
                 .ToListAsync();
 
-            var group = await _db.Groups.FindAsync(ev.GroupId);
+            var group = (await _db.Groups.FindAsync(ev.GroupId))!;
             var game = await _db.GroupGames.FindAsync(ev.GameId);
 
             await EmailMembersAsync(
@@ -224,7 +225,7 @@ namespace LetsGame.Web.Services
             
             string GetEmailMessage(Membership member)
             {
-                var friendlyTime = _dateService.FormatToUserFriendlyDate(ev.ChosenTime.Value, member.User);
+                var friendlyTime = _dateService.FormatToUserFriendlyDate(ev.ChosenTime.Value, member.User!);
 
                 return $"<p>Hi {HtmlEncode(member.DisplayName)}!" +
                        $"<p>You have a session for <strong>{(game == null ? "any game" : HtmlEncode(game.Name))}</strong> starting soon." +
@@ -245,10 +246,11 @@ namespace LetsGame.Web.Services
             
             var groupEvent = await _db.GroupEvents
                 .Include(x => x.Slots.Where(s => s.ProposedTime > threshold).OrderBy(s => s.ProposedTime)).ThenInclude(x => x.Votes)
-                .Include(x => x.Group.Memberships).ThenInclude(x => x.User).ThenInclude(x => x.PushSubscriptions)
+                .Include(x => x.Group.Memberships).ThenInclude(x => x.User).ThenInclude(x => x!.PushSubscriptions)
                 .Include(x => x.CantPlays)
                 .Include(x => x.Game)
-                .FirstOrDefaultAsync(x => x.Id == eventId);
+                .FirstOrDefaultAsync(x => x.Id == eventId)
+                ?? throw new InvalidOperationException($"Could not find event {eventId}");
             
             groupEvent.ReminderSentAt = now;
             await _db.SaveChangesAsync();
@@ -281,7 +283,7 @@ namespace LetsGame.Web.Services
                        $"<p>A session for <strong>{(groupEvent.Game == null ? "any game" : HtmlEncode(groupEvent.Game.Name))}</strong> is waiting for your vote." +
                        $"<p>The proposed time slots are:" +
                        $"<ul>" +
-                       string.Join("", groupEvent.Slots.Select(x => $"<li>{HtmlEncode(_dateService.FormatToUserFriendlyDate(x.ProposedTime, member.User))}")) +
+                       string.Join("", groupEvent.Slots.Select(x => $"<li>{HtmlEncode(_dateService.FormatToUserFriendlyDate(x.ProposedTime, member.User!))}")) +
                        $"</ul>" +
                        $"<p><a href=\"{groupUrl}\">Go to your group's page to vote on it!</a>";
             }
@@ -292,7 +294,7 @@ namespace LetsGame.Web.Services
             if (!availableMember.IsAvailableNow()) return;
             
             var otherMembers = await _db.Memberships
-                .Include(x => x.User).ThenInclude(x => x.PushSubscriptions)
+                .Include(x => x.User).ThenInclude(x => x!.PushSubscriptions)
                 .Where(x => x.GroupId == group.Id)
                 .Where(x => x.UserId != availableMember.UserId)
                 .ToListAsync();
@@ -320,7 +322,7 @@ namespace LetsGame.Web.Services
                 var availableUntilFormatted = _dateService
                     .ConvertToUserLocalTime(
                         availableMember.AvailableUntil.Value, 
-                        member.User)
+                        member.User!)
                     .ToString("h:mm tt", CultureInfo.InvariantCulture);
                 
                 return $"<p>Hi {HtmlEncode(member.DisplayName)}," +
@@ -338,6 +340,8 @@ namespace LetsGame.Web.Services
         {
             foreach (var member in members)
             {
+                if (string.IsNullOrWhiteSpace(member.User?.Email)) 
+                    continue;
                 if (isUnsubscribed(member.User))
                     continue;
 
@@ -357,6 +361,7 @@ namespace LetsGame.Web.Services
             
             foreach (var member in members)
             {
+                if (member.User == null) throw new InvalidOperationException("User not loaded");
                 if (isUnsubscribed(member.User))
                     continue;
 

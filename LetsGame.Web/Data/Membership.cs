@@ -7,13 +7,13 @@ namespace LetsGame.Web.Data
 {
     public class Membership
     {
-        public AppUser User { get; set; }
-        public Group Group { get; set; }
-        
-        [ForeignKey("User")] public string UserId { get; set; }
+        public AppUser? User { get; set; }
+        public Group? Group { get; set; }
+
+        [ForeignKey("User")] public string UserId { get; set; } = null!;
         [ForeignKey("Group")] public long GroupId { get; set; }
         
-        public string DisplayName { get; set; }
+        public required string DisplayName { get; set; }
         
         public GroupRole Role { get; set; }
         

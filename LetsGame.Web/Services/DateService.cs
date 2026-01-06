@@ -10,7 +10,7 @@ namespace LetsGame.Web.Services
     {
         private readonly IDateTimeZoneProvider _dateTimeZoneProvider;
         
-        private readonly string _localTimezone;
+        private readonly string? _localTimezone;
 
         public DateService(IConfiguration config, IDateTimeZoneProvider dateTimeZoneProvider)
         {
@@ -19,27 +19,28 @@ namespace LetsGame.Web.Services
             _localTimezone = config["LocalTimezone"];
         }
 
-        public LocalDateTime ConvertToUserLocalTime(Instant instant, AppUser userOverride = null)
+        public LocalDateTime ConvertToUserLocalTime(Instant instant, AppUser? userOverride = null)
         {
             return instant
                 .InZone(GetUserDateTimeZone(userOverride))
                 .LocalDateTime;
         }
 
-        public Instant ConvertFromUserLocalTime(LocalDateTime localTime, AppUser userOverride = null)
+        public Instant ConvertFromUserLocalTime(LocalDateTime localTime, AppUser? userOverride = null)
         {
             return localTime
                 .InZone(GetUserDateTimeZone(userOverride), Resolvers.LenientResolver)
                 .ToInstant();
         }
 
-        private DateTimeZone GetUserDateTimeZone(AppUser userOverride = null)
+        private DateTimeZone GetUserDateTimeZone(AppUser? userOverride = null)
         {
             // TODO: Implement user timezone preference
-            return _dateTimeZoneProvider.GetZoneOrNull(_localTimezone);
+            if (_localTimezone == null) return DateTimeZone.Utc;
+            return _dateTimeZoneProvider.GetZoneOrNull(_localTimezone) ?? DateTimeZone.Utc;
         }
 
-        public string FormatToUserFriendlyDate(Instant instant, AppUser userOverride = null)
+        public string FormatToUserFriendlyDate(Instant instant, AppUser? userOverride = null)
         {
             var localValue = ConvertToUserLocalTime(instant, userOverride);
             var localNow = ConvertToUserLocalTime(SystemClock.Instance.GetCurrentInstant(), userOverride);

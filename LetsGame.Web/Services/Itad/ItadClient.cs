@@ -18,7 +18,7 @@ namespace LetsGame.Web.Services.Itad
             _options = options;
         }
 
-        public async Task<ItadSearchResults> SearchAsync(string text, int limit = 20, bool strict = false)
+        public async Task<ItadSearchResults?> SearchAsync(string text, int limit = 20, bool strict = false)
         {
             if (string.IsNullOrWhiteSpace(_options.Value.ApiKey))
                 return new ItadSearchResults();
@@ -26,7 +26,7 @@ namespace LetsGame.Web.Services.Itad
             var uri = $"search/search?key={_options.Value.ApiKey}&q={text}&limit={limit}&strict={(strict ? 1 : 0)}";
             var results = await _client.GetFromJsonAsync<ItadResponse<ItadSearchResults>>(uri);
 
-            return results.Data;
+            return results?.Data;
         }
 
         public static void Configure(IServiceProvider services, HttpClient client)

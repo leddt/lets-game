@@ -19,7 +19,7 @@ namespace LetsGame.Web.Pages
             _userManager = userManager;
         }
 
-        public GroupInvite Invite { get; set; }
+        public GroupInvite? Invite { get; set; }
         
         [BindProperty, Required, Display(Name = "Your display name", Prompt = "Your nickname in this group")]
         public string DisplayName { get; set; }

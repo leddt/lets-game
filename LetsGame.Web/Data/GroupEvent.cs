@@ -15,8 +15,8 @@ namespace LetsGame.Web.Data
         [ForeignKey("Creator")] public string? CreatorId { get; set; }
         
         public Group Group { get; set; }
-        public GroupGame Game { get; set; }
-        public AppUser Creator { get; set; }
+        public GroupGame? Game { get; set; }
+        public AppUser? Creator { get; set; }
         public ICollection<GroupEventSlot> Slots { get; set; }
         public ICollection<GroupEventCantPlay> CantPlays { get; set; }
         

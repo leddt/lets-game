@@ -13,10 +13,10 @@ namespace LetsGame.Web.Services
     {
         public string Type => "simple";
             
-        public string Title { get; set; }
-        public string Body { get; set; }
-        public string Image { get; set; }
-        public string Url { get; set; }
+        public string? Title { get; set; }
+        public string? Body { get; set; }
+        public string? Image { get; set; }
+        public string? Url { get; set; }
 
         public string Icon { get; set; } = "/favicon.png";
     }

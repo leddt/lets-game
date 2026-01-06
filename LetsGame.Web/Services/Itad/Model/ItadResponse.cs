@@ -2,6 +2,6 @@
 {
     public class ItadResponse<T>
     {
-        public T Data { get; set; }
+        public T? Data { get; set; }
     }
 }

@@ -4,6 +4,6 @@ namespace LetsGame.Web.Services
 {
     public interface ICurrentUserAccessor
     {
-        public ClaimsPrincipal CurrentUser { get; }
+        public ClaimsPrincipal? CurrentUser { get; }
     }
 }

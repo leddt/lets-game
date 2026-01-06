@@ -33,7 +33,7 @@ namespace LetsGame.Web.GraphQL
             
             var groups = await db.Memberships
                 .Where(x => x.UserId == userId)
-                .Select(x => x.Group)
+                .Select(x => x.Group!)
                 .OrderBy(x => x.Name)
                 .ToListAsync();
 
