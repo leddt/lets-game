@@ -11,6 +11,6 @@ namespace LetsGame.Web.Data
         
         public long IgdbId { get; set; }
         public string Name { get; set; }
-        public string IgdbImageId { get; set; }
+        public string? IgdbImageId { get; set; }
     }
 }

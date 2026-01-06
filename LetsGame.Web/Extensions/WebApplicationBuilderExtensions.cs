@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -79,6 +80,8 @@ public static class WebApplicationBuilderExtensions
         else
             options.UseNpgsql(ConfigureNpgsql);
 
+        options.ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning));
+        
         return;
 
         void ConfigureNpgsql(NpgsqlDbContextOptionsBuilder npgsqlOptions)
@@ -174,13 +177,14 @@ public static class WebApplicationBuilderExtensions
             .AddSubscriptionType<Subscription>()
             .AddInMemorySubscriptions()
             .RegisterDbContextFactory<ApplicationDbContext>()
+            .AddWebTypes()
             .ConfigureSchema(x => x.AddType<LocalDateTimeType>());
         
         // SendGrid
         builder.Services
             .Configure<SendGridOptions>(builder.Configuration.GetSection("SendGrid"));
         
-        // NodaTi,e
+        // NodaTime
         builder.Services.AddTransient(_ => DateTimeZoneProviders.Bcl);
         
         return builder;

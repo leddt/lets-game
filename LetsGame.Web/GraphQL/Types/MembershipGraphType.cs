@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Threading.Tasks;
+using GreenDonut;
 using HotChocolate;
-using HotChocolate.Resolvers;
 using HotChocolate.Types;
 using LetsGame.Web.Data;
-using LetsGame.Web.Extensions;
+using LetsGame.Web.GraphQL.DataLoaders;
 using LetsGame.Web.Services;
 using NodaTime;
 
@@ -36,13 +36,10 @@ namespace LetsGame.Web.GraphQL.Types
 
         public bool IsAvailableNow => _membership.IsAvailableNow();
         
-        public async Task<GroupGraphType> GetGroup(IResolverContext context)
+        public async Task<GroupGraphType> GetGroup(IGroupByIdDataLoader loader)
         {
-            var group = await context.LoadGroup(_membership.GroupId);
-
-            return group == null 
-                ? null 
-                : new GroupGraphType(group);
+            var group = await loader.LoadRequiredAsync(_membership.GroupId);
+            return new GroupGraphType(group);
         }
 
         public static (long groupId, string userId) ParseMembershipId(string id)

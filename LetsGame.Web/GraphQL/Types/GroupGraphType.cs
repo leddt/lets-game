@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using HotChocolate;
-using HotChocolate.Resolvers;
 using LetsGame.Web.Authorization;
 using LetsGame.Web.Data;
-using LetsGame.Web.Extensions;
+using LetsGame.Web.GraphQL.DataLoaders;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using NodaTime;
@@ -29,32 +27,32 @@ namespace LetsGame.Web.GraphQL.Types
         public string Slug => _group.Slug;
         public string SharingKey => _group.SharingKey;
 
-        public async Task<IEnumerable<MembershipGraphType>> GetMembers(IResolverContext context)
+        public async Task<IEnumerable<MembershipGraphType>> GetMembers(IMembershipsByGroupIdDataLoader loader)
         {
-            var members = await context.LoadMembershipsByGroupId(_group.Id);
+            var members = await loader.LoadAsync(_group.Id) ?? [];
             return members.Select(x => new MembershipGraphType(x));
         }
         
-        public async Task<MembershipGraphType> GetSelf(
-            IResolverContext context, 
+        public async Task<MembershipGraphType?> GetSelf(
+            IMembershipsByGroupIdDataLoader loader, 
             ClaimsPrincipal user, 
             [Service] UserManager<AppUser> userManager)
         {
             var userId = userManager.GetUserId(user);
-            var members = await context.LoadMembershipsByGroupId(_group.Id);
+            var members = await loader.LoadAsync(_group.Id) ?? [];
             var self = members.FirstOrDefault(x => x.UserId == userId);
             return self == null ? null : new MembershipGraphType(self);
         }
 
-        public async Task<IEnumerable<GameGraphType>> GetGames(IResolverContext context)
+        public async Task<IEnumerable<GameGraphType>> GetGames(IGroupGamesByGroupIdDataLoader loader)
         {
-            var games = await context.LoadGamesByGroupId(_group.Id);
+            var games = await loader.LoadAsync(_group.Id) ?? [];
             return games.Select(x => new GameGraphType(x));
         }
 
-        public async Task<IEnumerable<ProposedSessionGraphType>> GetProposedSessions(IResolverContext context)
+        public async Task<IEnumerable<ProposedSessionGraphType>> GetProposedSessions(IGroupEventWithSlotsByGroupIdDataLoader loader)
         {
-            var events = await context.LoadEventsWithSlotsByGroupId(_group.Id);
+            var events = await loader.LoadAsync(_group.Id) ?? [];
             var now = SystemClock.Instance.GetCurrentInstant();
             
             return events
@@ -64,9 +62,9 @@ namespace LetsGame.Web.GraphQL.Types
                 .Select(x => new ProposedSessionGraphType(x));
         }
 
-        public async Task<IEnumerable<UpcomingSessionGraphType>> GetUpcomingSessions(IResolverContext context)
+        public async Task<IEnumerable<UpcomingSessionGraphType>> GetUpcomingSessions(IGroupEventWithSlotsByGroupIdDataLoader loader)
         {
-            var events = await context.LoadEventsWithSlotsByGroupId(_group.Id);
+            var events = await loader.LoadAsync(_group.Id) ?? [];
             var cutoff = SystemClock.Instance.GetCurrentInstant() - Duration.FromHours(6);
             
             return events
@@ -76,15 +74,15 @@ namespace LetsGame.Web.GraphQL.Types
                 .Select(x => new UpcomingSessionGraphType(x));
         }
 
-        public async Task<IEnumerable<InviteGraphType>> GetInvites(
-            IResolverContext context, 
+        public async Task<IEnumerable<InviteGraphType>?> GetInvites(
+            IGroupInvitesByGroupIdDataLoader loader, 
             ClaimsPrincipal user,
             [Service] IAuthorizationService authorizationService)
         {
             var auth = await authorizationService.AuthorizeAsync(user, _group.Id, AuthPolicies.ManageGroup);
             if (!auth.Succeeded) return null;
             
-            var invites = await context.LoadInvitesByGroupId(_group.Id);
+            var invites = await loader.LoadAsync(_group.Id) ?? [];
             return invites.Select(x => new InviteGraphType(x));
         }
     }

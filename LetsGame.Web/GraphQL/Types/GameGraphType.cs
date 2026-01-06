@@ -13,6 +13,6 @@ namespace LetsGame.Web.GraphQL.Types
 
         protected override object GetId() => _game.Id;
         public string Name => _game.Name;
-        public string IgdbImageId => _game.IgdbImageId;
+        public string? IgdbImageId => _game.IgdbImageId;
     }
 }

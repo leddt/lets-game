@@ -12,7 +12,7 @@ namespace LetsGame.Web.Data
         
         [ForeignKey("Game")] public long? GameId { get; set; }
         [ForeignKey("Group")] public long GroupId { get; set; }
-        [ForeignKey("Creator")] public string CreatorId { get; set; }
+        [ForeignKey("Creator")] public string? CreatorId { get; set; }
         
         public Group Group { get; set; }
         public GroupGame Game { get; set; }

@@ -1,5 +1,4 @@
-﻿#nullable enable
-namespace LetsGame.Web.GraphQL.Types
+﻿namespace LetsGame.Web.GraphQL.Types
 {
     public interface ISessionIdInput
     {

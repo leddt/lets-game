@@ -28,7 +28,7 @@ namespace LetsGame.Web.GraphQL
             return longId;
         }
         
-        public static long? ToLongOptional<T>(string id)
+        public static long? ToLongOptional<T>(string? id)
         {
             if (string.IsNullOrWhiteSpace(id)) return null;
             

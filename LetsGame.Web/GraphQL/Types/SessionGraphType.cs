@@ -1,8 +1,8 @@
 ﻿using System.Threading.Tasks;
-using HotChocolate.Resolvers;
+using GreenDonut;
 using HotChocolate.Types;
 using LetsGame.Web.Data;
-using LetsGame.Web.Extensions;
+using LetsGame.Web.GraphQL.DataLoaders;
 
 namespace LetsGame.Web.GraphQL.Types
 {
@@ -19,22 +19,23 @@ namespace LetsGame.Web.GraphQL.Types
         protected override object GetId() => GroupEvent.Id;
         public string Details => GroupEvent.Details;
 
-        public async Task<GroupGraphType> GetGroup(IResolverContext context)
+        public async Task<GroupGraphType> GetGroup(IGroupByIdDataLoader loader)
         {
-            var result = await context.LoadGroup(GroupEvent.GroupId);
+            var result = await loader.LoadRequiredAsync(GroupEvent.GroupId);
             return new GroupGraphType(result);
         }
         
-        public async Task<GameGraphType> GetGame(IResolverContext context)
+        public async Task<GameGraphType?> GetGame(IGroupGameByIdDataLoader loader)
         {
             if (GroupEvent.GameId == null) return null;
-            var result = await context.LoadGame(GroupEvent.GameId.Value);
+            var result = await loader.LoadRequiredAsync(GroupEvent.GameId.Value);
             return new GameGraphType(result);
         }
 
-        public async Task<MembershipGraphType> Creator(IResolverContext context)
+        public async Task<MembershipGraphType?> Creator(IMembershipByGroupIdAndUserIdDataLoader loader)
         {
-            var result = await context.LoadMembership(GroupEvent.GroupId, GroupEvent.CreatorId);
+            if (GroupEvent.CreatorId == null) return null;
+            var result = await loader.LoadRequiredAsync((GroupEvent.GroupId, GroupEvent.CreatorId));
             return new MembershipGraphType(result);
         }
     }

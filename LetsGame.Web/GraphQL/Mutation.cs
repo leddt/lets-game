@@ -116,6 +116,7 @@ namespace LetsGame.Web.GraphQL
             var id = ID.ToLong<GroupEvent>(sessionId);
 
             var groupEvent = await db.GroupEvents.FindAsync(id);
+            if (groupEvent == null) throw new Exception("Can't find event");
             if (groupEvent.ChosenTime.HasValue)
                 throw new Exception("Can't vote on confirmed event");
             
@@ -136,6 +137,7 @@ namespace LetsGame.Web.GraphQL
             var id = ID.ToLong<GroupEvent>(sessionId);
 
             var groupEvent = await db.GroupEvents.FindAsync(id);
+            if (groupEvent == null) throw new Exception("Can't find event");
             if (groupEvent.ChosenTime.HasValue)
                 throw new Exception("Can't send reminder on confirmed event");
             
@@ -160,6 +162,7 @@ namespace LetsGame.Web.GraphQL
                 .Where(x => x.Slots.Any(s => s.Id == id))
                 .FirstOrDefaultAsync();
             
+            if (groupEvent == null) throw new Exception("Can't find event");
             if (groupEvent.ChosenTime.HasValue)
                 throw new Exception("Can't pick slot on confirmed event");
             
@@ -183,6 +186,7 @@ namespace LetsGame.Web.GraphQL
             await groupService.CreateInviteAsync(id, singleUse);
 
             var group = await db.Groups.FindAsync(id);
+            if (group == null) throw new Exception("Group not found");
             
             var result = new GroupGraphType(group);
             await sender.Send(result);
@@ -225,6 +229,7 @@ namespace LetsGame.Web.GraphQL
             await groupService.SetAvailableFor(id, lengthInSeconds);
 
             var group = await db.Groups.FindAsync(id);
+            if (group == null) throw new Exception("Group not found");
             
             var result = new GroupGraphType(group);
             await sender.Send(result);
@@ -242,6 +247,7 @@ namespace LetsGame.Web.GraphQL
             await groupService.SetAvailableFor(id, -1);
 
             var group = await db.Groups.FindAsync(id);
+            if (group == null) throw new Exception("Group not found");
             
             var result = new GroupGraphType(group);
             await sender.Send(result);
@@ -259,6 +265,7 @@ namespace LetsGame.Web.GraphQL
             await groupService.AddGameToGroupAsync(ID.ToLong<Group>(groupId), ID.ToLong<Game>(gameId));
 
             var group = await db.Groups.FindAsync(ID.ToLong<Group>(groupId));
+            if (group == null) throw new Exception("Group not found");
             
             var result = new GroupGraphType(group);
             await sender.Send(result);
@@ -277,6 +284,7 @@ namespace LetsGame.Web.GraphQL
             await groupService.RemoveGameFromGroupAsync(ID.ToLong<Group>(groupId), ID.ToLong<GroupGame>(gameId));
 
             var group = await db.Groups.FindAsync(ID.ToLong<Group>(groupId));
+            if (group == null) throw new Exception("Group not found");
             
             var result = new GroupGraphType(group);
             await sender.Send(result);
@@ -287,7 +295,7 @@ namespace LetsGame.Web.GraphQL
         [Authorize(Policy = AuthPolicies.ReadGroup)]
         public async Task<GroupPayload> ProposeSession(
             [GraphQLType(typeof(IdType))] string groupId,
-            [GraphQLType(typeof(IdType))] string gameId,
+            [GraphQLType(typeof(IdType))] string? gameId,
             LocalDateTime[] dateTimes,
             string details,
             [Service] GroupService groupService,
@@ -306,6 +314,7 @@ namespace LetsGame.Web.GraphQL
                 instants);
             
             var group = await db.Groups.FindAsync(ID.ToLong<Group>(groupId));
+            if (group == null) throw new Exception("Group not found");
 
             var result = new GroupGraphType(group);
             await sender.Send(result);
@@ -325,6 +334,7 @@ namespace LetsGame.Web.GraphQL
             await groupService.RemoveGroupMember(ID.ToLong<Group>(groupId), userId);
             
             var group = await db.Groups.FindAsync(ID.ToLong<Group>(groupId));
+            if (group == null) throw new Exception("Group not found");
 
             var result = new GroupGraphType(group);
             await sender.Send(result);
@@ -351,6 +361,7 @@ namespace LetsGame.Web.GraphQL
             await groupService.LeaveGroup(ID.ToLong<Group>(groupId));
 
             var group = await db.Groups.FindAsync(groupId);
+            if (group == null) throw new Exception("Group not found");
             await sender.Send(new GroupGraphType(group));
             
             return true;
@@ -369,6 +380,7 @@ namespace LetsGame.Web.GraphQL
                 .Where(x => x.Id == id)
                 .Select(x => x.Group)
                 .FirstOrDefaultAsync();
+            if (group == null) throw new Exception("Group not found");
             
             await groupService.DeleteEvent(id);
             
@@ -399,6 +411,7 @@ namespace LetsGame.Web.GraphQL
             if (string.IsNullOrWhiteSpace(newName)) throw new Exception("New name can't be blank");
             
             var membership = await groupService.UpdateMemberDisplayNameAsync(ID.ToLong<Group>(groupId), newName);
+            if (membership == null) throw new Exception("Can't find membership");
             return new MembershipPayload(new MembershipGraphType(membership));
         }
 
@@ -412,6 +425,8 @@ namespace LetsGame.Web.GraphQL
                 ID.ToLong<GroupEvent>(input.SessionId), 
                 input.Details, 
                 input.GameId.Map(ID.ToLongOptional<GroupGame>));
+            
+            if (ev == null) throw new Exception("Can't find event");
             
             return new ProposedSessionPayload(new ProposedSessionGraphType(ev));
         }

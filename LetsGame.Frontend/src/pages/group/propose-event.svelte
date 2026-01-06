@@ -37,7 +37,7 @@
         mutation ProposeSession(
           $groupId: ID!
           $gameId: ID
-          $details: String
+          $details: String!
           $dateTimes: [LocalDateTime!]!
         ) {
           proposeSession(

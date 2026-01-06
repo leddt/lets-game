@@ -34,7 +34,7 @@
       ${upcomingSessionCardFragment}
       ${proposedSessionCardFragment}
       ${sidebarFragment}
-      query GroupData($slug: String) {
+      query GroupData($slug: String!) {
         groupBySlug(slug: $slug) {
           id
           name

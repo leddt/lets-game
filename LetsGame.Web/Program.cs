@@ -15,7 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
-using IPNetwork = Microsoft.AspNetCore.HttpOverrides.IPNetwork;
+using IPNetwork = System.Net.IPNetwork;
 
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
@@ -38,8 +38,8 @@ builder.AddApplicationAuth();
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
-    options.KnownNetworks.Add(new IPNetwork(IPAddress.Parse("::ffff:169.0.0.0"), 104));
-    options.KnownNetworks.Add(new IPNetwork(IPAddress.Parse("::ffff:172.0.0.0"), 104));
+    options.KnownIPNetworks.Add(new IPNetwork(IPAddress.Parse("::ffff:169.0.0.0"), 104));
+    options.KnownIPNetworks.Add(new IPNetwork(IPAddress.Parse("::ffff:172.0.0.0"), 104));
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor |
                                ForwardedHeaders.XForwardedProto;
 });
@@ -47,8 +47,6 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 builder.Services.AddRazorPages();
 
 builder.AddApplicationServices();
-
-builder.Services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();
 
 builder.Services.AddSpaStaticFiles(options =>
 {

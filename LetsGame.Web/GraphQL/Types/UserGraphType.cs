@@ -11,7 +11,7 @@ namespace LetsGame.Web.GraphQL.Types
             _user = user;
         }
 
-        public string Id => _user.FindFirstValue(ClaimTypes.NameIdentifier);
-        public string Email => _user.FindFirstValue(ClaimTypes.Email);
+        public string Id => _user.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+        public string Email => _user.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
     }
 }

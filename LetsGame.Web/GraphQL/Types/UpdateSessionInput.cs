@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-using HotChocolate;
+﻿using HotChocolate;
 using HotChocolate.Types;
 
 namespace LetsGame.Web.GraphQL.Types

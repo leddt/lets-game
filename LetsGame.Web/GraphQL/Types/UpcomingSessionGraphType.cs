@@ -2,9 +2,8 @@
 using System.Linq;
 using System.Threading.Tasks;
 using HotChocolate;
-using HotChocolate.Resolvers;
 using LetsGame.Web.Data;
-using LetsGame.Web.Extensions;
+using LetsGame.Web.GraphQL.DataLoaders;
 using LetsGame.Web.Services;
 using NodaTime;
 
@@ -24,9 +23,9 @@ namespace LetsGame.Web.GraphQL.Types
             return dateService.ConvertToUserLocalTime(_slot.ProposedTime);
         }
 
-        public async Task<IEnumerable<MembershipGraphType>> GetParticipants(IResolverContext context)
+        public async Task<IEnumerable<MembershipGraphType>> GetParticipants(IMembershipsBySlotIdDataLoader loader)
         {
-            var result = await context.LoadMembershipsBySlotId(_slot.Id);
+            var result = await loader.LoadAsync(_slot.Id) ?? [];
             return result.Select(x => new MembershipGraphType(x));
         } 
     }

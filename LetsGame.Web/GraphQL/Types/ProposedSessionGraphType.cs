@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using HotChocolate;
-using HotChocolate.Resolvers;
 using LetsGame.Web.Data;
-using LetsGame.Web.Extensions;
+using LetsGame.Web.GraphQL.DataLoaders;
 using LetsGame.Web.Services;
 using NodaTime;
 
@@ -17,25 +16,25 @@ namespace LetsGame.Web.GraphQL.Types
         {
         }
 
-        public async Task<IEnumerable<SessionSlotGraphType>> GetSlots(IResolverContext context)
+        public async Task<IEnumerable<SessionSlotGraphType>> GetSlots(ISlotsByEventIdDataLoader loader)
         {
-            var result = await context.LoadSlotsByEventId(GroupEvent.Id);
+            var result = await loader.LoadAsync(GroupEvent.Id) ?? [];
             return result
                 .Where(x => x.ProposedTime > SystemClock.Instance.GetCurrentInstant())
                 .OrderBy(x => x.ProposedTime)
                 .Select(x => new SessionSlotGraphType(x));
         }
 
-        public async Task<IEnumerable<MembershipGraphType>> GetCantPlays(IResolverContext context)
+        public async Task<IEnumerable<MembershipGraphType>> GetCantPlays(IMembershipsByCantPlayEventIdDataLoader loader)
         {
-            var result = await context.LoadMembershipsByCantPlayEventId(GroupEvent.Id);
+            var result = await loader.LoadAsync(GroupEvent.Id) ?? [];
             return result.Select(x => new MembershipGraphType(x));
         }
 
-        public async Task<IEnumerable<MembershipGraphType>> GetMissingVotes(IResolverContext context)
+        public async Task<IEnumerable<MembershipGraphType>> GetMissingVotes(IMembershipsByGroupIdDataLoader membershipsByGroupIdLoader, IVoterIdsByEventIdDataLoader voterIdsLoader)
         {
-            var allMembers = await context.LoadMembershipsByGroupId(GroupEvent.GroupId);
-            var allVoterIds = await context.LoadVoterIdsByEventId(GroupEvent.Id);
+            var allMembers = await membershipsByGroupIdLoader.LoadAsync(GroupEvent.GroupId) ?? [];
+            var allVoterIds = await voterIdsLoader.LoadAsync(GroupEvent.Id) ?? [];
 
             return allMembers
                 .Where(x => !allVoterIds.Contains(x.UserId))
