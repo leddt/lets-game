@@ -46,7 +46,7 @@ namespace LetsGame.Tests.Services
             _autoMocker.SetInstance(_db);
             _autoMocker.SetInstance(new UserManager<AppUser>(
                 new UserStore<AppUser>(_db),
-                null, null, null, null, null, null, null, null));
+                null!, null!, null!, null!, null!, null!, null!, null!));
             _autoMocker.SetInstance(new DateService(config, DateTimeZoneProviders.Bcl));
 
             _autoMocker.GetMock<ICurrentUserAccessor>()
@@ -64,8 +64,9 @@ namespace LetsGame.Tests.Services
         {
             _db.Groups.Add(new Group
             {
+                Name = "Test group",
                 Slug = "test",
-                Members = new List<AppUser> {_currentUser}
+                Memberships = [new Membership {User = _currentUser, DisplayName = "Test user"}]
             });
             await _db.SaveChangesAsync();
 
@@ -79,6 +80,7 @@ namespace LetsGame.Tests.Services
         {
             _db.Groups.Add(new Group
             {
+                Name = "Test group",
                 Slug = "test",
             });
             await _db.SaveChangesAsync();
@@ -97,7 +99,7 @@ namespace LetsGame.Tests.Services
             
             Assert.Equal("Test group", group.Name);
             Assert.Equal("test-group", group.Slug);
-            var membership = Assert.Single(group.Memberships);
+            var membership = Assert.Single(group.Memberships!);
             Assert.Equal(_currentUser, membership.User);
             Assert.Equal(GroupRole.Owner, membership.Role);
         }
@@ -125,7 +127,7 @@ namespace LetsGame.Tests.Services
         public async Task AddGameToGroupThrowsIfUserIsNotOwnerOfGroup()
         {
             var group = await CreateEmptyTestGroup();
-            group.Memberships.First().Role = GroupRole.Member;
+            group.Memberships!.First().Role = GroupRole.Member;
             await _db.SaveChangesAsync();
 
             await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.AddGameToGroupAsync(group.Id, 42));
@@ -142,7 +144,7 @@ namespace LetsGame.Tests.Services
         public async Task AddGameToGroupDoesNothingIfGroupAlreadyHasThisGame()
         {
             var group = await CreateEmptyTestGroup();
-            group.Games = new List<GroupGame> {new() {IgdbId = 42}};
+            group.Games = [new GroupGame { Name = "Test Game", IgdbId = 42 }];
             await _db.SaveChangesAsync();
             
             await _sut.AddGameToGroupAsync(group.Id, 42);
@@ -154,7 +156,7 @@ namespace LetsGame.Tests.Services
         public async Task AddSlotVoteAddsVoteForCurrentUser()
         {
             var group = await CreateFilledTestGroup();
-            var slot = group.Events.First().Slots.First();
+            var slot = group.Events!.First().Slots!.First();
 
             await _sut.AddSlotVoteAsync(slot.Id);
 
@@ -162,7 +164,7 @@ namespace LetsGame.Tests.Services
                 .Include(x => x.Votes).ThenInclude(x => x.Voter)
                 .FirstOrDefaultAsync(x => x.Id == slot.Id);
             
-            var vote = Assert.Single(slot.Votes);
+            var vote = Assert.Single(slot.Votes!);
             Assert.Equal(_currentUser, vote.Voter);
         }
 
@@ -170,10 +172,10 @@ namespace LetsGame.Tests.Services
         public async Task AddSlotVoteDoesNothingIfUserNotMemberOfGroup()
         {
             var group = await CreateFilledTestGroup();
-            group.Memberships.Clear();
+            group.Memberships!.Clear();
             await _db.SaveChangesAsync();
             
-            var slot = group.Events.First().Slots.First();
+            var slot = group.Events!.First().Slots!.First();
             
             await _sut.AddSlotVoteAsync(slot.Id);
             
@@ -181,14 +183,14 @@ namespace LetsGame.Tests.Services
                 .Include(x => x.Votes).ThenInclude(x => x.Voter)
                 .FirstOrDefaultAsync(x => x.Id == slot.Id);
             
-            Assert.Empty(slot.Votes);
+            Assert.Empty(slot.Votes!);
         }
 
         [Fact]
         public async Task AddSlotVoteDoesNothingIfUserAlreadyVoted()
         {
             var group = await CreateFilledTestGroup();
-            var slot = group.Events.First().Slots.First();
+            var slot = group.Events!.First().Slots!.First();
             slot.Votes = new List<GroupEventSlotVote> {new() {Voter = _currentUser}};
             await _db.SaveChangesAsync();
 
@@ -198,15 +200,15 @@ namespace LetsGame.Tests.Services
                 .Include(x => x.Votes).ThenInclude(x => x.Voter)
                 .FirstOrDefaultAsync(x => x.Id == slot.Id);
             
-            Assert.Single(slot.Votes);
+            Assert.Single(slot.Votes!);
         }
 
         [Fact]
         public async Task AddSlotVoteRemovesCantPlay()
         {
             var group = await CreateFilledTestGroup();
-            var slot = group.Events.First().Slots.First();
-            slot.Event.CantPlays = new List<GroupEventCantPlay> {new() {User = _currentUser}};
+            var slot = group.Events!.First().Slots!.First();
+            slot.Event!.CantPlays = new List<GroupEventCantPlay> {new() {User = _currentUser}};
             await _db.SaveChangesAsync();
             
             await _sut.AddSlotVoteAsync(slot.Id);
@@ -218,6 +220,8 @@ namespace LetsGame.Tests.Services
         {
             var group = new Group
             {
+                Name = "Test group",
+                Slug = "test",
                 Memberships = new List<Membership>
                 {
                     new() {User = _currentUser, Role = GroupRole.Owner, DisplayName = "Test user"}
@@ -232,7 +236,7 @@ namespace LetsGame.Tests.Services
 
         private async Task<Group> CreateFilledTestGroup()
         {
-            var game = new GroupGame();
+            var game = new GroupGame { Name = "Test game" };
             
             var group = await CreateEmptyTestGroup();
             group.Games = new List<GroupGame> {game};

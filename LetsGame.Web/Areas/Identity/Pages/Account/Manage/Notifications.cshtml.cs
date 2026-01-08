@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using LetsGame.Web.Data;
 using Microsoft.AspNetCore.Identity;
@@ -7,20 +6,18 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
-using WebPush;
 
 namespace LetsGame.Web.Areas.Identity.Pages.Account.Manage
 {
     public class Notifications : PageModel
     {
-        public string[] PushSubscriptions { get; set; }
-        public string VapidPublicKey { get; set; }
+        public string[]? PushSubscriptions { get; set; }
+        public string? VapidPublicKey { get; set; }
         
         [BindProperty] 
-        public string AddPushSubscription { get; set; }
+        public string? AddPushSubscription { get; set; }
         [BindProperty] 
-        public string RemovePushSubscription { get; set; }
+        public string? RemovePushSubscription { get; set; }
         
         [BindProperty] 
         public bool NewEvent { get; set; }
@@ -53,15 +50,15 @@ namespace LetsGame.Web.Areas.Identity.Pages.Account.Manage
         public bool AllVotesInPush { get; set; }
         
         [TempData]
-        public string StatusMessage { get; set; }
+        public string? StatusMessage { get; set; }
 
         public async Task OnGetAsync([FromServices] UserManager<AppUser> userManager, [FromServices] ApplicationDbContext db, [FromServices] IConfiguration config)
         {
             var user = await db.Users
                 .Include(x => x.PushSubscriptions)
-                .FirstOrDefaultAsync(x => x.Id == userManager.GetUserId(User));
-
-            PushSubscriptions = user.PushSubscriptions.Select(x => x.SubscriptionJson).ToArray();
+                .FirstAsync(x => x.Id == userManager.GetUserId(User));
+            
+            PushSubscriptions = user.PushSubscriptions!.Select(x => x.SubscriptionJson).ToArray();
             VapidPublicKey = config["vapid:publicKey"];
             
             NewEvent = !user.UnsubscribeNewEvent;
@@ -84,7 +81,7 @@ namespace LetsGame.Web.Areas.Identity.Pages.Account.Manage
         {
             var user = await db.Users
                 .Include(x => x.PushSubscriptions)
-                .FirstOrDefaultAsync(x => x.Id == userManager.GetUserId(User));
+                .FirstAsync(x => x.Id == userManager.GetUserId(User));
 
             user.UnsubscribeNewEvent = !NewEvent;
             user.UnsubscribeEventReminder = !EventReminder;
@@ -103,13 +100,13 @@ namespace LetsGame.Web.Areas.Identity.Pages.Account.Manage
 
             if (!string.IsNullOrWhiteSpace(AddPushSubscription))
             {
-                user.PushSubscriptions.Add(new UserPushSubscription {SubscriptionJson = AddPushSubscription});
+                user.PushSubscriptions!.Add(new UserPushSubscription {SubscriptionJson = AddPushSubscription});
             }
 
             if (!string.IsNullOrWhiteSpace(RemovePushSubscription))
             {
-                var sub = user.PushSubscriptions.FirstOrDefault(x => x.SubscriptionJson == RemovePushSubscription);
-                user.PushSubscriptions.Remove(sub);
+                var sub = user.PushSubscriptions!.FirstOrDefault(x => x.SubscriptionJson == RemovePushSubscription);
+                if (sub != null) user.PushSubscriptions!.Remove(sub);
             }
 
             await db.SaveChangesAsync();

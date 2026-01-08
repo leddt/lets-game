@@ -8,9 +8,9 @@ namespace LetsGame.Web.Data
         public long Id { get; set; }
         
         [Required, ForeignKey("UserId")]
-        public AppUser User { get; set; }
-        public string UserId { get; set; }
+        public AppUser? User { get; set; }
+        public string UserId { get; set; } = null!;
         
-        public string SubscriptionJson { get; set; }
+        public required string SubscriptionJson { get; set; }
     }
 }

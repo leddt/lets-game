@@ -1,35 +1,39 @@
 ﻿
+using System.Diagnostics.CodeAnalysis;
 using HotChocolate.Resolvers;
 
 namespace LetsGame.Web.Authorization
 {
     public static class AuthExtensions
     {
-        public static bool TryGetArgumentValue<T>(this IResolverContext ctx, string name, out T result)
+        extension(IResolverContext ctx)
         {
-            try
+            public bool TryGetArgumentValue<T>(string name, [NotNullWhen(true)] out T? result)
             {
-                result = ctx.ArgumentValue<T>(name);
-                return true;
+                try
+                {
+                    result = ctx.ArgumentValue<T>(name);
+                    return result != null;
+                }
+                catch
+                {
+                    result = default;
+                    return false;
+                }
             }
-            catch
-            {
-                result = default;
-                return false;
-            }
-        }
 
-        public static bool TryGetParent<T>(this IResolverContext ctx, out T result) where T : class
-        {
-            try
+            public bool TryGetParent<T>([NotNullWhen(true)] out T? result) where T : class
             {
-                result = ctx.Parent<T>();
-                return result != null;
-            }
-            catch
-            {
-                result = null;
-                return false;
+                try
+                {
+                    result = ctx.Parent<T>();
+                    return result != null!;
+                }
+                catch
+                {
+                    result = null;
+                    return false;
+                }
             }
         }
     }

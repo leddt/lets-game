@@ -73,7 +73,7 @@ namespace LetsGame.Web.GraphQL
 
             var sessions = await db.GroupEvents
                 .Include(x => x.Slots)
-                .Where(x => x.Group.Memberships.Any(m => m.UserId == userId))
+                .Where(x => x.Group!.Memberships!.Any(m => m.UserId == userId))
                 .Where(x => x.ChosenTime > threshold)
                 .OrderBy(x => x.ChosenTime)
                 .ToListAsync();
@@ -92,10 +92,10 @@ namespace LetsGame.Web.GraphQL
 
             var sessions = await db.GroupEvents
                 .Include(x => x.Slots)
-                .Where(x => x.Group.Memberships.Any(m => m.UserId == userId))
+                .Where(x => x.Group!.Memberships!.Any(m => m.UserId == userId))
                 .Where(x => x.ChosenTime == null)
-                .Where(x => x.Slots.Any(s => s.ProposedTime > now))
-                .OrderBy(x => x.Slots.Where(s => s.ProposedTime > now).Min(s => s.ProposedTime))
+                .Where(x => x.Slots!.Any(s => s.ProposedTime > now))
+                .OrderBy(x => x.Slots!.Where(s => s.ProposedTime > now).Min(s => s.ProposedTime))
                 .ToListAsync();
 
             return sessions.Select(x => new ProposedSessionGraphType(x));

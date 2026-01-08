@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using LetsGame.Web.Data;
 using LetsGame.Web.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -10,19 +9,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LetsGame.Web.Pages
 {
-    public class InviteModel : PageModel
+    public class InviteModel(UserManager<AppUser> userManager) : PageModel
     {
-        private readonly UserManager<AppUser> _userManager;
-
-        public InviteModel(UserManager<AppUser> userManager)
-        {
-            _userManager = userManager;
-        }
-
         public GroupInvite? Invite { get; set; }
         
         [BindProperty, Required, Display(Name = "Your display name", Prompt = "Your nickname in this group")]
-        public string DisplayName { get; set; }
+        public string? DisplayName { get; set; }
 
         public async Task<IActionResult> OnGet(
             [FromServices] ApplicationDbContext db, 
@@ -32,11 +24,11 @@ namespace LetsGame.Web.Pages
             
             if (Invite != null && User.Identity?.IsAuthenticated == true)
             {
-                var userId = _userManager.GetUserId(User);
+                var userId = userManager.GetUserId(User);
                 var membership = await db.Memberships.FirstOrDefaultAsync(x => x.UserId == userId && x.GroupId == Invite.GroupId);
 
                 if (membership != null)
-                    return Redirect($"/group/{Invite.Group.Slug}");
+                    return Redirect($"/group/{Invite.Group!.Slug}");
             }
 
             return Page();
@@ -59,7 +51,7 @@ namespace LetsGame.Web.Pages
                 return Page();
             }
             
-            var group = await groupService.AcceptInviteAsync(DisplayName, id);
+            var group = await groupService.AcceptInviteAsync(DisplayName!, id);
             
             return Redirect($"/group/{group.Slug}");
         }

@@ -5,19 +5,12 @@ using Microsoft.AspNetCore.Mvc;
 namespace LetsGame.Web.Controllers
 {
     [ApiController]
-    public class PushApiController : ControllerBase
+    public class PushApiController(IPushSender sender) : ControllerBase
     {
-        private readonly IPushSender _sender;
-
-        public PushApiController(IPushSender sender)
-        {
-            _sender = sender;
-        }
-
         [HttpPost("api/push/test")]
         public async Task<IActionResult> Test(TestNotificationRequest request)
         {
-            await _sender.SendNotification(new[] {request.Subscription}, new SimpleNotificationPayload
+            await sender.SendNotification([request.Subscription], new SimpleNotificationPayload
             {
                 Title = "Test notification",
                 Body = "It works!"
@@ -28,7 +21,7 @@ namespace LetsGame.Web.Controllers
 
         public class TestNotificationRequest
         {
-            public string Subscription { get; set; }
+            public required string Subscription { get; set; }
         }
     }
 }

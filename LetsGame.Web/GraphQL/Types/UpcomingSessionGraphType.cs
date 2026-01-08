@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using HotChocolate;
@@ -15,6 +16,7 @@ namespace LetsGame.Web.GraphQL.Types
 
         public UpcomingSessionGraphType(GroupEvent groupEvent) : base(groupEvent)
         {
+            if (groupEvent.Slots == null) throw new InvalidOperationException("Slots not loaded");
             _slot = groupEvent.Slots.Single(x => x.ProposedTime == groupEvent.ChosenTime);
         }
 

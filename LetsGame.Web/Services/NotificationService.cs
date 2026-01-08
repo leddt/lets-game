@@ -24,38 +24,26 @@ namespace LetsGame.Web.Services
         Task NotifyAllVotesIn(GroupEvent groupEvent);
     }
 
-    public class NotificationService : INotificationService
+    public class NotificationService(
+        ApplicationDbContext db,
+        DateService dateService,
+        IEmailSender emailSender,
+        IPushSender pushSender,
+        IHttpContextAccessor httpContextAccessor
+    ) : INotificationService
     {
-        private readonly ApplicationDbContext _db;
-        private readonly DateService _dateService;
-        private readonly IEmailSender _emailSender;
-        private readonly IPushSender _pushSender;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-
-        public NotificationService(
-            ApplicationDbContext db, 
-            DateService dateService,
-            IEmailSender emailSender,
-            IPushSender pushSender,
-            IHttpContextAccessor httpContextAccessor)
-        {
-            _db = db;
-            _dateService = dateService;
-            _emailSender = emailSender;
-            _pushSender = pushSender;
-            _httpContextAccessor = httpContextAccessor;
-        }
-
         public async Task NotifyEventAdded(GroupEvent newEvent)
         {
-            var allGroupMembers = await _db.Memberships
+            if (newEvent.Slots == null) throw new InvalidOperationException("Slots not set");
+            
+            var allGroupMembers = await db.Memberships
                 .Include(x => x.User).ThenInclude(x => x!.PushSubscriptions)
                 .Where(x => x.GroupId == newEvent.GroupId)
                 .ToListAsync();
-
+            
             var creator = allGroupMembers.First(x => x.UserId == newEvent.CreatorId);
-            var game = await _db.GroupGames.FindAsync(newEvent.GameId);
-            var group = (await _db.Groups.FindAsync(newEvent.GroupId))!;
+            var game = await db.GroupGames.FindAsync(newEvent.GameId);
+            var group = (await db.Groups.FindAsync(newEvent.GroupId))!;
             var slotsUtc = newEvent.Slots.Select(x => x.ProposedTime).ToList();
             var groupUrl = GetGroupUrl(group);
 
@@ -84,7 +72,7 @@ namespace LetsGame.Web.Services
                        $"<p>A new session for <strong>{(game == null ? "any game" : HtmlEncode(game.Name))}</strong> has been proposed by <strong>{HtmlEncode(creator.DisplayName)}</strong>." +
                        $"<p>The proposed time slots are:" +
                        $"<ul>" +
-                       string.Join("", slotsUtc.Select(x => $"<li>{HtmlEncode(_dateService.FormatToUserFriendlyDate(x, member.User!))}")) +
+                       string.Join("", slotsUtc.Select(x => $"<li>{HtmlEncode(dateService.FormatToUserFriendlyDate(x, member.User!))}")) +
                        $"</ul>" +
                        $"<p><a href=\"{groupUrl}\">Go to your group's page to vote on it!</a>";
             }
@@ -92,23 +80,23 @@ namespace LetsGame.Web.Services
 
         public async Task NotifySlotPicked(GroupEvent ev, string pickingUserId)
         {
-            var allGroupMembers = await _db.Memberships
+            var allGroupMembers = await db.Memberships
                 .Include(x => x.User).ThenInclude(x => x!.PushSubscriptions)
                 .Where(x => x.GroupId == ev.GroupId)
                 .ToListAsync();
 
-            var slots = await _db.GroupEventSlots
-                .Include(x => x.Votes).ThenInclude(x => x.Voter)
+            var slots = await db.GroupEventSlots
+                .Include(x => x.Votes!).ThenInclude(x => x.Voter)
                 .Where(x => x.EventId == ev.Id)
                 .ToListAsync();
             
             var allVoters = slots
-                .SelectMany(x => x.Votes)
-                .Select(x => x.Voter)
+                .SelectMany(x => x.Votes!)
+                .Select(x => x.Voter!)
                 .Distinct();
             
-            var group = (await _db.Groups.FindAsync(ev.GroupId))!;
-            var game = await _db.GroupGames.FindAsync(ev.GameId);
+            var group = (await db.Groups.FindAsync(ev.GroupId))!;
+            var game = await db.GroupGames.FindAsync(ev.GameId);
             var groupUrl = GetGroupUrl(group);
             var slotPicker = allGroupMembers.FirstOrDefault(x => x.UserId == pickingUserId);
             var pickedSlot = slots.FirstOrDefault(x => x.ProposedTime == ev.ChosenTime);
@@ -135,12 +123,14 @@ namespace LetsGame.Web.Services
                     Url = groupUrl
                 },
                 x => x.UnsubscribeSlotPickedPush);
+            
+            return;
 
             string GetEmailMessage(Membership member)
             {
                 return $"<p>Hi {HtmlEncode(member.DisplayName)}!" +
-                       $"<p>{slotPicker?.DisplayName ?? "Someone"} selected <strong>{_dateService.FormatToUserFriendlyDate(pickedSlot.ProposedTime, member.User!)}</strong> for the <strong>{(game == null ? "gaming" : HtmlEncode(game.Name))}</strong> session in {group.Name}." +
-                       (pickedSlot.Votes.Any(x => x.VoterId == member.UserId)
+                       $"<p>{slotPicker?.DisplayName ?? "Someone"} selected <strong>{dateService.FormatToUserFriendlyDate(pickedSlot.ProposedTime, member.User!)}</strong> for the <strong>{(game == null ? "gaming" : HtmlEncode(game.Name))}</strong> session in {group.Name}." +
+                       (pickedSlot.Votes!.Any(x => x.VoterId == member.UserId)
                            ? $"<p><a href=\"{groupUrl}\">Go to your group's page for more details</a>"
                            : $"<p>You did not vote for this slot, but you can still <a href=\"{groupUrl}\">join it from your group's page</a>!</p>");
             }
@@ -148,15 +138,15 @@ namespace LetsGame.Web.Services
 
         public async Task NotifyAllVotesIn(GroupEvent ev)
         {
-            var creator = await _db.Memberships
+            var creator = await db.Memberships
                 .Include(x => x.User).ThenInclude(x => x!.PushSubscriptions)
                 .Where(x => x.GroupId == ev.GroupId && x.UserId == ev.CreatorId)
                 .FirstOrDefaultAsync();
 
             if (creator == null) return;
             
-            var group = (await _db.Groups.FindAsync(ev.GroupId))!;
-            var game = await _db.GroupGames.FindAsync(ev.GameId);
+            var group = (await db.Groups.FindAsync(ev.GroupId))!;
+            var game = await db.GroupGames.FindAsync(ev.GameId);
             var groupUrl = GetGroupUrl(group);
             
             await EmailMembersAsync(
@@ -189,22 +179,22 @@ namespace LetsGame.Web.Services
             // Sanity checks
             if (ev.ChosenTime == null) return;
 
-            var eventSlot = await _db.GroupEventSlots
+            var eventSlot = await db.GroupEventSlots
                 .Include(x => x.Votes)
                 .Where(x => x.EventId == ev.Id)
                 .Where(x => x.ProposedTime == ev.ChosenTime)
                 .FirstOrDefaultAsync();
             if (eventSlot == null) return;
             
-            var participants = await _db.Memberships
+            var participants = await db.Memberships
                 .Include(x => x.User).ThenInclude(x => x!.PushSubscriptions)
-                .Where(m => eventSlot.Votes.Select(v => v.VoterId).Contains(m.UserId))
+                .Where(m => eventSlot.Votes!.Select(v => v.VoterId).Contains(m.UserId))
                 .Where(x => x.GroupId == ev.GroupId)
                 .OrderBy(x => x.DisplayName)
                 .ToListAsync();
 
-            var group = (await _db.Groups.FindAsync(ev.GroupId))!;
-            var game = await _db.GroupGames.FindAsync(ev.GameId);
+            var group = (await db.Groups.FindAsync(ev.GroupId))!;
+            var game = await db.GroupGames.FindAsync(ev.GameId);
 
             await EmailMembersAsync(
                 participants,
@@ -217,7 +207,7 @@ namespace LetsGame.Web.Services
                 new SimpleNotificationPayload
                 {
                     Title = group.Name,
-                    Body = $"{game?.Name ?? "Gaming"} session starting at {_dateService.ConvertToUserLocalTime(eventSlot.ProposedTime):h:mm tt}.",
+                    Body = $"{game?.Name ?? "Gaming"} session starting at {dateService.ConvertToUserLocalTime(eventSlot.ProposedTime):h:mm tt}.",
                     Image = Image.GetScreenshotMedUrl(game?.IgdbImageId),
                     Url = GetGroupUrl(group)
                 },
@@ -225,7 +215,7 @@ namespace LetsGame.Web.Services
             
             string GetEmailMessage(Membership member)
             {
-                var friendlyTime = _dateService.FormatToUserFriendlyDate(ev.ChosenTime.Value, member.User!);
+                var friendlyTime = dateService.FormatToUserFriendlyDate(ev.ChosenTime.Value, member.User!);
 
                 return $"<p>Hi {HtmlEncode(member.DisplayName)}!" +
                        $"<p>You have a session for <strong>{(game == null ? "any game" : HtmlEncode(game.Name))}</strong> starting soon." +
@@ -244,25 +234,25 @@ namespace LetsGame.Web.Services
             var now = SystemClock.Instance.GetCurrentInstant();
             var threshold = now - Duration.FromHours(6);
             
-            var groupEvent = await _db.GroupEvents
-                .Include(x => x.Slots.Where(s => s.ProposedTime > threshold).OrderBy(s => s.ProposedTime)).ThenInclude(x => x.Votes)
-                .Include(x => x.Group.Memberships).ThenInclude(x => x.User).ThenInclude(x => x!.PushSubscriptions)
+            var groupEvent = await db.GroupEvents
+                .Include(x => x.Slots!.Where(s => s.ProposedTime > threshold).OrderBy(s => s.ProposedTime)).ThenInclude(x => x.Votes!)
+                .Include(x => x.Group!.Memberships!).ThenInclude(x => x.User).ThenInclude(x => x!.PushSubscriptions)
                 .Include(x => x.CantPlays)
                 .Include(x => x.Game)
                 .FirstOrDefaultAsync(x => x.Id == eventId)
                 ?? throw new InvalidOperationException($"Could not find event {eventId}");
             
             groupEvent.ReminderSentAt = now;
-            await _db.SaveChangesAsync();
+            await db.SaveChangesAsync();
 
-            if (!groupEvent.Slots.Any()) return;
+            if (!groupEvent.Slots!.Any()) return;
 
             var missingVotes = groupEvent.GetMissingVotes().ToList();
-            var groupUrl = GetGroupUrl(groupEvent.Group);
+            var groupUrl = GetGroupUrl(groupEvent.Group!);
 
             await EmailMembersAsync(
                 missingVotes,
-                $"Don't forget to vote on this {groupEvent.Game?.Name ?? "gaming"} session in {groupEvent.Group.Name}!",
+                $"Don't forget to vote on this {groupEvent.Game?.Name ?? "gaming"} session in {groupEvent.Group!.Name}!",
                 GetEmailMessage,
                 x => x.UnsubscribeVoteReminder);
 
@@ -283,7 +273,7 @@ namespace LetsGame.Web.Services
                        $"<p>A session for <strong>{(groupEvent.Game == null ? "any game" : HtmlEncode(groupEvent.Game.Name))}</strong> is waiting for your vote." +
                        $"<p>The proposed time slots are:" +
                        $"<ul>" +
-                       string.Join("", groupEvent.Slots.Select(x => $"<li>{HtmlEncode(_dateService.FormatToUserFriendlyDate(x.ProposedTime, member.User!))}")) +
+                       string.Join("", groupEvent.Slots!.Select(x => $"<li>{HtmlEncode(dateService.FormatToUserFriendlyDate(x.ProposedTime, member.User!))}")) +
                        $"</ul>" +
                        $"<p><a href=\"{groupUrl}\">Go to your group's page to vote on it!</a>";
             }
@@ -293,7 +283,7 @@ namespace LetsGame.Web.Services
         {
             if (!availableMember.IsAvailableNow()) return;
             
-            var otherMembers = await _db.Memberships
+            var otherMembers = await db.Memberships
                 .Include(x => x.User).ThenInclude(x => x!.PushSubscriptions)
                 .Where(x => x.GroupId == group.Id)
                 .Where(x => x.UserId != availableMember.UserId)
@@ -319,7 +309,7 @@ namespace LetsGame.Web.Services
 
             string GetEmailMessage(Membership member)
             {
-                var availableUntilFormatted = _dateService
+                var availableUntilFormatted = dateService
                     .ConvertToUserLocalTime(
                         availableMember.AvailableUntil.Value, 
                         member.User!)
@@ -345,7 +335,7 @@ namespace LetsGame.Web.Services
                 if (isUnsubscribed(member.User))
                     continue;
 
-                await _emailSender.SendEmailAsync(
+                await emailSender.SendEmailAsync(
                     member.User.Email,
                     subject,
                     getMessage(member));
@@ -361,24 +351,28 @@ namespace LetsGame.Web.Services
             
             foreach (var member in members)
             {
-                if (member.User == null) throw new InvalidOperationException("User not loaded");
+                if (member.User == null) 
+                    throw new InvalidOperationException("User not loaded");
                 if (isUnsubscribed(member.User))
                     continue;
 
+                if (member.User.PushSubscriptions == null) 
+                    throw new InvalidOperationException("Push subscriptions not loaded");
+                
                 allSubscriptions.AddRange(member.User.PushSubscriptions.Select(x => x.SubscriptionJson));
             }
 
-            await _pushSender.SendNotification(allSubscriptions, payload);
+            await pushSender.SendNotification(allSubscriptions, payload);
         }
 
         private static string HtmlEncode(string value) => HtmlEncoder.Default.Encode(value);
         
         private string GetGroupUrl(Group group)
         {
-            if (_httpContextAccessor.HttpContext == null)
+            if (httpContextAccessor.HttpContext == null)
                 return $"/group/{group.Slug}";
 
-            var request = _httpContextAccessor.HttpContext.Request;
+            var request = httpContextAccessor.HttpContext.Request;
             return $"{request.Scheme}://{request.Host}/group/{@group.Slug}";
         }
         

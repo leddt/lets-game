@@ -42,7 +42,7 @@ internal static class MembershipDataLoader
         .Where(x => keys.Contains(x.SlotId))
         .Join(
             db.Memberships,
-            x => new { g = x.Slot.Event.GroupId, u = x.VoterId },
+            x => new { g = x.Slot!.Event!.GroupId, u = x.VoterId },
             x => new { g = x.GroupId, u = x.UserId },
             (vote, membership) => new { vote.SlotId, membership })
         .GroupBy(x => x.SlotId, x => x.membership)
@@ -58,7 +58,7 @@ internal static class MembershipDataLoader
         .Where(x => keys.Contains(x.EventId))
         .Join(
             db.Memberships,
-            x => new { g = x.Event.GroupId, u = x.UserId },
+            x => new { g = x.Event!.GroupId, u = x.UserId },
             x => new { g = x.GroupId, u = x.UserId },
             (cantPlay, membership) => new { cantPlay.EventId, membership })
         .GroupBy(x => x.EventId, x => x.membership)

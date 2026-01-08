@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.TagHelpers;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -11,26 +9,19 @@ using Microsoft.AspNetCore.Razor.TagHelpers;
 namespace LetsGame.Web.Infrastructure.AspNet.TagHelpers
 {
     [HtmlTargetElement("form-group", Attributes = "for", TagStructure = TagStructure.WithoutEndTag)]
-    public class FormGroupTagHelper : TagHelper
+    public class FormGroupTagHelper(IHtmlGenerator generator) : TagHelper
     {
         private const string LabelAttributePrefix = "label-";
         private const string ControlAttributePrefix = "control-";
         private const string ValidationAttributePrefix = "val-";
-        
-        private readonly IHtmlGenerator _generator;
 
-        public ModelExpression For { get; set; }
+        public required ModelExpression For { get; set; }
         
         public ControlElement As { get; set; }
         
         [ViewContext]
         [HtmlAttributeNotBound]
-        public ViewContext ViewContext { get; set; }
-
-        public FormGroupTagHelper(IHtmlGenerator generator)
-        {
-            _generator = generator;
-        }
+        public required ViewContext ViewContext { get; set; }
 
         public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
         {
@@ -49,7 +40,7 @@ namespace LetsGame.Web.Infrastructure.AspNet.TagHelpers
             
             ApplyAttributes(context, output, tag, LabelAttributePrefix);
 
-            await new LabelTagHelper(_generator) {For = For, ViewContext = ViewContext}.ProcessAsync(context, tag);
+            await new LabelTagHelper(generator) {For = For, ViewContext = ViewContext}.ProcessAsync(context, tag);
 
             output.Content.AppendHtml(tag);
         }
@@ -67,11 +58,11 @@ namespace LetsGame.Web.Infrastructure.AspNet.TagHelpers
 
             if (As == ControlElement.TextArea)
             {
-                await new TextAreaTagHelper(_generator) {For = For, ViewContext = ViewContext}.ProcessAsync(context, tag);
+                await new TextAreaTagHelper(generator) {For = For, ViewContext = ViewContext}.ProcessAsync(context, tag);
             }
             else
             {
-                await new InputTagHelper(_generator) {For = For, ViewContext = ViewContext}.ProcessAsync(context, tag);
+                await new InputTagHelper(generator) {For = For, ViewContext = ViewContext}.ProcessAsync(context, tag);
             }
 
             output.Content.AppendHtml(tag);
@@ -84,14 +75,14 @@ namespace LetsGame.Web.Infrastructure.AspNet.TagHelpers
             ApplyAttributes(context, output, tag, ValidationAttributePrefix);
             tag.AddClass("invalid-feedback", HtmlEncoder.Default);
 
-            await new ValidationMessageTagHelper(_generator) {For = For, ViewContext = ViewContext}.ProcessAsync(context, tag);
+            await new ValidationMessageTagHelper(generator) {For = For, ViewContext = ViewContext}.ProcessAsync(context, tag);
             
             output.Content.AppendHtml(tag);
         }
 
         private TagHelperOutput CreateTag(string name) => new(
             name,
-            new TagHelperAttributeList(),
+            [],
             (b, encoder) => Task.FromResult((TagHelperContent) new DefaultTagHelperContent()));
 
         private static void ApplyAttributes(TagHelperContext context, TagHelperOutput output, TagHelperOutput tag, string prefix)

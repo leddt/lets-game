@@ -22,7 +22,7 @@ namespace LetsGame.Web.RecurringTasks
             
             var events = await _db.GroupEvents
                 .Where(x => x.ChosenTime < threshold ||
-                            x.Slots.All(s => s.ProposedTime < threshold))
+                            x.Slots!.All(s => s.ProposedTime < threshold))
                 .ToListAsync();
 
             Console.WriteLine("{0} events to delete", events.Count);

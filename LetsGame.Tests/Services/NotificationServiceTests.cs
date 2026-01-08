@@ -97,6 +97,7 @@ namespace LetsGame.Tests.Services
                 Group = new Group
                 {
                     Name = "Test group",
+                    Slug = "test",
                     Memberships = new List<Membership>
                     {
                         new() {User = user1, UserId = user1.Id, DisplayName = "First user"},

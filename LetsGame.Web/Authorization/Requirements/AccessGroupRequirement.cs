@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using HotChocolate.Resolvers;
@@ -11,29 +12,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LetsGame.Web.Authorization.Requirements
 {
-    public class AccessGroupRequirement : IAuthorizationRequirement
+    public class AccessGroupRequirement(bool asOwner) : IAuthorizationRequirement
     {
-        public bool AsOwner { get; }
-
-        public AccessGroupRequirement(bool asOwner)
-        {
-            AsOwner = asOwner;
-        }
+        public bool AsOwner { get; } = asOwner;
     }
     
-    public class AccessGroupRequirementHandler : AuthorizationHandler<AccessGroupRequirement>
+    public class AccessGroupRequirementHandler(
+        UserManager<AppUser> userManager,
+        IDbContextFactory<ApplicationDbContext> dbFactory
+    )
+        : AuthorizationHandler<AccessGroupRequirement>
     {
-        private readonly UserManager<AppUser> _userManager;
-        private readonly IDbContextFactory<ApplicationDbContext> _dbFactory;
-
-        public AccessGroupRequirementHandler(
-            UserManager<AppUser> userManager,
-            IDbContextFactory<ApplicationDbContext> dbFactory)
-        {
-            _userManager = userManager;
-            _dbFactory = dbFactory;
-        }
-
         protected override async Task HandleRequirementAsync(
             AuthorizationHandlerContext context, 
             AccessGroupRequirement requirement)
@@ -84,7 +73,7 @@ namespace LetsGame.Web.Authorization.Requirements
             return false;
         }
 
-        private static bool TryGetSlugToAuthorize(AuthorizationHandlerContext context, out string result)
+        private static bool TryGetSlugToAuthorize(AuthorizationHandlerContext context, [NotNullWhen(true)] out string? result)
         {
             if (context.Resource is IResolverContext resolver)
             {
@@ -101,9 +90,9 @@ namespace LetsGame.Web.Authorization.Requirements
 
         private async Task<bool> AuthorizeForGroupId(ClaimsPrincipal user, bool asOwner, long groupId)
         {
-            var userId = _userManager.GetUserId(user);
+            var userId = userManager.GetUserId(user);
 
-            await using var db = _dbFactory.CreateDbContext();
+            await using var db = await dbFactory.CreateDbContextAsync();
 
             return await db.Memberships.AnyAsync(x => x.UserId == userId &&
                                                       x.GroupId == groupId &&
@@ -112,12 +101,12 @@ namespace LetsGame.Web.Authorization.Requirements
         
         private async Task<bool> AuthorizeForGroupSlug(ClaimsPrincipal user, bool asOwner, string slug)
         {
-            var userId = _userManager.GetUserId(user);
+            var userId = userManager.GetUserId(user);
 
-            await using var db = _dbFactory.CreateDbContext();
+            await using var db = await dbFactory.CreateDbContextAsync();
 
             return await db.Memberships.AnyAsync(x => x.UserId == userId &&
-                                                      x.Group.Slug == slug &&
+                                                      x.Group!.Slug == slug &&
                                                       (asOwner == false || x.Role == GroupRole.Owner));
         }
     }

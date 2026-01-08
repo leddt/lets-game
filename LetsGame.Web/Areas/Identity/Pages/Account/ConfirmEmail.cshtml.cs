@@ -13,35 +13,28 @@ using Microsoft.AspNetCore.WebUtilities;
 namespace LetsGame.Web.Areas.Identity.Pages.Account
 {
     [AllowAnonymous]
-    public class ConfirmEmailModel : PageModel
+    public class ConfirmEmailModel(UserManager<AppUser> userManager) : PageModel
     {
-        private readonly UserManager<AppUser> _userManager;
-
-        public ConfirmEmailModel(UserManager<AppUser> userManager)
-        {
-            _userManager = userManager;
-        }
-
         [TempData]
-        public string StatusMessage { get; set; }
+        public string? StatusMessage { get; set; }
         public bool Success { get; set; }
-        public string ReturnUrl { get; set; }
+        public string? ReturnUrl { get; set; }
 
-        public async Task<IActionResult> OnGetAsync(string userId, string code, string returnUrl)
+        public async Task<IActionResult> OnGetAsync(string? userId, string? code, string? returnUrl)
         {
             if (userId == null || code == null)
             {
                 return RedirectToPage("/Index");
             }
 
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await userManager.FindByIdAsync(userId);
             if (user == null)
             {
                 return NotFound($"Unable to load user with ID '{userId}'.");
             }
 
             code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code));
-            var result = await _userManager.ConfirmEmailAsync(user, code);
+            var result = await userManager.ConfirmEmailAsync(user, code);
             Success = result.Succeeded;
             ReturnUrl = returnUrl;
             StatusMessage = result.Succeeded ? "Thank you for confirming your email." : "Error confirming your email.";

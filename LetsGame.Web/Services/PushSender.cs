@@ -66,21 +66,25 @@ namespace LetsGame.Web.Services
 
         private PushSubscription DeserializeSubscription(string subscription)
         {
-            var details = JsonConvert.DeserializeObject<PushSubscriptionDetails>(subscription);
-            var pushSubscription = new PushSubscription(details.Endpoint, details.Keys.P256dh, details.Keys.Auth);
+            var details = JsonConvert.DeserializeObject<PushSubscriptionDetails>(subscription)
+                          ?? throw new InvalidOperationException("Failed to deserialize subscription");
+            var pushSubscription = new PushSubscription(
+                details.Endpoint, 
+                details.Keys?.P256dh, 
+                details.Keys?.Auth);
 
             return pushSubscription;
         }
 
         private class PushSubscriptionDetails
         {
-            public string Endpoint { get; set; }
-            public PushSubscriptionKeys Keys { get; set; }
+            public string? Endpoint { get; set; }
+            public PushSubscriptionKeys? Keys { get; set; }
 
             public class PushSubscriptionKeys
             {
-                public string P256dh { get; set; }
-                public string Auth { get; set; }
+                public string? P256dh { get; set; }
+                public string? Auth { get; set; }
             }
         }
     }

@@ -57,7 +57,10 @@ namespace LetsGame.Web.Hubs
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, group);
 
+            if (Context.User is null) return;
             var userId = _userManager.GetUserId(Context.User);
+            if (userId is null) return;
+            
             var presentUsers = _presences.Add(Context.ConnectionId, userId, group);
             await Clients.Group(group).UpdatePresences(group, presentUsers);
         }
@@ -66,14 +69,20 @@ namespace LetsGame.Web.Hubs
         {
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, group);
 
+            if (Context.User is null) return;
             var userId = _userManager.GetUserId(Context.User);
+            if (userId is null) return;
+            
             var presentUsers = _presences.Remove(Context.ConnectionId, userId, group);
             await Clients.Group(group).UpdatePresences(group, presentUsers);
         }
 
-        public override async Task OnDisconnectedAsync(Exception exception)
+        public override async Task OnDisconnectedAsync(Exception? exception)
         {
+            if (Context.User is null) return;
             var userId = _userManager.GetUserId(Context.User);
+            if (userId is null) return;
+            
             var groups = _presences.GetGroupsByConnectionId(Context.ConnectionId);
 
             foreach (var group in groups)

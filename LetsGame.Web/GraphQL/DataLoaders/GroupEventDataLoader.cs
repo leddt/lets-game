@@ -40,9 +40,9 @@ internal static class GroupEventDataLoader
     {
         var votes = await db.GroupEvents
             .Where(x => keys.Contains(x.Id))
-            .SelectMany(x => x.Slots)
-            .SelectMany(x => x.Votes)
-            .Select(x => new { x.Slot.EventId, x.VoterId })
+            .SelectMany(x => x.Slots!)
+            .SelectMany(x => x.Votes!)
+            .Select(x => new { x.Slot!.EventId, x.VoterId })
             .Distinct()
             .ToListAsync(ct);
 

@@ -28,7 +28,7 @@ namespace LetsGame.Web.GraphQL
             var id = ID.ToLong<GroupEventSlot>(slotId);
             
             var slot = await db.GroupEventSlots.Include(x=> x.Event).FirstAsync(x => x.Id == id);
-            if (slot.Event.ChosenTime.HasValue)
+            if (slot.Event!.ChosenTime.HasValue)
                 throw new Exception("Can't vote on confirmed event");
 
             await groupService.AddSlotVoteAsync(id);
@@ -48,7 +48,7 @@ namespace LetsGame.Web.GraphQL
             var id = ID.ToLong<GroupEventSlot>(slotId);
             
             var slot = await db.GroupEventSlots.Include(x => x.Event).FirstAsync(x => x.Id == id);
-            if (slot.Event.ChosenTime.HasValue)
+            if (slot.Event!.ChosenTime.HasValue)
                 throw new Exception("Can't vote on confirmed event");
             
             await groupService.RemoveSlotVoteAsync(ID.ToLong<GroupEventSlot>(slotId));
@@ -70,14 +70,14 @@ namespace LetsGame.Web.GraphQL
             var slot = await db.GroupEventSlots
                 .Include(x => x.Event)
                 .Where(x => x.EventId == id)
-                .Where(x => x.ProposedTime == x.Event.ChosenTime)
+                .Where(x => x.ProposedTime == x.Event!.ChosenTime)
                 .FirstOrDefaultAsync();
 
             if (slot == null) throw new Exception("Can't find chosen slot");
 
             await groupService.AddSlotVoteAsync(slot.Id);
             
-            var result = new UpcomingSessionGraphType(slot.Event);
+            var result = new UpcomingSessionGraphType(slot.Event!);
             await sender.Send(result);
             return new UpcomingSessionPayload(result);
         }
@@ -94,14 +94,14 @@ namespace LetsGame.Web.GraphQL
             var slot = await db.GroupEventSlots
                 .Include(x => x.Event)
                 .Where(x => x.EventId == id)
-                .Where(x => x.ProposedTime == x.Event.ChosenTime)
+                .Where(x => x.ProposedTime == x.Event!.ChosenTime)
                 .FirstOrDefaultAsync();
 
             if (slot == null) throw new Exception("Can't find chosen slot");
 
             await groupService.RemoveSlotVoteAsync(slot.Id);
             
-            var result = new UpcomingSessionGraphType(slot.Event);
+            var result = new UpcomingSessionGraphType(slot.Event!);
             await sender.Send(result);
             return new UpcomingSessionPayload(result);
         }
@@ -159,7 +159,7 @@ namespace LetsGame.Web.GraphQL
 
             var groupEvent = await db.GroupEvents
                 .Include(x => x.Group)
-                .Where(x => x.Slots.Any(s => s.Id == id))
+                .Where(x => x.Slots!.Any(s => s.Id == id))
                 .FirstOrDefaultAsync();
             
             if (groupEvent == null) throw new Exception("Can't find event");
@@ -168,7 +168,7 @@ namespace LetsGame.Web.GraphQL
             
             await groupService.PickSlotAsync(ID.ToLong<GroupEventSlot>(slotId));
             
-            var result = new GroupGraphType(groupEvent.Group);
+            var result = new GroupGraphType(groupEvent.Group!);
             await sender.Send(result);
             return new GroupPayload(result);
         }

@@ -7,26 +7,18 @@ using Ical.Net.Serialization;
 using LetsGame.Web.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using NodaTime;
 using Duration = NodaTime.Duration;
 
 namespace LetsGame.Web.Controllers
 {
     [ApiController]
-    public class IcalController : ControllerBase
+    public class IcalController(ApplicationDbContext db) : ControllerBase
     {
-        private readonly ApplicationDbContext _db;
-
-        public IcalController(ApplicationDbContext db)
-        {
-            _db = db;
-        }
-
         [HttpGet("group/{slug}.ics")]
         public async Task<IActionResult> GetGroupCalendarAsIcalAsync(string slug, string k)
         {
-            var group = await _db.Groups
-                .Include(g => g.Events.Where(e => e.ChosenTime.HasValue)).ThenInclude(e => e.Game)
+            var group = await db.Groups
+                .Include(g => g.Events!.Where(e => e.ChosenTime.HasValue)).ThenInclude(e => e.Game)
                 .Where(g => g.Slug == slug)
                 .Where(g => g.SharingKey == k)
                 .FirstOrDefaultAsync();
@@ -37,9 +29,9 @@ namespace LetsGame.Web.Controllers
             {
                 Properties = { new CalendarProperty("X-WR-CALNAME", group.Name)}
             };
-            calendar.Events.AddRange(group.Events.Select(GetCalendarEvent));
+            calendar.Events.AddRange(group.Events!.Select(GetCalendarEvent));
 
-            var serialized = new CalendarSerializer().SerializeToString(calendar);
+            var serialized = new CalendarSerializer().SerializeToString(calendar) ?? "";
 
             return Content(serialized, "text/calendar");
         }

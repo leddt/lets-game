@@ -12,24 +12,17 @@ using NodaTime;
 
 namespace LetsGame.Web.GraphQL.Types
 {
-    public class GroupGraphType : IdGraphType<Group>
+    public class GroupGraphType(Group group) : IdGraphType<Group>
     {
-        private readonly Group _group;
+        protected override object GetId() => group.Id;
 
-        public GroupGraphType(Group group)
-        {
-            _group = group;
-        }
-
-        protected override object GetId() => _group.Id;
-
-        public string Name => _group.Name;
-        public string Slug => _group.Slug;
-        public string SharingKey => _group.SharingKey;
+        public string Name => group.Name;
+        public string Slug => group.Slug;
+        public string SharingKey => group.SharingKey;
 
         public async Task<IEnumerable<MembershipGraphType>> GetMembers(IMembershipsByGroupIdDataLoader loader)
         {
-            var members = await loader.LoadAsync(_group.Id) ?? [];
+            var members = await loader.LoadAsync(group.Id) ?? [];
             return members.Select(x => new MembershipGraphType(x));
         }
         
@@ -39,32 +32,32 @@ namespace LetsGame.Web.GraphQL.Types
             [Service] UserManager<AppUser> userManager)
         {
             var userId = userManager.GetUserId(user);
-            var members = await loader.LoadAsync(_group.Id) ?? [];
+            var members = await loader.LoadAsync(group.Id) ?? [];
             var self = members.FirstOrDefault(x => x.UserId == userId);
             return self == null ? null : new MembershipGraphType(self);
         }
 
         public async Task<IEnumerable<GameGraphType>> GetGames(IGroupGamesByGroupIdDataLoader loader)
         {
-            var games = await loader.LoadAsync(_group.Id) ?? [];
+            var games = await loader.LoadAsync(group.Id) ?? [];
             return games.Select(x => new GameGraphType(x));
         }
 
         public async Task<IEnumerable<ProposedSessionGraphType>> GetProposedSessions(IGroupEventWithSlotsByGroupIdDataLoader loader)
         {
-            var events = await loader.LoadAsync(_group.Id) ?? [];
+            var events = await loader.LoadAsync(group.Id) ?? [];
             var now = SystemClock.Instance.GetCurrentInstant();
             
             return events
                 .Where(x => x.ChosenTime == null)
-                .Where(x => x.Slots.Any(s => s.ProposedTime > now))
-                .OrderBy(x => x.Slots.Where(s => s.ProposedTime > now).Min(s => s.ProposedTime))
+                .Where(x => x.Slots!.Any(s => s.ProposedTime > now))
+                .OrderBy(x => x.Slots!.Where(s => s.ProposedTime > now).Min(s => s.ProposedTime))
                 .Select(x => new ProposedSessionGraphType(x));
         }
 
         public async Task<IEnumerable<UpcomingSessionGraphType>> GetUpcomingSessions(IGroupEventWithSlotsByGroupIdDataLoader loader)
         {
-            var events = await loader.LoadAsync(_group.Id) ?? [];
+            var events = await loader.LoadAsync(group.Id) ?? [];
             var cutoff = SystemClock.Instance.GetCurrentInstant() - Duration.FromHours(6);
             
             return events
@@ -79,10 +72,10 @@ namespace LetsGame.Web.GraphQL.Types
             ClaimsPrincipal user,
             [Service] IAuthorizationService authorizationService)
         {
-            var auth = await authorizationService.AuthorizeAsync(user, _group.Id, AuthPolicies.ManageGroup);
+            var auth = await authorizationService.AuthorizeAsync(user, group.Id, AuthPolicies.ManageGroup);
             if (!auth.Succeeded) return null;
             
-            var invites = await loader.LoadAsync(_group.Id) ?? [];
+            var invites = await loader.LoadAsync(group.Id) ?? [];
             return invites.Select(x => new InviteGraphType(x));
         }
     }

@@ -91,8 +91,8 @@ namespace LetsGame.Web.Authorization.Requirements
 
             return await db.GroupEventSlots
                 .Where(x => x.Id == slotId)
-                .AnyAsync(s => s.Event.CreatorId == userId ||
-                               s.Event.Group.Memberships.Any(m => m.UserId == userId && (!manage || m.Role == GroupRole.Owner)));
+                .AnyAsync(s => s.Event!.CreatorId == userId ||
+                               s.Event.Group!.Memberships!.Any(m => m.UserId == userId && (!manage || m.Role == GroupRole.Owner)));
         }
     }
 }

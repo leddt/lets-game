@@ -12,29 +12,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LetsGame.Web.Authorization.Requirements
 {
-    public class AccessSessionRequirement : IAuthorizationRequirement
+    public class AccessSessionRequirement(bool manage) : IAuthorizationRequirement
     {
-        public bool Manage { get; }
-
-        public AccessSessionRequirement(bool manage)
-        {
-            Manage = manage;
-        }
+        public bool Manage { get; } = manage;
     }
     
-    public class AccessSessionRequirementHandler : AuthorizationHandler<AccessSessionRequirement>
+    public class AccessSessionRequirementHandler(
+        UserManager<AppUser> userManager,
+        IDbContextFactory<ApplicationDbContext> dbFactory
+    )
+        : AuthorizationHandler<AccessSessionRequirement>
     {
-        private readonly UserManager<AppUser> _userManager;
-        private readonly IDbContextFactory<ApplicationDbContext> _dbFactory;
-
-        public AccessSessionRequirementHandler(
-            UserManager<AppUser> userManager,
-            IDbContextFactory<ApplicationDbContext> dbFactory)
-        {
-            _userManager = userManager;
-            _dbFactory = dbFactory;
-        }
-
         protected override async Task HandleRequirementAsync(
             AuthorizationHandlerContext context,
             AccessSessionRequirement requirement)
@@ -91,14 +79,14 @@ namespace LetsGame.Web.Authorization.Requirements
 
         private async Task<bool> AuthorizeForSessionId(ClaimsPrincipal user, bool manage, long sessionId)
         {
-            var userId = _userManager.GetUserId(user);
+            var userId = userManager.GetUserId(user);
 
-            await using var db = _dbFactory.CreateDbContext();
+            await using var db = await dbFactory.CreateDbContextAsync();
 
             return await db.GroupEvents
                 .Where(x => x.Id == sessionId)
                 .AnyAsync(e => e.CreatorId == userId ||
-                               e.Group.Memberships.Any(m => m.UserId == userId && (!manage || m.Role == GroupRole.Owner)));
+                               e.Group!.Memberships!.Any(m => m.UserId == userId && (!manage || m.Role == GroupRole.Owner)));
         }
     }
 }

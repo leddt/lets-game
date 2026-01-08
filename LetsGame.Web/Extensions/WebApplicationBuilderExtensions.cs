@@ -73,7 +73,7 @@ public static class WebApplicationBuilderExtensions
         }
     }
 
-    public static void ConfigureDbContext(DbContextOptionsBuilder options, NpgsqlDataSource dataSource = null)
+    public static void ConfigureDbContext(DbContextOptionsBuilder options, NpgsqlDataSource? dataSource = null)
     {
         if (dataSource is not null)
             options.UseNpgsql(dataSource, ConfigureNpgsql);
@@ -107,8 +107,8 @@ public static class WebApplicationBuilderExtensions
             auth
                 .AddGoogle(options =>
                 {
-                    options.ClientId = googleConfig["ClientId"];
-                    options.ClientSecret = googleConfig["ClientSecret"];
+                    options.ClientId = googleConfig["ClientId"]!;
+                    options.ClientSecret = googleConfig["ClientSecret"]!;
                 });
         }
 

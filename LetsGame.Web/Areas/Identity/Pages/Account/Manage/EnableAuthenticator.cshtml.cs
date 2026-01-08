@@ -29,18 +29,18 @@ namespace LetsGame.Web.Areas.Identity.Pages.Account.Manage
             _urlEncoder = urlEncoder;
         }
 
-        public string SharedKey { get; set; }
+        public string? SharedKey { get; set; }
 
-        public string AuthenticatorUri { get; set; }
-
-        [TempData]
-        public string[] RecoveryCodes { get; set; }
+        public string? AuthenticatorUri { get; set; }
 
         [TempData]
-        public string StatusMessage { get; set; }
+        public string[]? RecoveryCodes { get; set; }
+
+        [TempData]
+        public string? StatusMessage { get; set; }
 
         [BindProperty]
-        public InputModel Input { get; set; }
+        public InputModel? Input { get; set; }
 
         public class InputModel
         {
@@ -48,7 +48,7 @@ namespace LetsGame.Web.Areas.Identity.Pages.Account.Manage
             [StringLength(7, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
             [DataType(DataType.Text)]
             [Display(Name = "Verification Code")]
-            public string Code { get; set; }
+            public required string Code { get; set; }
         }
 
         public async Task<IActionResult> OnGetAsync()
@@ -79,12 +79,12 @@ namespace LetsGame.Web.Areas.Identity.Pages.Account.Manage
             }
 
             // Strip spaces and hypens
-            var verificationCode = Input.Code.Replace(" ", string.Empty).Replace("-", string.Empty);
+            var verificationCode = Input?.Code.Replace(" ", string.Empty).Replace("-", string.Empty) ?? "";
 
-            var is2faTokenValid = await _userManager.VerifyTwoFactorTokenAsync(
+            var is2FaTokenValid = await _userManager.VerifyTwoFactorTokenAsync(
                 user, _userManager.Options.Tokens.AuthenticatorTokenProvider, verificationCode);
 
-            if (!is2faTokenValid)
+            if (!is2FaTokenValid)
             {
                 ModelState.AddModelError("Input.Code", "Verification code is invalid.");
                 await LoadSharedKeyAndQrCodeUriAsync(user);
@@ -93,14 +93,14 @@ namespace LetsGame.Web.Areas.Identity.Pages.Account.Manage
 
             await _userManager.SetTwoFactorEnabledAsync(user, true);
             var userId = await _userManager.GetUserIdAsync(user);
-            _logger.LogInformation("User with ID '{UserId}' has enabled 2FA with an authenticator app.", userId);
+            _logger.LogInformation("User with ID '{UserId}' has enabled 2FA with an authenticator app", userId);
 
             StatusMessage = "Your authenticator app has been verified.";
 
             if (await _userManager.CountRecoveryCodesAsync(user) == 0)
             {
                 var recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);
-                RecoveryCodes = recoveryCodes.ToArray();
+                RecoveryCodes = recoveryCodes?.ToArray() ?? [];
                 return RedirectToPage("./ShowRecoveryCodes");
             }
             else
@@ -116,7 +116,7 @@ namespace LetsGame.Web.Areas.Identity.Pages.Account.Manage
             if (string.IsNullOrEmpty(unformattedKey))
             {
                 await _userManager.ResetAuthenticatorKeyAsync(user);
-                unformattedKey = await _userManager.GetAuthenticatorKeyAsync(user);
+                unformattedKey = await _userManager.GetAuthenticatorKeyAsync(user) ?? "";
             }
 
             SharedKey = FormatKey(unformattedKey);
@@ -142,12 +142,12 @@ namespace LetsGame.Web.Areas.Identity.Pages.Account.Manage
             return result.ToString().ToLowerInvariant();
         }
 
-        private string GenerateQrCodeUri(string email, string unformattedKey)
+        private string GenerateQrCodeUri(string? email, string unformattedKey)
         {
             return string.Format(
                 AuthenticatorUriFormat,
                 _urlEncoder.Encode("Let's Game!"),
-                _urlEncoder.Encode(email),
+                _urlEncoder.Encode(email ?? ""),
                 unformattedKey);
         }
     }
