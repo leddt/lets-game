@@ -14,6 +14,7 @@ RUN apt-get update -yq \
 
 WORKDIR /src
 COPY ["LetsGame.Web/LetsGame.Web.csproj", "LetsGame.Web/"]
+COPY ["LetsGame.ServiceDefaults/LetsGame.ServiceDefaults.csproj", "LetsGame.ServiceDefaults/"]
 RUN dotnet restore "LetsGame.Web/LetsGame.Web.csproj"
 
 COPY ["LetsGame.Frontend/package.json", "LetsGame.Frontend/package-lock.json", "LetsGame.Frontend/"]
