@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Net;
 using NodaTime;
 
 namespace LetsGame.Web.Services.EventSystem;
@@ -24,7 +25,16 @@ public class WideRequestEvent
     public string? UserAgent { get; set; }
     public int? StatusCode { get; set; }
     
-    public Exception? Exception { get; set; }
+    public string? UserId { get; set; }
+    
+    public string? ExceptionTypeName { get; set; }
+    public string? ExceptionMessage { get; set; }
+    public string? ExceptionStackTrace { get; set; }
+    
+    public string? GraphQLOperationName { get; set; }
+    public string? GraphQLOperationType { get; set; }
+    public int? GraphQLOperationResultErrorCount { get; set; }
+    public string? GraphQLOperationResultKind { get; set; }
 
     public bool ShouldPost()
     {
@@ -32,7 +42,8 @@ public class WideRequestEvent
 
         if (DurationMs is > 500) return true;
         if (StatusCode is >= 400 and <= 599) return true;
-        if (Exception is not null) return true;
+        if (ExceptionTypeName is not null) return true;
+        if (GraphQLOperationResultErrorCount is > 0) return true;
 
         return true;
     }

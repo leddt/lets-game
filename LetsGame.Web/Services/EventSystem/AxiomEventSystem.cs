@@ -2,6 +2,8 @@
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -13,6 +15,11 @@ public class AxiomEventSystem(IHttpClientFactory httpClientFactory, IOptions<Axi
 {
     private bool _posted;
     private readonly WideRequestEvent _currentEvent = new();
+
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new(JsonSerializerDefaults.General)
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    };
     
     public void Enrich(Action<WideRequestEvent> enricher)
     {
@@ -29,7 +36,7 @@ public class AxiomEventSystem(IHttpClientFactory httpClientFactory, IOptions<Axi
         
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", options.Value.ApiToken);
         var uri = $"https://{options.Value.EdgeDomain}/v1/ingest/{options.Value.DatasetName}";
-        var response = await client.PostAsJsonAsync(uri, _currentEvent, cancellationToken);
+        var response = await client.PostAsJsonAsync(uri, _currentEvent, JsonSerializerOptions, cancellationToken);
         _posted = true;
 
         if (!response.IsSuccessStatusCode)

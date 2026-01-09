@@ -1,6 +1,5 @@
 ﻿using System;
 using HotChocolate;
-using HotChocolate.Data;
 using HotChocolate.Types.NodaTime;
 using LetsGame.Web.Authorization;
 using LetsGame.Web.Authorization.Requirements;
@@ -9,6 +8,7 @@ using LetsGame.Web.GraphQL;
 using LetsGame.Web.Hubs;
 using LetsGame.Web.RecurringTasks;
 using LetsGame.Web.Services;
+using LetsGame.Web.Services.EventSystem;
 using LetsGame.Web.Services.Igdb;
 using LetsGame.Web.Services.Itad;
 using Microsoft.AspNetCore.Authorization;
@@ -178,7 +178,20 @@ public static class WebApplicationBuilderExtensions
             .AddInMemorySubscriptions()
             .RegisterDbContextFactory<ApplicationDbContext>()
             .AddWebTypes()
-            .ConfigureSchema(x => x.AddType<LocalDateTimeType>());
+            .ConfigureSchema(x => x.AddType<LocalDateTimeType>())
+            // Default pipeline
+            .UseInstrumentation()
+            .UseExceptions()
+            .UseTimeout()
+            .UseDocumentCache()
+            .UseDocumentParser()
+            .UseDocumentValidation()
+            .UseOperationCache()
+            .UseOperationResolver()
+            .UseSkipWarmupExecution()
+            .UseOperationVariableCoercion()
+            .UseRequest<EventEnricherRequestMiddleware>() // custom middleware
+            .UseOperationExecution();
         
         // SendGrid
         builder.Services

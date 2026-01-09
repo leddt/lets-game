@@ -1,9 +1,10 @@
 ﻿using System;
+using LetsGame.Web.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using NodaTime;
 
 namespace LetsGame.Web.Services.EventSystem;
 
@@ -43,6 +44,7 @@ public static class EventSystemExtensions
             {
                 var environment = context.RequestServices.GetRequiredService<IWebHostEnvironment>();
                 var eventSystem = context.RequestServices.GetRequiredService<IEventSystem>();
+                var userManager = context.RequestServices.GetRequiredService<UserManager<AppUser>>();
                 
                 eventSystem.Enrich(x =>
                 {
@@ -52,6 +54,8 @@ public static class EventSystemExtensions
                     x.RequestMethod = context.Request.Method;
                     x.RemoteIp = context.Connection.RemoteIpAddress?.ToString();
                     x.UserAgent = context.Request.Headers["User-Agent"];
+                    
+                    x.UserId = userManager.GetUserId(context.User);
                 });
 
                 try
@@ -60,7 +64,12 @@ public static class EventSystemExtensions
                 }
                 catch (Exception ex)
                 {
-                    eventSystem.Enrich(x => x.Exception = ex);
+                    eventSystem.Enrich(x =>
+                    {
+                        x.ExceptionTypeName = ex.GetType().FullName;
+                        x.ExceptionMessage = ex.Message;
+                        x.ExceptionStackTrace = ex.StackTrace;
+                    });
                 }
                 finally
                 {
