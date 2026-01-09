@@ -5,15 +5,14 @@ using LetsGame.Web.Data;
 using LetsGame.Web.Extensions;
 using LetsGame.Web.Hubs;
 using LetsGame.Web.RecurringTasks;
+using LetsGame.Web.Services.EventSystem;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using IPNetwork = System.Net.IPNetwork;
 
@@ -24,6 +23,7 @@ var builder = WebApplication.CreateBuilder(args);
 #region Configure services
 
 builder.AddServiceDefaults();
+builder.AddEventSystem();
 builder.AddApplicationDatabase();
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -102,11 +102,13 @@ app.UseCookiePolicy(new CookiePolicyOptions
 // app.UseHttpsRedirection();
             
 app.UseStaticFiles();
+app.UseEventSystem();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseWebSockets();
 app.UseEndpoints(_ => { });
+
 
 app.MapDefaultEndpoints();
 app.MapGraphQL();
