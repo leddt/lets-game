@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using NodaTime;
@@ -35,6 +36,28 @@ public class WideRequestEvent
     public string? GraphQLOperationType { get; set; }
     public int? GraphQLOperationResultErrorCount { get; set; }
     public string? GraphQLOperationResultKind { get; set; }
+    
+    private readonly Dictionary<string, object> _extraData = new();
+    public IReadOnlyDictionary<string, object> ExtraData => _extraData;
+
+
+    public WideRequestEvent AddData(string key, object value)
+    {
+        _extraData.Add(key, value);
+        return this;
+    }
+    
+    public void Increment(string key, int amount = 1)
+    {
+        var value = _extraData.GetValueOrDefault(key);
+
+        _extraData[key] = value switch
+        {
+            null => amount,
+            int v => v + amount,
+            _ => throw new InvalidOperationException($"Can't increment non-numeric value {key}")
+        };
+    }
 
     public bool ShouldPost()
     {

@@ -6,6 +6,7 @@ using HotChocolate.Resolvers;
 using LetsGame.Web.Data;
 using LetsGame.Web.GraphQL;
 using LetsGame.Web.GraphQL.Types;
+using LetsGame.Web.Services.EventSystem;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -19,20 +20,27 @@ namespace LetsGame.Web.Authorization.Requirements
     
     public class AccessSessionRequirementHandler(
         UserManager<AppUser> userManager,
-        IDbContextFactory<ApplicationDbContext> dbFactory
-    )
-        : AuthorizationHandler<AccessSessionRequirement>
+        IDbContextFactory<ApplicationDbContext> dbFactory,
+        IEventSystem eventSystem
+    ) : AuthorizationHandler<AccessSessionRequirement>
     {
         protected override async Task HandleRequirementAsync(
             AuthorizationHandlerContext context,
             AccessSessionRequirement requirement)
         {
+            eventSystem.Enrich(x => x.AddData("AuthSessionManage", requirement.Manage));
+            
             bool isAuthorized;
 
             if (TryGetIdToAuthorize(context, out var id))
+            {
+                eventSystem.Enrich(x => x.AddData("AuthSessionId", id));
                 isAuthorized = await AuthorizeForSessionId(context.User, requirement.Manage, id);
+            }
             else
                 throw new InvalidOperationException("Can't resolve session to authorize");
+
+            eventSystem.Enrich(x => x.AddData("AuthSessionSucceeded", isAuthorized));
             
             if (isAuthorized) 
                 context.Succeed(requirement);

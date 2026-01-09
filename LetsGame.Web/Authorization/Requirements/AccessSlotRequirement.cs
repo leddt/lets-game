@@ -6,6 +6,7 @@ using HotChocolate.Resolvers;
 using LetsGame.Web.Data;
 using LetsGame.Web.GraphQL;
 using LetsGame.Web.GraphQL.Types;
+using LetsGame.Web.Services.EventSystem;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -22,29 +23,29 @@ namespace LetsGame.Web.Authorization.Requirements
         }
     }
     
-    public class AccessSlotRequirementHandler : AuthorizationHandler<AccessSlotRequirement>
+    public class AccessSlotRequirementHandler(
+        UserManager<AppUser> userManager,
+        IDbContextFactory<ApplicationDbContext> dbFactory,
+        IEventSystem eventSystem
+    ) : AuthorizationHandler<AccessSlotRequirement>
     {
-        private readonly UserManager<AppUser> _userManager;
-        private readonly IDbContextFactory<ApplicationDbContext> _dbFactory;
-
-        public AccessSlotRequirementHandler(
-            UserManager<AppUser> userManager,
-            IDbContextFactory<ApplicationDbContext> dbFactory)
-        {
-            _userManager = userManager;
-            _dbFactory = dbFactory;
-        }
-
         protected override async Task HandleRequirementAsync(
             AuthorizationHandlerContext context,
             AccessSlotRequirement requirement)
         {
+            eventSystem.Enrich(x => x.AddData("AuthSlotManage", requirement.Manage));
+            
             bool isAuthorized;
 
             if (TryGetIdToAuthorize(context, out var id))
+            {
+                eventSystem.Enrich(x => x.AddData("AuthSlotId", id));
                 isAuthorized = await AuthorizeForSlotId(context.User, requirement.Manage, id);
+            }
             else
                 throw new InvalidOperationException("Can't resolve session to authorize");
+            
+            eventSystem.Enrich(x => x.AddData("AuthSlotSucceeded", isAuthorized));
             
             if (isAuthorized) 
                 context.Succeed(requirement);
@@ -85,9 +86,9 @@ namespace LetsGame.Web.Authorization.Requirements
 
         private async Task<bool> AuthorizeForSlotId(ClaimsPrincipal user, bool manage, long slotId)
         {
-            var userId = _userManager.GetUserId(user);
+            var userId = userManager.GetUserId(user);
 
-            await using var db = _dbFactory.CreateDbContext();
+            await using var db = dbFactory.CreateDbContext();
 
             return await db.GroupEventSlots
                 .Where(x => x.Id == slotId)

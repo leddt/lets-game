@@ -6,6 +6,7 @@ using HotChocolate.Resolvers;
 using LetsGame.Web.Data;
 using LetsGame.Web.GraphQL;
 using LetsGame.Web.GraphQL.Types;
+using LetsGame.Web.Services.EventSystem;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -19,23 +20,33 @@ namespace LetsGame.Web.Authorization.Requirements
     
     public class AccessGroupRequirementHandler(
         UserManager<AppUser> userManager,
-        IDbContextFactory<ApplicationDbContext> dbFactory
-    )
-        : AuthorizationHandler<AccessGroupRequirement>
+        IDbContextFactory<ApplicationDbContext> dbFactory,
+        IEventSystem eventSystem
+    ) : AuthorizationHandler<AccessGroupRequirement>
     {
         protected override async Task HandleRequirementAsync(
             AuthorizationHandlerContext context, 
             AccessGroupRequirement requirement)
         {
+            eventSystem.Enrich(x => x.AddData("AuthGroupAsOwner", requirement.AsOwner));
+            
             bool isAuthorized;
 
             if (TryGetIdToAuthorize(context, out var id))
+            {
+                eventSystem.Enrich(x => x.AddData("AuthGroupId", id));
                 isAuthorized = await AuthorizeForGroupId(context.User, requirement.AsOwner, id);
+            }
             else if (TryGetSlugToAuthorize(context, out var slug))
+            {
+                eventSystem.Enrich(x => x.AddData("AuthGroupSlug", slug));
                 isAuthorized = await AuthorizeForGroupSlug(context.User, requirement.AsOwner, slug);
+            }
             else
                 throw new InvalidOperationException("Can't resolve group to authorize");
 
+            eventSystem.Enrich(x => x.AddData("AuthGroupSucceeded", isAuthorized));
+            
             if (isAuthorized) 
                 context.Succeed(requirement);
         }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using LetsGame.Web.Services.EventSystem;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -26,19 +27,14 @@ namespace LetsGame.Web.Services
         Task SendNotification(IEnumerable<string> subscriptions, SimpleNotificationPayload payload);
     }
 
-    public class PushSender : IPushSender
+    public class PushSender(
+        WebPushClient webPushClient,
+        VapidDetails vapidDetails,
+        ILogger<PushSender> logger,
+        IEventSystem eventSystem
+    )
+        : IPushSender
     {
-        private readonly WebPushClient _webPushClient;
-        private readonly VapidDetails _vapidDetails;
-        private readonly ILogger<PushSender> _logger;
-
-        public PushSender(WebPushClient webPushClient, VapidDetails vapidDetails, ILogger<PushSender> logger)
-        {
-            _webPushClient = webPushClient;
-            _vapidDetails = vapidDetails;
-            _logger = logger;
-        }
-
         public async Task SendNotification(IEnumerable<string> subscriptions, SimpleNotificationPayload payload)
         {
             var json = JsonConvert.SerializeObject(payload, new JsonSerializerSettings
@@ -49,18 +45,21 @@ namespace LetsGame.Web.Services
             try
             {
                 await Task.WhenAll(
-                    subscriptions.Select(s =>
-                        _webPushClient.SendNotificationAsync(
+                    subscriptions.Select(async s =>
+                    {
+                        await webPushClient.SendNotificationAsync(
                             DeserializeSubscription(s),
                             json,
-                            _vapidDetails
-                        )
-                    )
+                            vapidDetails
+                        );
+
+                        eventSystem.Enrich(x => x.Increment("PushNotificationsSent"));
+                    })
                 );
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error sending notification");
+                logger.LogError(ex, "Error sending notification");
             }
         }
 
