@@ -102,9 +102,9 @@ app.UseCookiePolicy(new CookiePolicyOptions
 // app.UseHttpsRedirection();
             
 app.UseStaticFiles();
-app.UseEventSystem();
 app.UseRouting();
 app.UseAuthentication();
+app.UseEventSystem();
 app.UseAuthorization();
 app.UseWebSockets();
 app.UseEndpoints(_ => { });
