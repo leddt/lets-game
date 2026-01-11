@@ -24,6 +24,8 @@ public static class EventSystemExtensions
             if (AxiomIsConfigured(builder.Configuration))
             {
                 builder.Services.Configure<AxiomOptions>(builder.Configuration.GetSection("Axiom"));
+                builder.Services.AddSingleton<AxiomEventQueue>();
+                builder.Services.AddHostedService<AxiomBackgroundWorker>();
                 builder.Services.AddScoped<IEventSystem, AxiomEventSystem>();
             }
             else
