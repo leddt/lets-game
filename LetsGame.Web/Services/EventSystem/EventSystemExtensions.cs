@@ -21,17 +21,18 @@ public static class EventSystemExtensions
     {
         public WebApplicationBuilder AddEventSystem()
         {
+            builder.Services.AddSingleton<EventQueue>();
+            builder.Services.AddScoped<IEventSystem, EventSystem>();
+            
             if (AxiomIsConfigured(builder.Configuration))
             {
                 builder.Services.Configure<AxiomOptions>(builder.Configuration.GetSection("Axiom"));
-                builder.Services.AddSingleton<AxiomEventQueue>();
                 builder.Services.AddHostedService<AxiomBackgroundWorker>();
-                builder.Services.AddScoped<IEventSystem, AxiomEventSystem>();
             }
             else
             {
-                Console.WriteLine("No Axiom configuration found. Using ConsoleEventSystem.");
-                builder.Services.AddScoped<IEventSystem, ConsoleEventSystem>();
+                Console.WriteLine("No Axiom configuration found. Using ConsoleBackgroundWorker.");
+                builder.Services.AddHostedService<ConsoleBackgroundWorker>();
             }
 
             return builder;

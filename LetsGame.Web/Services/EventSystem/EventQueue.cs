@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace LetsGame.Web.Services.EventSystem;
 
-public class AxiomEventQueue
+public class EventQueue
 {
     private readonly Channel<WideRequestEvent> _channel = Channel.CreateUnbounded<WideRequestEvent>(
         new UnboundedChannelOptions

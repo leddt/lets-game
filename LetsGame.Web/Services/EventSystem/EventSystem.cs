@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace LetsGame.Web.Services.EventSystem;
 
-public class AxiomEventSystem(AxiomEventQueue queue) : IEventSystem
+public class EventSystem(EventQueue queue) : IEventSystem
 {
     private bool _posted;
     private readonly WideRequestEvent _currentEvent = new();
@@ -24,3 +24,4 @@ public class AxiomEventSystem(AxiomEventQueue queue) : IEventSystem
         _posted = true;
     }
 }
+

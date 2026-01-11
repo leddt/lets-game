@@ -13,7 +13,7 @@ using Microsoft.Extensions.Options;
 namespace LetsGame.Web.Services.EventSystem;
 
 public class AxiomBackgroundWorker(
-    AxiomEventQueue queue,
+    EventQueue queue,
     IHttpClientFactory httpClientFactory,
     IOptions<AxiomOptions> options,
     ILogger<AxiomBackgroundWorker> logger) : BackgroundService
